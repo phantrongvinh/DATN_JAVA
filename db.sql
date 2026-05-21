@@ -233,4 +233,6 @@ CREATE TABLE cart_items(
     
     CONSTRAINT FK_CI_C FOREIGN KEY (cart_id) REFERENCES carts(id),
     CONSTRAINT FK_CI_PV FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
-)
+);
+
+INSERT INTO roles(`name`) values("USER"),("ADMIN");

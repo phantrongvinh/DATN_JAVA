@@ -62,13 +62,14 @@ public class AuthService implements IAuthService {
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
 
-        Role role = roleRepository.findByName("USER")
+        Role role = roleRepository.findByName("ADMIN")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
 
         List<Role> roles = new ArrayList<>();
         roles.add(role);
 
-        user.setRoles(roles);;
+        user.setRoles(roles);
+        ;
 
         userRepository.save(user);
 
@@ -87,6 +88,6 @@ public class AuthService implements IAuthService {
         String token = jwtService.generateToken(userDetails.getUsername(), roles);
 
         return ResponseEntity.ok(
-                Map.of("token", token, "email", userDetails.getUsername(), "roles", authentication.getAuthorities()));
+                Map.of("token", token, "email", userDetails.getUsername(), "roles", roles));
     }
 }
