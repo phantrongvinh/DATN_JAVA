@@ -29,19 +29,19 @@ axiosClient.interceptors.response.use(
     const isLoginRequest = requestUrl.includes('/login')
     if (!isLoginRequest) {
       const status = error.response?.status
-      if (status == 401) {
+      if (status === 401) {
         localStorage.removeItem('token')
         window.location.href = '/login'
       }
 
-      if (status == 403) {
+      if (status === 403) {
         window.location.href = '/forbidden'
       }
-      if (status == 500) {
+      if (status === 500) {
         console.error('Server error')
       }
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
   },
 )
 
