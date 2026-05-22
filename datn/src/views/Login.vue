@@ -66,7 +66,7 @@ const handleGoogleLogin = () => {
   window.location.href = 'http://localhost:8080/oauth2/authorization/google'
 }
 
-// Khai báo props để truyền xuống Form component
+// Khai báo props để truyền xuống Form component hao
 const initialValues = { email: '', password: '' }
 const errorMessage = ref('')
 
