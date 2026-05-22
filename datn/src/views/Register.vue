@@ -12,26 +12,16 @@
             <div class="text-center fs-2 fw-bold my-5">Welcome Back!</div>
             <Form
               :initialValues="initialValues"
-              :interactive="true"
-              :validate="validate"
-              btn="Login"
-              :handleSubmitForm="handleLogin"
+              btn="Sign up"
               :errorMessage="errorMessage"
+              :validate="validate"
+              :handleSubmitForm="handleRegister"
             ></Form>
-            <div class="mb-3">
-              <button
-                class="btn btn-outline-dark w-100 rounded-3"
-                @click.prevent="handleGoogleLogin"
-              >
-                <img src="/images/google.svg" alt="google" width="20" height="20" />
-                Log in with Google
-              </button>
-            </div>
             <div class="mt-5">
               <div class="text-dark fs-6 text-center">
-                Don't have an account?
-                <RouterLink to="/register" class="fw-semibold hover-underline text-primary"
-                  >Sign up</RouterLink
+                Already have an account?
+                <RouterLink to="/login" class="fw-semibold hover-underline text-primary"
+                  >Log in</RouterLink
                 >
               </div>
             </div>
@@ -45,7 +35,7 @@
 <script setup>
 import authAPI from '@/api/authAPI'
 import Form from '@/components/Form.vue'
-import { onMounted, ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 
@@ -55,35 +45,30 @@ const screenHeight = ref(window.innerHeight)
 
 const screenRef = ref(null)
 
-onMounted(() => {
-  window.addEventListener('resize', () => {
-    screenHeight.value = window.innerHeight
-  })
-})
-
-// Hàm dùng để handle event login bằng google
-const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:8080/oauth2/authorization/google'
-}
-
-// Khai báo props để truyền xuống Form component
-const initialValues = { email: '', password: '' }
+// Khai báo các props truyền xuống Form component
+const initialValues = { fullName: '', email: '', password: '', confirmPassword: '', phone: '' }
 const errorMessage = ref('')
 
-// Validate bằng yup cho login
+// Validate bằng yup cho register
 const validate = yup.object({
+  fullName: yup.string().required('Name required'),
   email: yup.string().required('Email required').email('Invalid email'),
   password: yup.string().required('Password required'),
+  confirmPassword: yup
+    .string()
+    .required('Confirm pass required')
+    .oneOf([yup.ref('password')], 'Passwords must match'),
+  phone: yup
+    .string()
+    .required('Phone required')
+    .matches(/^(03|05|07|08|09)+([0-9]{8})$/, 'Invalid phone number'),
 })
 
-// Handle event login
-
-const handleLogin = async (values) => {
+const handleRegister = async (values) => {
   try {
-    const res = await authAPI.login(values)
+    const res = await authAPI.register(values)
 
-    localStorage.setItem('token', res.token)
-    router.push('/')
+    router.push('/login')
   } catch (error) {
     errorMessage.value = error?.response?.data?.message
   }

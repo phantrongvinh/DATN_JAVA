@@ -49,11 +49,11 @@ public class AuthService implements IAuthService {
     public ResponseEntity<?> register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Account already exists with email: " + request.getEmail());
+                    .body(Map.of("message","Account already exists"));
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password does not match");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","Password does not match"));
         }
 
         User user = new User();
@@ -62,7 +62,7 @@ public class AuthService implements IAuthService {
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
 
-        Role role = roleRepository.findByName("ADMIN")
+        Role role = roleRepository.findByName("USER")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
 
         List<Role> roles = new ArrayList<>();
