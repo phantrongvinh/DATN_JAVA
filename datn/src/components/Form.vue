@@ -1,7 +1,7 @@
 <template>
   <form action="">
     <div class="mb-3" v-for="(field, key) in fields" :key="key">
-      <div class="form-label">{{ formatLabel(field.name) }}</div>
+      <div class="form-label">{{ ulti.formatLabel(field.name) }}</div>
       <input
         :type="passwordFields.includes(field.name) ? 'password' : 'text'"
         class="form-control rounded-3"
@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import ulti from '@/ulti/ulti'
 import { useField, useForm } from 'vee-validate'
 import { reactive, ref, watch } from 'vue'
 
@@ -78,10 +79,6 @@ Object.keys(props.initialValues).forEach((key) => {
     meta: field.meta,
   }
 })
-
-const formatLabel = (str) => {
-  return str.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())
-}
 
 // Hàmm dùng để handle event có các thuộc tính trong fields
 const passwordFields = ['password', 'confirmPassword']

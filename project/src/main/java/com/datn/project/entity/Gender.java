@@ -32,6 +32,6 @@ public class Gender implements Serializable {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @OneToMany(mappedBy = "gender", fetch = FetchType.LAZY)
-    private List<Product> products;
+    // @OneToMany(mappedBy = "gender", fetch = FetchType.LAZY)
+    // private List<Product> products;
 }

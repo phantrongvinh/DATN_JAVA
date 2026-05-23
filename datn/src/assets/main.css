@@ -8,3 +8,22 @@
   text-decoration: underline;
   color: black;
 }
+
+.fs-14 {
+  font-size: 13px;
+}
+
+.text-hover:hover {
+  opacity: 0.6;
+}
+.dropdown-menu {
+  display: block;
+  opacity: 1;
+  visibility: hidden;
+  transition: 0.2s;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+}

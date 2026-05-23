@@ -24,6 +24,36 @@ const router = createRouter({
       name: 'register',
       component: () => import('../views/Register.vue'),
     },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/Profile.vue'),
+    },
+    {
+      path: '/:gender',
+      name: 'gender',
+      component: () => import('../views/Gender.vue'),
+    },
+    {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('../views/Cart.vue'),
+    },
+    {
+      path: '/accesories',
+      name: 'accesories',
+      component: () => import('../views/Accessory.vue'),
+    },
+    {
+      path: '/productDetail',
+      name: 'productDetail',
+      component: () => import('../views/ProductDetail.vue'),
+    },
+    // {
+    //   path: '/register',
+    //   name: 'register',
+    //   component: () => import('../views/Register.vue'),
+    // },
   ],
 })
 

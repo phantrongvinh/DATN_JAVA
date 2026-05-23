@@ -236,3 +236,4 @@ CREATE TABLE cart_items(
 );
 
 INSERT INTO roles(`name`) values("USER"),("ADMIN");
+INSERT INTO genders(`name`) values("men"),("women"),("kids");
