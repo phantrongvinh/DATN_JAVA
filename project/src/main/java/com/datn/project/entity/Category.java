@@ -31,6 +31,9 @@ public class Category implements Serializable {
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
+    
+    @Column(name = "is_accessory", nullable = false)
+    private boolean isAccessory;
 
     @Column(name = "description")
     private String description;

@@ -29,7 +29,7 @@
       </div>
     </div>
     <div class="mb-3">
-      <button class="btn btn-primary w-100 rounded-3" @click.prevent="onSubmit">
+      <button class="btn btn-outline-primary w-100 rounded-3" @click.prevent="onSubmit">
         {{ props.btn }}
       </button>
     </div>

@@ -20,4 +20,9 @@ public class CategoryController {
     public ResponseEntity<?> getAllCategory() {
         return ResponseEntity.ok(categoryService.getAllCategories()).getBody();
     }
+
+    @GetMapping("/accessory")
+    public ResponseEntity<?> getAllAccessories() {
+        return ResponseEntity.ok(categoryService.getAllAccessories()).getBody();
+    }
 }

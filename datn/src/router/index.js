@@ -30,9 +30,9 @@ const router = createRouter({
       component: () => import('../views/Profile.vue'),
     },
     {
-      path: '/:gender',
-      name: 'gender',
-      component: () => import('../views/Gender.vue'),
+      path: '/:audience',
+      name: 'audience',
+      component: () => import('../views/Audience.vue'),
     },
     {
       path: '/cart',

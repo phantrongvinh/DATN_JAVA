@@ -13,17 +13,27 @@
   font-size: 13px;
 }
 
-.text-hover:hover {
-  opacity: 0.6;
+.text-hover:hover div {
+  color: #8a8a8a;
 }
 .dropdown-menu {
   display: block;
   opacity: 1;
   visibility: hidden;
-  transition: 0.2s;
+  transform: translateY(-5px);
+  transition: all 0.1s ease;
 }
 
 .dropdown:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0);
+}
+
+.shadow-bottom {
+  box-shadow: 0 1px 1px #ccc;
+}
+
+.w-20 {
+  width: 20%;
 }

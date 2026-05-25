@@ -2,7 +2,7 @@ package com.datn.project.service;
 
 import org.springframework.http.ResponseEntity;
 
-public interface IGenderService {
+public interface ITargetAudienceService {
     
-    ResponseEntity<?> getAllGender();
+    ResponseEntity<?> getAllAudiences();
 }

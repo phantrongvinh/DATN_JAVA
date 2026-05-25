@@ -51,10 +51,10 @@ public class Product implements Serializable {
     private Brand brand;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gender_id", nullable = false)
-    private Gender gender;
+    @JoinColumn(name = "target_audiences_id", nullable = false)
+    private TargetAudience targetAudience;
 
-    @Column(name = "create_at", nullable = false, insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.datn.project.dto.CategoryResponse;
 import com.datn.project.entity.Category;
 import com.datn.project.repository.ICategoryRepository;
 
@@ -25,6 +26,35 @@ public class CategoryService implements ICategoryService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Categories not found"));
         }
 
-        return ResponseEntity.ok(categories);
+        List<CategoryResponse> responses = categories.stream().map(c -> {
+            CategoryResponse response = new CategoryResponse();
+
+            response.setId(c.getId());
+            response.setName(c.getName());
+
+            return response;
+        }).toList();
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @Override
+    public ResponseEntity<?> getAllAccessories() {
+        List<Category> categories = categoryRepository.findByIsAccessory(true);
+
+        if (categories.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Categories not found"));
+        }
+
+        List<CategoryResponse> responses = categories.stream().map(c -> {
+            CategoryResponse response = new CategoryResponse();
+
+            response.setId(c.getId());
+            response.setName(c.getName());
+
+            return response;
+        }).toList();
+
+        return ResponseEntity.ok(responses);
     }
 }

@@ -16,11 +16,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "genders")
+@Table(name = "target_audiences")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Gender implements Serializable {
+public class TargetAudience implements Serializable {
     
     private static final long serialVersionUID = 1L;
 
@@ -32,6 +32,6 @@ public class Gender implements Serializable {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    // @OneToMany(mappedBy = "gender", fetch = FetchType.LAZY)
-    // private List<Product> products;
+    @OneToMany(mappedBy = "targetAudience", fetch = FetchType.LAZY)
+    private List<Product> products;
 }

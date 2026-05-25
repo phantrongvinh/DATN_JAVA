@@ -6,18 +6,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datn.project.service.IGenderService;
+import com.datn.project.service.IBrandService;
 
 @RestController
-@RequestMapping(value = "/api/v1/genders")
-public class GenderController {
-    
-
+@RequestMapping(value = "api/v1/brands")
+public class BrandController {
     @Autowired
-    private IGenderService genderService;
+    private IBrandService brandService;
 
-    @GetMapping()
-    public ResponseEntity<?> getAllGender() {
-        return ResponseEntity.ok(genderService.getAllGender()).getBody();
+    @GetMapping
+    public ResponseEntity<?> getAllBrand() {
+        return ResponseEntity.ok(brandService.getAllBrand()).getBody();
     }
 }

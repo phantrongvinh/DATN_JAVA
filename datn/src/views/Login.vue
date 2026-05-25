@@ -6,7 +6,9 @@
   >
     <div class="w-50 rounded-4 shadow">
       <div class="row m-4">
-        <div class="col-lg-6"></div>
+        <div class="col-lg-6 d-flex justify-content-center align-items-center">
+          <i class="fa-solid fa-fire-flame-curved fs-1"></i>
+        </div>
         <div class="col-lg-6 mb-4">
           <div class="m-4">
             <div class="text-center fs-2 fw-bold my-5">Welcome Back!</div>

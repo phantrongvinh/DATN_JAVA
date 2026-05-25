@@ -1,5 +1,27 @@
 package com.datn.project.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.datn.project.service.IProductService;
+
+@RestController
+@RequestMapping(value = "/api/v1/products")
 public class ProductController {
     
+    @Autowired
+    private IProductService productService;
+
+    @GetMapping()
+    public ResponseEntity<?> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts()).getBody();
+    }
+
+    @GetMapping("/spotlight")
+    public ResponseEntity<?> getSpotlightProducts() {
+        return ResponseEntity.ok(productService.getSpotlightProducts()).getBody();
+    }
 }
