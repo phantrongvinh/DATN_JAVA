@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.project.service.IProductService;
@@ -16,8 +17,8 @@ public class ProductController {
     private IProductService productService;
 
     @GetMapping()
-    public ResponseEntity<?> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts()).getBody();
+    public ResponseEntity<?> getFilterProducts(@RequestParam(required = false)String audience,@RequestParam(required = false) String brand ) {
+        return ResponseEntity.ok(productService.getFilterProducts(audience,brand)).getBody();
     }
 
     @GetMapping("/spotlight")

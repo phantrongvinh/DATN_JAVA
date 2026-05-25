@@ -3,10 +3,18 @@
     <div class="d-flex py-1 justify-content-between align-items-center container-fluid px-3 py-2">
       <i class="fa-regular fa-futbol fs-6"></i>
       <div class="d-flex align-items-center">
-        <RouterLink to="/login" class="text-decoration-none text-dark fw-semibold fs-14 text-hover"
+        <i class="fa-regular fa-user fs-6 dropdown-user" v-if="isAuthenticated">
+          <ul class="dropdown-menu-user mt-2 z-100 bg-white list-unstyled rounded shadow-sm p-3">
+            <li><a class="dropdown-item lh-lg" href="#">Đăng nhập</a></li>
+            <li>
+              <button class="dropdown-item lh-lg" @click.prevent="handleLogout">Đăng xuất</button>
+            </li>
+            <li><a class="dropdown-item lh-lg" href="#">Hồ sơ cá nhân</a></li>
+          </ul>
+        </i>
+        <RouterLink to="/login" class="text-decoration-none fw-semibold fs-14 text-hover" v-else
           >Sign in</RouterLink
         >
-        <i class="fa-regular fa-user fs-6 d-none"></i>
       </div>
     </div>
   </div>
@@ -31,8 +39,8 @@
               >
                 <RouterLink
                   :to="{
-                    name: 'audience',
-                    params: { audience: audience.name.toLowerCase() },
+                    name: 'product',
+                    query: { audience: audience.name.toLowerCase() },
                   }"
                   class="nav-link text-decoration-none text-dark fw-semibold"
                   >{{ ulti.formatLabel(audience.name) }}</RouterLink
@@ -48,14 +56,12 @@
                     >
                       <li>
                         <RouterLink
-                          class="text-decoration-none fs-14 text-secondary lh-lg fw-semibold"
+                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
                           :to="{
-                            name: 'audience',
-                            params: {
-                              audience: audience.name.toLowerCase(),
-                            },
+                            name: 'product',
                             query: {
-                              brand: brand.name,
+                              audience: audience.name.toLowerCase(),
+                              brand: brand.name.toLowerCase(),
                             },
                           }"
                         >
@@ -83,7 +89,7 @@
                     >
                       <li>
                         <RouterLink
-                          class="text-decoration-none fs-14 text-secondary lh-lg fw-semibold"
+                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
                           to="/"
                         >
                           {{ accesory.name }}
@@ -122,17 +128,20 @@
 </template>
 
 <script setup>
+import router from '@/router'
 import { useAudienceStore } from '@/stores/useAudienceStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
 import ulti from '@/ulti/ulti'
 import { storeToRefs } from 'pinia'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 
 // stores
 const audienceStore = useAudienceStore()
 const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 
 onMounted(async () => {
   await audienceStore.fetchAudiences()
@@ -143,4 +152,16 @@ onMounted(async () => {
 const { audiences: audienceList } = storeToRefs(audienceStore)
 const { brands: brandList } = storeToRefs(brandStore)
 const { accessories: accesoryList } = storeToRefs(categoryStore)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// logout
+const handleLogout = () => {
+  try {
+    authStore.logout()
+    router.push('/')
+    return { success: true }
+  } catch (error) {
+    return { success: false }
+  }
+}
 </script>

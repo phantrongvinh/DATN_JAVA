@@ -47,6 +47,7 @@
 <script setup>
 import authAPI from '@/api/authAPI'
 import Form from '@/components/Form.vue'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
@@ -80,11 +81,12 @@ const validate = yup.object({
 
 // Handle event login
 
+const authStore = useAuthStore()
+
 const handleLogin = async (values) => {
   try {
-    const res = await authAPI.login(values)
+    await authStore.login(values)
 
-    localStorage.setItem('token', res.token)
     router.push('/')
   } catch (error) {
     errorMessage.value = error?.response?.data?.message

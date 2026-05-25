@@ -55,6 +55,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/auth/me").authenticated()
                             .requestMatchers("/api/v1/auth/logout").authenticated()
                             .requestMatchers("/api/v1/auth/**").permitAll()
+                            .requestMatchers("/api/v1/products/**").permitAll()
                             .anyRequest().permitAll();
                 })
                 .oauth2Login(oauth2 -> oauth2

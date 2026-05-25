@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface IProductService {
     
-    ResponseEntity<?> getAllProducts();
+    ResponseEntity<?> getFilterProducts(String audience, String brand);
 
     ResponseEntity<?> getSpotlightProducts();
 

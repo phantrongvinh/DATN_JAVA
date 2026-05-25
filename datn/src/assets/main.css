@@ -12,10 +12,27 @@
 .fs-14 {
   font-size: 13px;
 }
+.text-hover {
+  color: black;
+}
 
 .text-hover:hover div {
   color: #8a8a8a;
 }
+
+.text-hover:hover {
+  color: #8a8a8a;
+}
+
+.text-menu {
+  color: #8a8a8a;
+}
+
+.text-menu:hover {
+  color: black;
+}
+
+.dropdown-menu-user,
 .dropdown-menu {
   display: block;
   opacity: 1;
@@ -36,4 +53,29 @@
 
 .w-20 {
   width: 20%;
+}
+
+.dropdown-user {
+  position: relative;
+}
+
+.z-100 {
+  z-index: 2000;
+}
+
+.dropdown-menu-user {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  /* transform: translateY(-10px);
+  transition: 0.2s; */
+}
+
+.dropdown-user:hover .dropdown-menu-user {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }

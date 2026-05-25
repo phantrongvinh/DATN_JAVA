@@ -1,6 +1,7 @@
 package com.datn.project.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import com.datn.project.dto.ProductSpotlightResponse;
 import com.datn.project.dto.ProductVariantResponse;
 import com.datn.project.entity.Product;
 import com.datn.project.repository.IProductRepository;
+import com.datn.project.specification.ProductSpecification;
 
 @Service
 public class ProductService implements IProductService {
@@ -20,16 +22,17 @@ public class ProductService implements IProductService {
     private IProductRepository productRepository;
 
     @Override
-    public ResponseEntity<?> getAllProducts() {
-        List<Product> products = productRepository.findAll();
+    public ResponseEntity<?> getFilterProducts(String audience, String brand) {
+        List<Product> products = productRepository.findAll(ProductSpecification.filter(audience, brand));
 
         if (products.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Products not found");
+            return ResponseEntity.ok(Map.of("message","Product not found"));
         }
 
         List<ProductResponse> responses = products.stream().map(p -> {
             ProductResponse response = new ProductResponse();
 
+            response.setId(p.getId());
             response.setName(p.getName());
             response.setDescription(p.getDescription());
             response.setBasePrice(p.getBasePrice());
@@ -38,10 +41,14 @@ public class ProductService implements IProductService {
             response.setBrand(p.getBrand().getName());
             response.setTargetAudience(p.getTargetAudience().getName());
             response.setAccessory(p.getCategory().isAccessory());
+            if (p.getProductImages() != null && !p.getProductImages().isEmpty()) {
+                response.setImg(p.getProductImages().get(0).getImageUrl());
+            }
 
             List<ProductVariantResponse> variantResponses = p.getProductVariants().stream().map(v -> {
                 ProductVariantResponse variantResponse = new ProductVariantResponse();
 
+                variantResponse.setId(v.getId());
                 variantResponse.setColor(v.getColor());
                 variantResponse.setSize(v.getSize().getName());
                 variantResponse.setStock(v.getStock());
