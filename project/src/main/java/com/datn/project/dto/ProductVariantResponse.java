@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductVariantResponse {
     
+    private int id;
     private String color;
     private String size;
     private int stock;

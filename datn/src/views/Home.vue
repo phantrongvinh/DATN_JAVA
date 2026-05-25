@@ -6,7 +6,13 @@
     <div class="fw-bolder text-center mt-5" style="font-size: 100px">SPOTLIGHT</div>
     <div class="d-flex justify-content-center mx-auto flex-wrap py-5 align-items-stretch w-75">
       <RouterLink
-        to="/"
+        :to="{
+          name: 'product',
+          query: {
+            product: s.id,
+            name: s.name,
+          },
+        }"
         class="d-flex flex-column align-items-center justify-content-end w-20 my-5 text-decoration-none text-dark text-hover"
         v-for="s in spotlightList"
         :key="s.id"
@@ -19,6 +25,7 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useProductStore } from '@/stores/useProductStore'
 import ulti from '@/ulti/ulti'
 import { storeToRefs } from 'pinia'
@@ -33,5 +40,4 @@ onMounted(async () => {
 })
 
 const { spotlightProducts: spotlightList } = storeToRefs(productStore)
-console.log(spotlightList)
 </script>

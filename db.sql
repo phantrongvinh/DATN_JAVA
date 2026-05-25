@@ -450,3 +450,4 @@ INSERT INTO product_variants (
 -- Goalkeeper Gloves
 (10, 'Green', 8, 8, 1490000, 'PM-GK-M-GR'),
 (10, 'Green', 9, 6, 1490000, 'PM-GK-L-GR');
+
