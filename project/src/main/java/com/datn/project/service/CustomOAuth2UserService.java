@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.datn.project.entity.AuthProvider;
 import com.datn.project.entity.CustomOAuth2User;
 import com.datn.project.entity.Role;
 import com.datn.project.entity.User;
@@ -44,6 +45,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newUser.setEmail(email);
             newUser.setFullName(name);
             newUser.setPhone("");
+            newUser.setActived(true);
+            newUser.setAuthProvider(AuthProvider.GOOLE);
             newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Role not found"));
 

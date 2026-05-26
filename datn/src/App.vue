@@ -4,14 +4,7 @@ import Header from './views/layout/Header.vue'
 import Footer from './views/layout/Footer.vue'
 import { useAuthStore } from './stores/useAuthStore'
 import { onMounted } from 'vue'
-
-const authStore = useAuthStore()
-
-onMounted(async () => {
-  if (authStore.token) {
-    console.log(authStore.token)
-  }
-})
+import { storeToRefs } from 'pinia'
 </script>
 
 <template>

@@ -4,10 +4,24 @@ import org.springframework.http.ResponseEntity;
 
 import com.datn.project.dto.LoginRequest;
 import com.datn.project.dto.RegisterRequest;
+import com.datn.project.entity.User;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface IAuthService {
 
     ResponseEntity<?> register(RegisterRequest request);
 
     ResponseEntity<?> login(LoginRequest request);
+
+    ResponseEntity<?> logout(HttpServletRequest request);
+
+    // void sendVerificationEmail(User user, String token);
+
+    void activate(String token);
+
+    void resendActivation(String email);
+
+    ResponseEntity<?> me();
+
 }

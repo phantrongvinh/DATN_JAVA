@@ -1,14 +1,16 @@
 import authAPI from '@/api/authAPI'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { errorMessages } from 'vue/compiler-sfc'
 
 export const useAuthStore = defineStore('auth', () => {
   // states
   const token = ref(localStorage.getItem('token') || null)
   const user = ref(null)
+  const roles = ref([])
   const loadding = ref(false)
   const error = ref(null)
+  const resend = ref(false)
+  const message = ref('')
 
   const isAuthenticated = computed(() => !!token.value)
 
@@ -20,9 +22,58 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.login(data)
       token.value = res.token
+      roles.value = res.roles
+      resend.value = false
+
       localStorage.setItem('token', res.token)
-      user.value = res
-      return { success: true }
+
+      const resUser = await authAPI.me()
+
+      user.value = resUser
+    } catch (err) {
+      error.value = err.response?.data?.message
+      if (error.value === 'Account not activated') {
+        resend.value = true
+      }
+      throw err
+    } finally {
+      loadding.value = false
+    }
+  }
+  async function register(data) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await authAPI.register(data)
+      message.value = res
+    } catch (err) {
+      error.value = err.response?.data?.message
+      throw err
+    } finally {
+      loadding.value = false
+    }
+  }
+
+  async function logout() {
+    try {
+      await authAPI.logout()
+    } catch (error) {
+      error.value = error
+      return { success: false, errorMessages: error.message }
+    } finally {
+      user.value = null
+      token.value = null
+      localStorage.removeItem('token')
+    }
+  }
+
+  async function resendMail(email) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await authAPI.resend(email)
+      message.value = res.message
+      resend.value = false
     } catch (error) {
       error.value = error
       return { success: false, errorMessages: error.message }
@@ -30,11 +81,16 @@ export const useAuthStore = defineStore('auth', () => {
       loadding.value = false
     }
   }
-
-  function logout() {
-    token.value = null
-    user.value = null
-    localStorage.removeItem('token')
+  return {
+    user,
+    loadding,
+    error,
+    login,
+    logout,
+    isAuthenticated,
+    resend,
+    resendMail,
+    message,
+    register,
   }
-  return { user, loadding, error, login, logout, isAuthenticated }
 })
