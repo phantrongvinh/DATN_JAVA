@@ -67,7 +67,6 @@
   position: absolute;
   top: 100%;
   right: 0;
-  min-width: 200px;
   opacity: 0;
   visibility: hidden;
   /* transform: translateY(-10px);
@@ -78,4 +77,17 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.flatpickr-calendar {
+  border-radius: 16px;
+}
+
+.flatpickr-day.selected {
+  background: #198754;
+  border-color: #198754;
 }

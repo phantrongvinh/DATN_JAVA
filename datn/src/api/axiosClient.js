@@ -21,27 +21,26 @@ axiosClient.interceptors.request.use(
 )
 
 axiosClient.interceptors.response.use(
-  (res) => {
-    return res
-  },
+  (res) => res,
   (error) => {
     const requestUrl = error.config?.url || ''
     const isLoginRequest = requestUrl.includes('/login')
-    if (!isLoginRequest) {
-      const status = error.response?.status
-      if (status === 401) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
-      }
 
-      if (status === 403) {
-        window.location.href = '/forbidden'
-      }
-      if (status === 500) {
-        console.error('Server error')
-      }
+    if (isLoginRequest) {
       return Promise.reject(error)
     }
+
+    const status = error.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    } else if (status === 403) {
+      window.location.href = '/forbidden'
+    } else if (status === 500) {
+      console.error('Server error')
+    }
+
+    return Promise.reject(error)
   },
 )
 

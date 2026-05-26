@@ -18,8 +18,18 @@
               :validate="validate"
               btn="Login"
               :handleSubmitForm="handleLogin"
-              :errorMessage="errorMessage"
+              :errorMessage="error"
+              :successMessage="message"
             ></Form>
+            <div class="mb-3" v-if="resend">
+              <button
+                class="btn btn-outline-success w-100 rounded-3"
+                @click.prevent="handleResend"
+                :disabled="loadding"
+              >
+                {{ loadding ? 'Resending' : 'Resend active' }}
+              </button>
+            </div>
             <div class="mb-3">
               <button
                 class="btn btn-outline-dark w-100 rounded-3"
@@ -48,7 +58,8 @@
 import authAPI from '@/api/authAPI'
 import Form from '@/components/Form.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 
@@ -71,7 +82,6 @@ const handleGoogleLogin = () => {
 
 // Khai báo props để truyền xuống Form component hao
 const initialValues = { email: '', password: '' }
-const errorMessage = ref('')
 
 // Validate bằng yup cho login
 const validate = yup.object({
@@ -80,16 +90,25 @@ const validate = yup.object({
 })
 
 // Handle event login
-
+const mailSend = ref('')
 const authStore = useAuthStore()
+const { loadding, error, resend, message } = storeToRefs(authStore)
 
 const handleLogin = async (values) => {
   try {
+    message.value = ''
+    mailSend.value = values.email
     await authStore.login(values)
-
     router.push('/')
-  } catch (error) {
-    errorMessage.value = error?.response?.data?.message
-  }
+  } catch (err) {}
+}
+
+// Handle resend email
+const handleResend = async () => {
+  console.log(mailSend.value)
+
+  await authStore.resendMail({ email: mailSend.value })
+  mailSend.value = ''
+  error.value = ''
 }
 </script>

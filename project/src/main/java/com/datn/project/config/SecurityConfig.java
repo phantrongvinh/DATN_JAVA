@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.datn.project.service.CustomOAuth2UserService;
 import com.datn.project.service.CustomUserDetailService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -50,6 +52,31 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
         return httpSecurity.cors(Customizer.withDefaults()).csrf(csrf -> csrf.disable())
+                .exceptionHandling(ex -> ex
+                        // Xử lý 401 - chưa đăng nhập
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                        {
+                                            "status": 401,
+                                            "error": "Unauthorized",
+                                            "message": "Please login to continue"
+                                        }
+                                    """);
+                        })
+                        // Xử lý 403 - không có quyền
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                                        {
+                                            "status": 403,
+                                            "error": "Forbidden",
+                                            "message": "You don't have permission"
+                                        }
+                                    """);
+                        }))
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/v1/auth/me").authenticated()
@@ -62,6 +89,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureUrl("/api/auth/oauth2/failure"))
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider())
                 .build();

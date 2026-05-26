@@ -33,3 +33,4 @@ build/
 .vscode/
 application-secret.properties
 application-oauth2.properties
+application-mail.properties

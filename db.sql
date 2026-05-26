@@ -84,8 +84,13 @@ CREATE TABLE users(
     full_name 			NVARCHAR(100) NOT NULL,
     email				VARCHAR(255) NOT NULL UNIQUE,
     `password`			VARCHAR(500) NOT NULL,
-    
     phone				VARCHAR(15) NOT NULL,
+    birth_day           TIMESTAMP NOT NULL,
+     -- 'local' hoặc 'google'
+    provider      		VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+ 
+    -- false cho đến khi kích hoạt qua email
+    is_actived       	BOOLEAN NOT NULL DEFAULT FALSE,
     
     created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -235,6 +240,14 @@ CREATE TABLE cart_items(
     
     CONSTRAINT FK_CI_C FOREIGN KEY (cart_id) REFERENCES carts(id),
     CONSTRAINT FK_CI_PV FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
+);
+
+CREATE TABLE verification_tokens(
+	id 					INT AUTO_INCREMENT PRIMARY KEY,
+    token				VARCHAR(500) NOT NULL,
+    expiry_date			TIMESTAMP NOT NULL,
+    user_id             INT NOT NULL UNIQUE,
+    CONSTRAINT FK_VRFT_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 INSERT INTO roles(`name`) values("USER"),("ADMIN");

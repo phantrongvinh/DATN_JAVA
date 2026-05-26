@@ -15,9 +15,11 @@
             <Form
               :initialValues="initialValues"
               btn="Sign up"
-              :errorMessage="errorMessage"
+              :loading="loadding"
+              :errorMessage="error"
               :validate="validate"
               :handleSubmitForm="handleRegister"
+              :successMessage="message"
             ></Form>
             <div class="mt-5">
               <div class="text-dark fs-6 text-center">
@@ -37,7 +39,9 @@
 <script setup>
 import authAPI from '@/api/authAPI'
 import Form from '@/components/Form.vue'
-import { ref } from 'vue'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 
@@ -48,8 +52,14 @@ const screenHeight = ref(window.innerHeight)
 const screenRef = ref(null)
 
 // Khai báo các props truyền xuống Form component
-const initialValues = { fullName: '', email: '', password: '', confirmPassword: '', phone: '' }
-const errorMessage = ref('')
+const initialValues = {
+  fullName: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  birthDay: '',
+  phone: '',
+}
 
 // Validate bằng yup cho register
 const validate = yup.object({
@@ -60,19 +70,30 @@ const validate = yup.object({
     .string()
     .required('Confirm pass required')
     .oneOf([yup.ref('password')], 'Passwords must match'),
+  birthDay: yup
+    .date()
+    .transform((value, originalValue) => {
+      if (!originalValue) return null
+
+      return new Date(originalValue)
+    })
+    .max(new Date(), 'Birth day cannot be in the future')
+    .required('Birth day required'),
   phone: yup
     .string()
     .required('Phone required')
     .matches(/^(03|05|07|08|09)+([0-9]{8})$/, 'Invalid phone number'),
 })
 
+// handle register
+
+const authStore = useAuthStore()
+
+const { loadding, error, message } = storeToRefs(authStore)
+
 const handleRegister = async (values) => {
   try {
-    const res = await authAPI.register(values)
-
-    router.push('/login')
-  } catch (error) {
-    errorMessage.value = error?.response?.data?.message
-  }
+    await authStore.register(values)
+  } catch (error) {}
 }
 </script>

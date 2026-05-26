@@ -9,13 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequest {
+public class ProfileResponse {
 
     private String email;
-    private String password;
-    private String confirmPassword;
-    private String fullName;
     private String phone;
+    private String fullName;
     private LocalDate birthDay;
 
 }
