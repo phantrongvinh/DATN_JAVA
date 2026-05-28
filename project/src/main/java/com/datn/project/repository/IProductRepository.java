@@ -10,4 +10,6 @@ import com.datn.project.entity.Product;
 public interface IProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
 
     List<Product> findTop10ByOrderByCreatedAtDesc();
+
+    List<Product> findTop5ByOrderByCreatedAtDesc();
 }

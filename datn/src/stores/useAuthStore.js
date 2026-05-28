@@ -6,7 +6,6 @@ export const useAuthStore = defineStore('auth', () => {
   // states
   const token = ref(localStorage.getItem('token') || null)
   const user = ref(null)
-  const roles = ref([])
   const loadding = ref(false)
   const error = ref(null)
   const resend = ref(false)
@@ -22,14 +21,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.login(data)
       token.value = res.token
-      roles.value = res.roles
       resend.value = false
 
       localStorage.setItem('token', res.token)
 
-      const resUser = await authAPI.me()
-
-      user.value = resUser
+      await me()
     } catch (err) {
       error.value = err.response?.data?.message
       if (error.value === 'Account not activated') {
@@ -40,6 +36,13 @@ export const useAuthStore = defineStore('auth', () => {
       loadding.value = false
     }
   }
+
+  async function me() {
+    if (isAuthenticated.value) {
+      user.value = await authAPI.me()
+    }
+  }
+
   async function register(data) {
     loadding.value = true
     error.value = null
@@ -92,5 +95,6 @@ export const useAuthStore = defineStore('auth', () => {
     resendMail,
     message,
     register,
+    me,
   }
 })

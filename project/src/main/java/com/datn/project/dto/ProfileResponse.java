@@ -1,6 +1,7 @@
 package com.datn.project.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,5 +16,5 @@ public class ProfileResponse {
     private String phone;
     private String fullName;
     private LocalDate birthDay;
-
+    private List<String> roles;
 }

@@ -83,6 +83,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/auth/logout").authenticated()
                             .requestMatchers("/api/v1/auth/**").permitAll()
                             .requestMatchers("/api/v1/products/**").permitAll()
+                            .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                             .anyRequest().permitAll();
                 })
                 .oauth2Login(oauth2 -> oauth2

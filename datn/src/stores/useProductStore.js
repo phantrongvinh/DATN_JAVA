@@ -1,3 +1,4 @@
+import aminAPI from '@/api/adminAPI'
 import productAPI from '@/api/productAPI'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
@@ -8,6 +9,7 @@ export const useProductStore = defineStore('product', () => {
   const filterProducts = ref([])
   const loadding = ref(false)
   const error = ref(null)
+  const productOverview = ref([])
 
   // actions
   async function fetchSpotlightProducts() {
@@ -15,7 +17,8 @@ export const useProductStore = defineStore('product', () => {
     error.value = null
 
     try {
-      spotlightProducts.value = await productAPI.fetchSpotlightProducts()
+      const res = await productAPI.fetchSpotlightProducts()
+      spotlightProducts.value = res
       return { success: true }
     } catch (error) {
       error.value = error
@@ -30,7 +33,8 @@ export const useProductStore = defineStore('product', () => {
     error.value = null
 
     try {
-      filterProducts.value = await productAPI.fetchFilterProducts(data)
+      const res = await productAPI.fetchFilterProducts(data)
+      filterProducts.value = res
       return { success: true }
     } catch (error) {
       error.value = error
@@ -39,12 +43,31 @@ export const useProductStore = defineStore('product', () => {
       loadding.value = false
     }
   }
+
+  async function fetchProductOVerview() {
+    loadding.value = true
+    error.value = null
+
+    try {
+      const res = await aminAPI.fetchProductOverview()
+      productOverview.value = res
+      return { success: true }
+    } catch (error) {
+      error.value = error
+      return { success: false, errorMessages: error.message }
+    } finally {
+      loadding.value = false
+    }
+  }
+
   return {
     spotlightProducts,
     filterProducts,
     loadding,
     error,
+    productOverview,
     fetchSpotlightProducts,
     fetchFilterProducts,
+    fetchProductOVerview,
   }
 })

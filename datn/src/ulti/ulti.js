@@ -14,10 +14,19 @@ function formatDate(dateString) {
   return date.toLocaleDateString('vi-VN')
 }
 
+function formatVND(amount) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    minimumFractionDigits: 0,
+  }).format(amount)
+}
+
 const ulti = {
   formatLabel,
   getFirstThreeWords,
   formatDate,
+  formatVND,
 }
 
 export default ulti

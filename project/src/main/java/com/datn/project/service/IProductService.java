@@ -8,4 +8,5 @@ public interface IProductService {
 
     ResponseEntity<?> getSpotlightProducts();
 
+    ResponseEntity<?> getTop5Product();
 }

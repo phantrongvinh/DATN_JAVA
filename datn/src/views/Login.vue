@@ -20,6 +20,7 @@
               :handleSubmitForm="handleLogin"
               :errorMessage="error"
               :successMessage="message"
+              :loading="loadding"
             ></Form>
             <div class="mb-3" v-if="resend">
               <button
@@ -105,8 +106,6 @@ const handleLogin = async (values) => {
 
 // Handle resend email
 const handleResend = async () => {
-  console.log(mailSend.value)
-
   await authStore.resendMail({ email: mailSend.value })
   mailSend.value = ''
   error.value = ''
