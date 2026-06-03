@@ -126,7 +126,7 @@ public class AuthService implements IAuthService {
         String token = jwtService.generateToken(userDetails.getUsername(), roles);
 
         return ResponseEntity.ok(
-                Map.of("token", token, "email", userDetails.getUsername(), "roles", roles));
+                Map.of("token", token));
     }
 
     @Override
@@ -164,6 +164,10 @@ public class AuthService implements IAuthService {
         response.setFullName(user.getFullName());
         response.setPhone(user.getPhone());
         response.setBirthDay(user.getBirthDay());
+
+        List<String> roles = user.getRoles().stream().map(r -> r.getName()).toList();
+
+        response.setRoles(roles);
 
         return ResponseEntity.ok(response);
     }
