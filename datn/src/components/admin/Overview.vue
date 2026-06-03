@@ -108,7 +108,7 @@
           </button>
         </div>
         <!-- TABLE COMPONENT PRODUCT -->
-        <Table :initialValues="initialProduct" :datalist="productOverview"></Table>
+        <Table :initialValues="initialProduct" :productOverview="productOverview"></Table>
       </div>
     </div>
     <div class="border w-100 border-opacity-50 rounded-4">

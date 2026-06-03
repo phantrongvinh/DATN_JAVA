@@ -1,5 +1,5 @@
 <template>
-  <table :class="isBorder ? 'table border' : 'table table-borderless' + ''">
+  <table :class="isBorder ? 'table border product-table' : 'table table-borderless' + ''">
     <thead>
       <tr>
         <th
@@ -12,48 +12,31 @@
       </tr>
     </thead>
     <tbody>
-      <tr class="my-3 align-end" v-for="d in data" :key="d.id">
-        <td class="fs-14 text-center fw-bolder py-4">{{ d.name }}</td>
-        <td class="fs-14 text-center fw-bolder py-4">{{ d.category }}</td>
-        <td class="fs-14 text-center fw-bolder py-4">{{ d.brand }}</td>
-        <td class="fs-14 text-center fw-bolder py-4">{{ ulti.formatVND(d.basePrice) }}</td>
-        <td class="fs-14 text-center fw-bolder py-4">
-          <span
-            class="bg-opacity-25 rounded-3 px-3 py-2 d-inline-block"
-            :class="
-              d.stock <= 0
-                ? 'bg-danger text-danger '
-                : d.stock <= 5
-                  ? 'bg-warning text-warning '
-                  : 'bg-success text-success '
-            "
-          >
-            {{ d.stock <= 0 ? 'Hết hàng' : d.stock <= 5 ? 'Sắp hết hàng' : 'Còn hàng' }}
-          </span>
-        </td>
-        <!-- <td class="fs-14 text-center fw-bolder py-4">
-          {{ ulti.formatDate(new Date(Date.now())) }}
-        </td> -->
-        <td v-if="interactive">
-          <div class="d-flex justify-content-center align-items-center gap-2">
-            <button class="btn btn-danger fs-14">Xoa</button>
-            <button class="btn btn-danger fs-14">Xoa</button>
-          </div>
-        </td>
-      </tr>
+      <ProductOverview v-if="productOverview" :data="productOverview"></ProductOverview>
+      <ProductListView
+        v-if="products"
+        :data="products"
+        :interactive="props.interactive"
+        :handleActiveProduct="props.handleActiveProduct"
+        :handleUpdateProduct="props.handleUpdateProduct"
+      ></ProductListView>
     </tbody>
   </table>
 </template>
 
 <script setup>
-import ulti from '@/ulti/ulti'
 import { onMounted, reactive, ref, watch } from 'vue'
+import ProductOverview from './tableItems/ProductOverview.vue'
+import ProductListView from './tableItems/ProductListView.vue'
 
 const props = defineProps({
   initialValues: Object,
   interactive: Array,
   isBorder: Boolean,
-  datalist: Array,
+  productOverview: Array,
+  products: Array,
+  handleActiveProduct: Function,
+  handleUpdateProduct: Function,
 })
 
 const fields = reactive({})
@@ -69,24 +52,44 @@ watch(
   { immediate: true },
 )
 
-const data = reactive([])
+const productOverview = reactive([])
 
 watch(
-  () => props.datalist,
+  () => props.productOverview,
   (val) => {
     if (!val) return
     val.forEach((value, index) => {
-      data[index] = {
+      productOverview[index] = {
         id: value.id,
         name: value.name,
         category: value.category,
         brand: value.brand,
         price: value.basePrice,
-        stock: () => value.productVariant.map((v) => v.stock),
+        stock: value.stock,
       }
     })
   },
   { immediate: true },
 )
-console.log(props.datalist)
+
+const products = reactive([])
+
+watch(
+  () => props.products,
+  (val) => {
+    if (!val) return
+    val.forEach((value, index) => {
+      products[index] = {
+        id: value.id,
+        name: value.name,
+        category: value.category,
+        brand: value.brand,
+        price: value.basePrice,
+        variantCount: value.variantCount,
+        status: value.status,
+        updatedAt: value.updatedAt,
+      }
+    })
+  },
+)
 </script>

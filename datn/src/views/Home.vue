@@ -22,6 +22,21 @@
       </RouterLink>
     </div>
   </div>
+  <div class="my-5 container">
+    <div class="d-flex justify-content-between mx-auto gap-5 py-5 align-items-stretch">
+      <div class="w-50 d-flex justify-content-center align-items-center h-100">
+        <img src="/images/thum-nail.jpg" alt="" class="img-fluid rounded-5" />
+      </div>
+      <div class="w-50 d-flex flex-column gap-3 justify-content-center h-100">
+        <div class="fs-1 fw-bold">Bóng đá</div>
+        <div class="fs-5 lh-lg">
+          Mỗi đường chuyền là một cơ hội, mỗi cú sút là một giấc mơ và mỗi trận đấu là một hành
+          trình chinh phục. Hãy trang bị cho mình những sản phẩm tốt nhất để tận hưởng trọn vẹn niềm
+          đam mê bóng đá và tạo nên những khoảnh khắc đáng nhớ trên sân cỏ.
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>

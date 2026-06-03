@@ -14,8 +14,4 @@ import Footer from './views/layout/Footer.vue'
   <Footer></Footer>
 </template>
 
-<style scoped>
-#main {
-  min-height: 800px;
-}
-</style>
+<style scoped></style>

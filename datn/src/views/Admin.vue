@@ -1,7 +1,7 @@
 <template>
   <div class="row w-100">
     <div class="col-lg-2 d-flex">
-      <div class="border-end w-100 h-100 bg-light">
+      <div class="border-end w-100 h-100 bg-light pb-5">
         <div class="fw-semibold text-center px-5 pt-5 btn-primary" style="font-size: 28px">
           Welcome ADMIN
         </div>
@@ -102,7 +102,7 @@
               aria-labelledby="pills-user-tab"
               tabindex="0"
             >
-              Người dùng
+              <Account />
             </div>
             <div
               class="tab-pane fade"
@@ -121,6 +121,7 @@
 </template>
 
 <script setup>
+import Account from '@/components/admin/Account.vue'
 import Overview from '@/components/admin/Overview.vue'
 import ProductView from '@/components/admin/ProductView.vue'
 import ulti from '@/ulti/ulti'

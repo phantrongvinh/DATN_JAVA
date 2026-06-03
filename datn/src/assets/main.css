@@ -113,3 +113,20 @@
   color: rgb(50, 79, 133);
   background-color: rgb(218, 229, 248);
 }
+
+.product-table {
+  table-layout: fixed;
+  width: 100%;
+}
+.pagination .page-link {
+  color: #212529;
+}
+
+.pagination .page-link:hover {
+  background-color: #f8f9fa;
+}
+
+.pagination .active .page-link {
+  background-color: rgba(83, 141, 248, 0.836);
+  color: white;
+}
