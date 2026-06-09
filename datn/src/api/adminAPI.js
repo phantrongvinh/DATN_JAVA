@@ -17,10 +17,16 @@ const deleteProductById = async (id) => {
   return res.data
 }
 
+const updateProductById = async (data) => {
+  const res = await axiosClient.put(`${url}/products/update`, data)
+  return res.data
+}
+
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
   deleteProductById,
+  updateProductById,
 }
 
 export default adminAPI

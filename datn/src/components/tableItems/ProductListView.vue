@@ -17,10 +17,10 @@
     <td class="fs-14 text-center fw-bolder py-4">{{ ulti.formatDate(d.updatedAt) }}</td>
 
     <td v-if="interactive">
-      <div class="d-flex justify-content-center align-items-center gap-2">
+      <div class="d-flex justify-content-center align-items-center gap-1">
         <button
           class="btn btn-danger fs-14 w-50"
-          @click.prevent="props.handleActiveProduct(d.id, d.name)"
+          @click.prevent="props.handleActiveProduct(d.id, d.name, d.status)"
         >
           {{ d.status ? 'Khôi phục' : 'Vô hiệu' }}
         </button>

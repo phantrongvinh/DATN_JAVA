@@ -130,3 +130,37 @@
   background-color: rgba(83, 141, 248, 0.836);
   color: white;
 }
+
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  color: black;
+  background-color: white;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.success {
+  background-color: #60b88f;
+}
+
+.error {
+  background-color: #d66873;
+}
+
+.warning {
+  background-color: #fdd96c;
+}

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,8 +39,8 @@ public class ProductService implements IProductService {
     private ICategoryRepository categoryRepository;
 
     @Override
-    public ResponseEntity<?> getFilterProducts(String audience, String brand) {
-        List<Product> products = productRepository.findAll(ProductSpecification.filter(audience, brand));
+    public ResponseEntity<?> getFilterProducts(List<String> audiences, List<String> brands) {
+        List<Product> products = productRepository.findAll(ProductSpecification.filter(audiences, brands));
 
         if (products.isEmpty()) {
             return ResponseEntity.ok(Map.of("message", "Product not found"));
@@ -180,6 +181,13 @@ public class ProductService implements IProductService {
     public ResponseEntity<?> updateProduct(ProductUpdateRequest request) {
         Product product = productRepository.findById(request.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (product.getName().equals(request.getName()) &&
+                product.getBasePrice().equals(request.getPrice()) &&
+                product.getBrand().getId() == request.getBrandID() &&
+                product.getCategory().getId() == request.getCategoryID()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No data change");
+        }
 
         product.setBasePrice(request.getPrice());
         product.setName(request.getName());
