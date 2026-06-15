@@ -94,7 +94,7 @@ public class AuthService implements IAuthService {
         user.setActived(false);
         user.setAuthProvider(AuthProvider.LOCAL);
 
-        Role role = roleRepository.findByName("USER")
+        Role role = roleRepository.findByName("ADMIN")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
 
         List<Role> roles = new ArrayList<>();

@@ -10,8 +10,8 @@ const fetchSpotlightProducts = async () => {
 const fetchFilterProducts = async (data) => {
   const res = await axiosClient.get(`${url}`, {
     params: {
-      audience: data.audience,
-      brand: data.brand,
+      audiences: data.audience,
+      brands: data.brand,
     },
   })
   return res.data
