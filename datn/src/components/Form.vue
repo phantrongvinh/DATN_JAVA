@@ -128,6 +128,7 @@ const passwordFields = ['password', 'confirmPassword']
 
 const onSubmit = handleSubmit(async (values) => {
   props.handleSubmitForm(values)
+  Object.assign(fields, {})
 })
 
 // handle clear message

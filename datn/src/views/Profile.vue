@@ -64,7 +64,7 @@
           </ul>
         </div>
       </div>
-      <div class="col-lg-10 border-start">
+      <div class="col-lg-10 border-start pb-5">
         <div class="d-flex justify-content-center">
           <div class="tab-content w-100" id="pills-tabContent">
             <div

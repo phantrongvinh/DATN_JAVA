@@ -94,6 +94,8 @@ const { loadding, error, message } = storeToRefs(authStore)
 const handleRegister = async (values) => {
   try {
     await authStore.register(values)
-  } catch (error) {}
+  } catch (error) {
+  } finally {
+  }
 }
 </script>

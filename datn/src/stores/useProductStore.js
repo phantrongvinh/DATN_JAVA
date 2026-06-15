@@ -41,6 +41,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       const res = await productAPI.fetchFilterProducts(data)
       filterProducts.value = res
+
       return { success: true }
     } catch (error) {
       error.value = error
@@ -100,6 +101,23 @@ export const useProductStore = defineStore('product', () => {
       loadding.value = false
     }
   }
+  async function updateProductById(data) {
+    loadding.value = true
+    error.value = null
+
+    try {
+      console.log(data)
+
+      const res = await adminAPI.updateProductById(data)
+
+      await fetchAllProducts({ newPage: page.value, newSize: size.value })
+    } catch (error) {
+      error.value = error
+      throw error
+    } finally {
+      loadding.value = false
+    }
+  }
 
   return {
     spotlightProducts,
@@ -117,5 +135,6 @@ export const useProductStore = defineStore('product', () => {
     fetchProductOVerview,
     fetchAllProducts,
     deleteProductById,
+    updateProductById,
   }
 })

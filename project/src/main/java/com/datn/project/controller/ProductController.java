@@ -1,5 +1,7 @@
 package com.datn.project.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +19,9 @@ public class ProductController {
     private IProductService productService;
 
     @GetMapping()
-    public ResponseEntity<?> getFilterProducts(@RequestParam(required = false)String audience,@RequestParam(required = false) String brand ) {
-        return ResponseEntity.ok(productService.getFilterProducts(audience,brand)).getBody();
+    public ResponseEntity<?> getFilterProducts(@RequestParam(required = false) List<String> audiences,
+            @RequestParam(required = false) List<String> brands) {
+        return ResponseEntity.ok(productService.getFilterProducts(audiences,brands)).getBody();
     }
 
     @GetMapping("/spotlight")

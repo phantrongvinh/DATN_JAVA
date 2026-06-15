@@ -89,7 +89,7 @@
     </div>
     <div class="mt-5 border rounded-4">
       <div class="m-4">
-        <div class="text-start fw-bold fs-5 w-100">Danh sach san pham</div>
+        <div class="text-start fw-bold fs-5 w-100">Danh sách sản phẩm</div>
         <div class="mt-3">
           <Table
             :initialValues="initialProductList"
@@ -130,45 +130,63 @@
                 <h5 class="modal-title fw-bold" v-if="isDel">Delete product</h5>
                 <h5 class="modal-title fw-bold" v-else-if="isUpdate">Update product</h5>
 
-                <button
-                  type="button"
-                  class="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
+                <button type="button" class="btn-close" @click.prevent="handleOpenModal"></button>
               </div>
               <div class="modal-body">
                 <div class="fs-5 text-secondary" v-if="isDel">
-                  Bạn chắc muốn xóa sản phẩm
-                  <strong class="text-danger">{{ nameDel }}</strong> không?
+                  Bạn chắc muốn {{ isActive ? 'khôi phục' : 'vô hiệu' }} sản phẩm
+                  <strong class="text-danger">"{{ nameDel }}"</strong> không?
                 </div>
                 <div class="p-3" v-else-if="isUpdate">
                   <form action="" @submit.prevent="handleSubmit">
                     <div class="mb-3">
                       <label for="" class="form-label">Sản phẩm: </label>
-                      <input type="text" class="form-control" v-model="form.name" />
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="name"
+                        @focus="errorMessage = ''"
+                      />
+                      <div class="text-danger">{{ errors.name }}</div>
                     </div>
                     <div class="mb-3">
                       <label for="" class="form-label">Hãng: </label>
-                      <select class="form-select" v-model="form.brandID">
-                        <option disabled value="">Chọn thương hiệu</option>
+                      <select
+                        class="form-select"
+                        v-model.number="brandID"
+                        @focus="errorMessage = ''"
+                      >
+                        <option disabled :value="null">Chọn thương hiệu</option>
                         <option v-for="b in brands" :value="b.id" :key="b.id">{{ b.name }}</option>
                       </select>
+                      <div class="text-danger">{{ errors.brandID }}</div>
                     </div>
                     <div class="mb-3">
                       <label for="" class="form-label">Loại: </label>
-                      <select class="form-select" v-model="form.categoryID">
-                        <option disabled value="">Chọn danh mục</option>
+                      <select
+                        class="form-select"
+                        v-model.number="categoryID"
+                        @focus="errorMessage = ''"
+                      >
+                        <option disabled :value="null">Chọn danh mục</option>
                         <option v-for="c in categories" :value="c.id" :key="c.id">
                           {{ c.name }}
                         </option>
                       </select>
+                      <div class="text-danger">{{ errors.categoryID }}</div>
                     </div>
                     <div class="mb-3">
                       <label for="" class="form-label">Giá: </label>
-                      <input type="text" class="form-control" v-model="form.price" />
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="price"
+                        @focus="errorMessage = ''"
+                      />
+                      <div class="text-danger">{{ errors.price }}</div>
                     </div>
                   </form>
+                  <div class="text-danger">{{ errorMessage }}</div>
                 </div>
               </div>
               <div class="modal-footer">
@@ -178,15 +196,15 @@
                 <button
                   type="button"
                   class="btn btn-primary"
-                  @click.prevent="handleConfirm"
+                  @click.prevent="handleActive"
                   v-if="isDel"
                 >
-                  Xóa
+                  {{ isActive ? 'Khôi phục' : 'Vô hiệu' }}
                 </button>
                 <button
                   type="button"
                   class="btn btn-primary"
-                  @click.prevent="handleConfirm"
+                  @click.prevent="handleConfirmUpdate"
                   v-else-if="isUpdate"
                 >
                   Cập nhật
@@ -205,9 +223,14 @@
 import { useProductStore } from '@/stores/useProductStore.js'
 import Table from '../Table.vue'
 import { storeToRefs } from 'pinia'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useBrandStore } from '@/stores/useBrandStore.js'
 import { useCategoryStore } from '@/stores/useCategoryStore.js'
+import * as yup from 'yup'
+import { useForm } from 'vee-validate'
+import { useNotificationStore } from '@/stores/useNotificationStore.js'
+
+const notification = useNotificationStore()
 
 const initialProductList = {
   sanPham: 'Sản phẩm',
@@ -250,17 +273,36 @@ const handleOpenModal = () => {
 // handel del
 const idDel = ref(null)
 const nameDel = ref(null)
+const isActive = ref(false)
 
-const handleActiveProduct = async (id, name) => {
+const handleActiveProduct = async (id, name, status) => {
   isDel.value = true
   isUpdate.value = false
   idDel.value = id
   nameDel.value = name
+  isActive.value = status
+  handleOpenModal()
+}
+
+const handleActive = async () => {
+  if (isDel.value && idDel.value !== null) {
+    try {
+      await productStore.deleteProductById(idDel.value)
+      isActive.value
+        ? notification.notify(`Khôi phục thành công sản phẩm ${nameDel.value}`, 'success')
+        : notification.notify(`Vô hiệu thành công sản phẩm ${nameDel.value}`, 'success')
+    } catch (error) {
+      isActive.value
+        ? notification.notify(`Khôi phục thất bại sản phẩm ${nameDel.value}`, 'error')
+        : notification.notify(`Vô hiệu thất bại sản phẩm ${nameDel.value}`, 'error')
+    } finally {
+      idDel.value = null
+    }
+  }
   handleOpenModal()
 }
 
 // handel upd
-const productUpdate = ref(null)
 
 const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
@@ -272,49 +314,72 @@ onMounted(async () => {
   await Promise.all([categoryStore.fetchCategory(), brandStore.fetchBrand()])
 })
 
-const form = reactive({
-  id: null,
-  name: '',
-  categoryID: null,
-  brandID: null,
-  price: null,
+const schema = yup.object({
+  name: yup.string().required('Tên sản phẩm không được để trống'),
+  brandID: yup.number().required('Vui lòng chọn thương hiệu'),
+  categoryID: yup.number().required('Vui lòng chọn danh mục'),
+  price: yup
+    .number()
+    .typeError('Giá phải là số')
+    .positive('Giá phải lớn hơn 0')
+    .required('Vui lòng nhập giá'),
 })
+
+const { handleSubmit, errors, defineField, setValues } = useForm({
+  validationSchema: schema,
+})
+
+const [name] = defineField('name')
+const [brandID] = defineField('brandID')
+const [categoryID] = defineField('categoryID')
+const [price] = defineField('price')
+const originalProduct = ref(null)
 
 const handleUpdateProduct = (product) => {
   isUpdate.value = true
   isDel.value = false
-  productUpdate.value = product
 
-  const brand = brands.value.find((b) => b.name === productUpdate.value.brand)
-  const category = categories.value.find((c) => c.name === productUpdate.value.category)
-  console.log(brand.id)
+  const brand = brands.value.find((b) => b.name === product.brand)
+  const category = categories.value.find((c) => c.name === product.category)
 
-  Object.assign(form, {
-    id: productUpdate.value.id,
-    name: productUpdate.value.name,
-    categoryID: brand?.id,
-    brandID: category?.id,
-    price: productUpdate.value.price,
-  })
+  originalProduct.value = {
+    id: product.id,
+    name: product.name,
+    brandID: brand?.id,
+    categoryID: category?.id,
+    price: product.price,
+  }
+  setValues(originalProduct.value)
   handleOpenModal()
 }
 
-const handleConfirm = async () => {
-  if (isDel.value && idDel.value !== null) {
+// Handle confirm form
+const errorMessage = ref('')
+const handleConfirmUpdate = handleSubmit(async (values) => {
+  if (isUpdate.value) {
     try {
-      await productStore.deleteProductById(idDel.value)
+      const currentData = {
+        name: values.name,
+        brandID: values.brandID,
+        categoryID: values.categoryID,
+        price: values.price,
+      }
+      if (
+        currentData.name === originalProduct.value.name &&
+        currentData.brandID === originalProduct.value.brandID &&
+        currentData.categoryID === originalProduct.value.categoryID &&
+        currentData.price === originalProduct.value.price
+      ) {
+        errorMessage.value = 'Không có thay đổi'
+        return
+      }
+      await productStore.updateProductById({ id: originalProduct.value.id, ...currentData })
+
+      notification.notify(`Cập nhật thành công sản phẩm ${currentData.name}`, 'success')
     } catch (error) {
-    } finally {
-      idDel.value = null
-    }
-  } else if (isUpdate.value) {
-    try {
-      console.log(form)
-    } catch (error) {
-    } finally {
-      productUpdate.value = null
+      notification.notify(`Cập nhật thất bại sản phẩm ${currentData.name}`, 'error')
     }
   }
   handleOpenModal()
-}
+})
 </script>

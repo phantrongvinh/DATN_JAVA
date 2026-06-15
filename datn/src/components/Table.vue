@@ -31,7 +31,7 @@ import ProductListView from './tableItems/ProductListView.vue'
 
 const props = defineProps({
   initialValues: Object,
-  interactive: Array,
+  interactive: Boolean,
   isBorder: Boolean,
   productOverview: Array,
   products: Array,
