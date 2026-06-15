@@ -40,7 +40,6 @@
 </template>
 
 <script setup>
-import { useAuthStore } from '@/stores/useAuthStore'
 import { useProductStore } from '@/stores/useProductStore'
 import ulti from '@/ulti/ulti'
 import { storeToRefs } from 'pinia'

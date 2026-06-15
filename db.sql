@@ -250,6 +250,13 @@ CREATE TABLE verification_tokens(
     CONSTRAINT FK_VRFT_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE password_reset_tokens(
+    id 					INT AUTO_INCREMENT PRIMARY KEY,
+    token				VARCHAR(500) NOT NULL,     
+    expiry_date			TIMESTAMP NOT NULL,
+    email				VARCHAR(255) NOT NULL UNIQUE,
+)
+
 INSERT INTO roles(`name`) values("USER"),("ADMIN");
 
 INSERT INTO target_audiences(`name`) VALUES

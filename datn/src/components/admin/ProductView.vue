@@ -292,8 +292,8 @@ const handleUpdateProduct = (product) => {
   Object.assign(form, {
     id: productUpdate.value.id,
     name: productUpdate.value.name,
-    categoryID: brand?.id,
-    brandID: category?.id,
+    categoryID: category?.id,
+    brandID: brand?.id,
     price: productUpdate.value.price,
   })
   handleOpenModal()

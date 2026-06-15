@@ -24,4 +24,7 @@ public interface IAuthService {
 
     ResponseEntity<?> me();
 
+    ResponseEntity<?> forgotPassword(String email);
+
+    ResponseEntity<?> resetPassword(String token, String newPassword);
 }

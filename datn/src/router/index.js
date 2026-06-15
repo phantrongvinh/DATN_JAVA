@@ -66,6 +66,21 @@ const router = createRouter({
         roles: ['ADMIN'],
       },
     },
+    {
+      path: '/activate-success',
+      name: 'activate',
+      component: () => import('../views/ActivateSuccess.vue'),
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('../views/ForgotPassword.vue'),
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/ResetPassword.vue'),
+    },
   ],
 })
 

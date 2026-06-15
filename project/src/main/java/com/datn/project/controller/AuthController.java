@@ -49,7 +49,7 @@ public class AuthController {
             authService.activate(token);
 
             response.sendRedirect(
-                    "http://localhost:5173/login");
+                    "http://localhost:5173/activate-success");
 
         } catch (Exception e) {
 
@@ -85,4 +85,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.me()).getBody();
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body){
+        return ResponseEntity.ok(authService.forgotPassword(body.get("email"))).getBody();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body){
+        System.out.println(body);
+        return ResponseEntity.ok(authService.resetPassword(body.get("token"), body.get("password"))).getBody();
+    }
 }

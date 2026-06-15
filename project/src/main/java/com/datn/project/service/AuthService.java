@@ -25,9 +25,11 @@ import com.datn.project.dto.LoginRequest;
 import com.datn.project.dto.ProfileResponse;
 import com.datn.project.dto.RegisterRequest;
 import com.datn.project.entity.AuthProvider;
+import com.datn.project.entity.ForgotPasswordToken;
 import com.datn.project.entity.Role;
 import com.datn.project.entity.User;
 import com.datn.project.entity.VerificationToken;
+import com.datn.project.repository.IForgotPasswordTokenRepository;
 import com.datn.project.repository.IRoleRepository;
 import com.datn.project.repository.IUserRepository;
 import com.datn.project.repository.IVerificationTokenRepository;
@@ -64,6 +66,9 @@ public class AuthService implements IAuthService {
     @Autowired
     private IVerificationTokenRepository verificationTokenRepository;
 
+    @Autowired
+    private IForgotPasswordTokenRepository forgotPasswordToken;
+
     AuthService(MailService mailService) {
         this.mailService = mailService;
     }
@@ -73,11 +78,11 @@ public class AuthService implements IAuthService {
     public ResponseEntity<?> register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("message", "Account already exists"));
+                    .body(Map.of("message", "Tài khoản có email này đã tồn tại"));
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Password does not match"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Không đúng mật khẩu"));
         }
 
         User user = new User();
@@ -110,7 +115,7 @@ public class AuthService implements IAuthService {
 
         sendVerificationEmail(user, token);
 
-        return ResponseEntity.ok("Register success, please check your email");
+        return ResponseEntity.ok("Đăng ký thành công, kiểm tra email để kích hoạt tài khoản");
     }
 
     @Override
@@ -135,7 +140,7 @@ public class AuthService implements IAuthService {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Not authenticated"));
+                    .body(Map.of("message", "Chưa đăng nhập"));
         }
 
         String authHeader = request.getHeader("Authorization");
@@ -147,7 +152,7 @@ public class AuthService implements IAuthService {
 
         SecurityContextHolder.clearContext();
 
-        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+        return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
     }
 
     @Override
@@ -156,8 +161,8 @@ public class AuthService implements IAuthService {
         String email = authentication.getName();
 
         User user = userRepository.findByEmailWithRoles(email).orElseThrow(() -> new RuntimeException(
-                "User not found"));
-                        
+                "Người dùng không tồn tại"));
+
         ProfileResponse response = new ProfileResponse();
 
         response.setEmail(email);
@@ -175,7 +180,7 @@ public class AuthService implements IAuthService {
     private void sendVerificationEmail(User user, String token) {
         String link = "http://localhost:8080/api/v1/auth/activate?token=" + token;
 
-        mailService.sendVerificationEmail(user.getEmail(), "Activate Account", "Click here: " + link);
+        mailService.sendMessageEmail(user.getEmail(), "Kích hoạt tài khoản", "Bấm vào link dưới đây để kích hoạt: " + link);
 
     }
 
@@ -183,11 +188,11 @@ public class AuthService implements IAuthService {
     public void activate(String token) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new RuntimeException(
-                        "Invalid token"));
+                        "Mã kích hoạt không hợp lệ"));
 
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException(
-                    "Token verify expired");
+                    "Mã kích hoạt hết hạn");
         }
 
         User user = verificationToken.getUser();
@@ -205,12 +210,12 @@ public class AuthService implements IAuthService {
         User user = userRepository
                 .findByEmail(email)
                 .orElseThrow(() -> new RuntimeException(
-                        "User not found"));
+                        "Người dùng không tìm thấy"));
 
         if (user.isActived()) {
 
             throw new RuntimeException(
-                    "Account already activated");
+                    "Tài khoản đã được kích hoạt");
         }
 
         verificationTokenRepository.deleteAllByUser(user);
@@ -230,5 +235,53 @@ public class AuthService implements IAuthService {
                 .save(verificationToken);
 
         sendVerificationEmail(user, token);
+    }
+
+    @Override
+    public ResponseEntity<?> forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException(
+                        "Tài khoản có email này không tồn tại"));
+
+        ForgotPasswordToken oldResetToken = forgotPasswordToken.findByEmail(user.getEmail());
+
+        if (oldResetToken != null) {
+            forgotPasswordToken.delete(oldResetToken);
+        }
+
+        String token = UUID.randomUUID().toString();
+
+        ForgotPasswordToken resetToken = new ForgotPasswordToken();
+        resetToken.setEmail(email);
+        resetToken.setToken(token);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15)); // hết hạn sau 15 phút
+        forgotPasswordToken.save(resetToken);
+
+        // Gửi mail
+        sendResetPassword(user, token);
+        return ResponseEntity.ok("Email đã được gửi");
+    }
+
+    private void sendResetPassword(User user, String token) {
+        String link = "http://localhost:5173/reset-password?token=" + token;
+        mailService.sendMessageEmail(user.getEmail(), "Khôi phục mật khẩu", "Click here to change password: " + link);
+
+    }
+
+    @Override
+    public ResponseEntity<?> resetPassword(String token, String newPassword) {
+        ForgotPasswordToken resetToken = forgotPasswordToken.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Mã khôi phục hết hạng, vui lòng gửi lại yêu cầu"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Hết thời gian khôi phục, vui lòng gửi lại yêu cầu");
+        }
+
+        User user = userRepository.findByEmail(resetToken.getEmail()).get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        forgotPasswordToken.delete(resetToken);
+        return ResponseEntity.ok("Đổi mật khẩu thành công");
     }
 }

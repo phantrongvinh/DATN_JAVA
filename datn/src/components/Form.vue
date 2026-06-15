@@ -40,7 +40,9 @@
         </div>
 
         <div class="text-secondary">
-          <RouterLink to="/" class="fs-6 hover-underline">Forgot password?</RouterLink>
+          <RouterLink to="/forgot-password" class="fs-6 hover-underline"
+            >Forgot password?</RouterLink
+          >
         </div>
       </div>
     </div>
@@ -48,9 +50,15 @@
       <button
         class="btn btn-outline-primary w-100 rounded-3"
         @click.prevent="onSubmit"
-        :disabled="props.loading"
+        :disabled="props.loading || props.countDown > 0"
       >
-        {{ !props.loading ? props.btn : props.btn.trim().split(/\s+/).slice(0, 1) + 'ing' }}
+        {{
+          props.countDown > 0
+            ? `Gửi lại sau ${props.countDown}s`
+            : !props.loading
+              ? props.btn
+              : props.btn.trim().split(/\s+/)[0] + 'ing'
+        }}
       </button>
     </div>
   </form>
@@ -84,6 +92,11 @@ const props = defineProps({
   errorMessage: String,
   successMessage: String,
   loading: Boolean,
+  countDown: {
+    type: Number,
+    default: 0,
+  },
+  isResetForm: Boolean,
 })
 const localErrorMessage = ref(props.errorMessage)
 const localSuccessMessage = ref(props.successMessage)
@@ -126,8 +139,11 @@ Object.keys(props.initialValues).forEach((key) => {
 // Hàmm dùng để handle event có các thuộc tính trong fields
 const passwordFields = ['password', 'confirmPassword']
 
-const onSubmit = handleSubmit(async (values) => {
+const onSubmit = handleSubmit(async (values, { resetForm }) => {
   props.handleSubmitForm(values)
+  if (props.isResetForm) {
+    resetForm()
+  }
 })
 
 // handle clear message

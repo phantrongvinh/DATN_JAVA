@@ -88,6 +88,7 @@ const validate = yup.object({
 // handle register
 
 const authStore = useAuthStore()
+onMounted(() => authStore.clearMessages())
 
 const { loadding, error, message } = storeToRefs(authStore)
 

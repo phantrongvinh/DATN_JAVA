@@ -27,12 +27,26 @@ const me = async () => {
   return res.data
 }
 
+const forgotPassword = async (email) => {
+  const res = await axiosClient.post(`${url}/forgot-password`, { email: email })
+  return res.data
+}
+const resetPassword = async (token, password) => {
+  const res = await axiosClient.post(`${url}/reset-password`, {
+    token: token,
+    password: password,
+  })
+  return res.data
+}
+
 const authAPI = {
   register,
   login,
   logout,
   resend,
   me,
+  forgotPassword,
+  resetPassword,
 }
 
 export default authAPI

@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
                                 .body(Map.of(
                                                 "status", 403,
                                                 "error", "Forbidden",
-                                                "message", "You don't have permission to access this resource"));
+                                                "message", "Bạn không có quyền truy cập vào trang này"));
         }
 
         @ExceptionHandler(AuthenticationException.class)
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
                                 .body(Map.of(
                                                 "status", 401,
                                                 "error", "Token Expired",
-                                                "message", "JWT token has expired, please login again"));
+                                                "message", "Mã đăng nhập đã hết hạng, vui lòng đăng nhập lại"));
         }
 
         @ExceptionHandler(DisabledException.class)
@@ -59,6 +59,11 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(403)
                                 .body(Map.of(
                                                 "message",
-                                                "Account not activated"));
+                                                "Tài khoản chưa được kích hoạt, hãy gửi lại mã kích hoạt"));
+        }
+
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<?> handleNotFound(RuntimeException re){
+                return ResponseEntity.status(404).body(Map.of("message",re.getMessage()));
         }
 }

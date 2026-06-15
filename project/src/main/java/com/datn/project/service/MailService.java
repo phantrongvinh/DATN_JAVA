@@ -12,7 +12,7 @@ public class MailService {
 
     private final JavaMailSender mailSender;
 
-    public void sendVerificationEmail(String to, String subject, String body) {
+    public void sendMessageEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setTo(to);

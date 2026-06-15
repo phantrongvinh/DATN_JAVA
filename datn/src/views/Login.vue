@@ -93,6 +93,7 @@ const validate = yup.object({
 // Handle event login
 const mailSend = ref('')
 const authStore = useAuthStore()
+onMounted(() => authStore.clearMessages())
 const { loadding, error, resend, message } = storeToRefs(authStore)
 
 const handleLogin = async (values) => {

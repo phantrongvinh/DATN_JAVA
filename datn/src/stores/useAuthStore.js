@@ -1,6 +1,6 @@
 import authAPI from '@/api/authAPI'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
   // states
@@ -84,6 +84,43 @@ export const useAuthStore = defineStore('auth', () => {
       loadding.value = false
     }
   }
+
+  async function forgotPassword(email) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await authAPI.forgotPassword(email)
+
+      message.value = res
+      resend.value = false
+    } catch (err) {
+      error.value = err.response?.data?.message
+      return { success: false, errorMessages: err.message }
+    } finally {
+      loadding.value = false
+    }
+  }
+
+  async function resetPassword(token, password) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await authAPI.resetPassword(token, password)
+
+      message.value = res
+      resend.value = false
+    } catch (err) {
+      error.value = err.response?.data?.message
+      return { success: false, errorMessages: err.message }
+    } finally {
+      loadding.value = false
+    }
+  }
+  function clearMessages() {
+    error.value = null
+    message.value = null
+  }
+
   return {
     user,
     loadding,
@@ -96,5 +133,8 @@ export const useAuthStore = defineStore('auth', () => {
     message,
     register,
     me,
+    forgotPassword,
+    resetPassword,
+    clearMessages,
   }
 })
