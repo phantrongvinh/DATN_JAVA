@@ -10,6 +10,7 @@ export const useProductStore = defineStore('product', () => {
   const loadding = ref(false)
   const error = ref(null)
   const productOverview = ref([])
+  const message = ref('')
 
   const products = ref([])
   const page = ref(1)
@@ -40,6 +41,7 @@ export const useProductStore = defineStore('product', () => {
 
     try {
       const res = await productAPI.fetchFilterProducts(data)
+
       filterProducts.value = res
 
       return { success: true }
@@ -67,17 +69,33 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
-  async function fetchAllProducts({ newPage = page.value, newSize = size.value }) {
+  async function fetchAllProducts({
+    newPage = page.value,
+    newSize = size.value,
+    audienceIds,
+    brandIds,
+    categoryIds,
+  }) {
     loadding.value = true
     error.value = null
-
     try {
-      const res = await adminAPI.fetchAllProducts({ page: newPage, size: newSize })
-      products.value = res.content
-      totalPages.value = res.totalPages
-      totalElements.value = res.totalElements
-      page.value = res.number + 1
-      size.value = res.size
+      const res = await adminAPI.fetchAllProducts({
+        page: newPage,
+        size: newSize,
+        audienceIds,
+        brandIds,
+        categoryIds,
+      })
+
+      message.value = res.message
+
+      products.value = Array.isArray(res.content) ? res.content : []
+      console.log(products.value)
+
+      totalPages.value = res.page.totalPages
+      totalElements.value = res.page.totalElements
+      page.value = res.page.number + 1
+      size.value = res.page.size
     } catch (error) {
       error.value = error
       return { success: false, errorMessages: error.message }
@@ -106,8 +124,6 @@ export const useProductStore = defineStore('product', () => {
     error.value = null
 
     try {
-      console.log(data)
-
       const res = await adminAPI.updateProductById(data)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
@@ -128,6 +144,7 @@ export const useProductStore = defineStore('product', () => {
     products,
     page,
     size,
+    message,
     totalPages,
     totalElements,
     fetchSpotlightProducts,

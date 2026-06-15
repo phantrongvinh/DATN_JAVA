@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.datn.project.dto.ProductFilterDTO;
 import com.datn.project.dto.ProductOverview;
 import com.datn.project.dto.ProductResponse;
 import com.datn.project.dto.ProductSpotlightResponse;
@@ -39,8 +40,8 @@ public class ProductService implements IProductService {
     private ICategoryRepository categoryRepository;
 
     @Override
-    public ResponseEntity<?> getFilterProducts(List<String> audiences, List<String> brands) {
-        List<Product> products = productRepository.findAll(ProductSpecification.filter(audiences, brands));
+    public ResponseEntity<?> getFilterProducts(ProductFilterDTO filterDTO) {
+        List<Product> products = productRepository.findAll(ProductSpecification.filter(filterDTO));
 
         if (products.isEmpty()) {
             return ResponseEntity.ok(Map.of("message", "Product not found"));
@@ -132,12 +133,12 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public ResponseEntity<?> getAllProducts(int page, int size) {
+    public ResponseEntity<?> getAllProducts(int page, int size, ProductFilterDTO filterDTO) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Product> products = productRepository.findAll(pageable);
+        Page<Product> products = productRepository.findAll(ProductSpecification.adminFilter(filterDTO),pageable);
 
         if (products.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Products not found");
+            return ResponseEntity.ok(Map.of("message","Không tìm thấy sản phẩm"));
         }
 
         Page<ProductOverview> responses = products.map(p -> {

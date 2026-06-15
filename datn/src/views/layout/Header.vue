@@ -50,7 +50,7 @@
                 <RouterLink
                   :to="{
                     name: 'product',
-                    query: { audience: audience.name.toLowerCase() },
+                    query: { audienceIds: audience.id },
                   }"
                   class="nav-link text-decoration-none text-dark fw-semibold"
                   >{{ ulti.formatLabel(audience.name) }}</RouterLink
@@ -70,8 +70,8 @@
                           :to="{
                             name: 'product',
                             query: {
-                              audience: audience.name.toLowerCase(),
-                              brand: brand.name.toLowerCase(),
+                              audienceIds: audience.id,
+                              brandIds: brand.id,
                             },
                           }"
                         >
@@ -156,9 +156,11 @@ const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  await audienceStore.fetchAudiences()
-  await brandStore.fetchBrand()
-  await categoryStore.fetchAccessory()
+  await Promise.all([
+    audienceStore.fetchAudiences(),
+    brandStore.fetchBrand(),
+    categoryStore.fetchAccessory(),
+  ])
 })
 
 const { audiences: audienceList } = storeToRefs(audienceStore)

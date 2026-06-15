@@ -13,5 +13,5 @@ public interface IProductRepository extends JpaRepository<Product, Integer>, Jpa
 
     List<Product> findTop5ByDeletedAtIsNullOrderByCreatedAtDesc();
 
-
+    List<Product> findByDeletedAtIsNull();
 }
