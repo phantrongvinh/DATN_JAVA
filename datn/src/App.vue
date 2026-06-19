@@ -17,13 +17,15 @@ const notification = useNotificationStore()
     </div>
     <div class="py-2 w-100 m-0" :class="notification.type"></div>
   </div>
-  <Header></Header>
+  <div class="d-flex flex-column">
+    <Header></Header>
 
-  <div id="main">
-    <RouterView />
+    <div id="main" class="flex-grow-1">
+      <RouterView />
+    </div>
+
+    <Footer></Footer>
   </div>
-
-  <Footer></Footer>
 </template>
 
 <style scoped></style>

@@ -22,10 +22,13 @@
       ></ProductListView>
     </tbody>
   </table>
+  <div class="text-muted font-semibold w-100 text-center" v-if="props.message">
+    {{ props.message }}
+  </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import ProductOverview from './tableItems/ProductOverview.vue'
 import ProductListView from './tableItems/ProductListView.vue'
 
@@ -37,6 +40,7 @@ const props = defineProps({
   products: Array,
   handleActiveProduct: Function,
   handleUpdateProduct: Function,
+  message: String,
 })
 
 const fields = reactive({})
@@ -78,8 +82,11 @@ watch(
   () => props.products,
   (val) => {
     if (!val) return
-    val.forEach((value, index) => {
-      products[index] = {
+    console.log('val', val)
+    products.splice(
+      0,
+      products.length,
+      ...val.map((value) => ({
         id: value.id,
         name: value.name,
         category: value.category,
@@ -88,8 +95,9 @@ watch(
         variantCount: value.variantCount,
         status: value.status,
         updatedAt: value.updatedAt,
-      }
-    })
+      })),
+    )
+    console.log(products)
   },
 )
 </script>

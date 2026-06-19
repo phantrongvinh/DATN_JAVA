@@ -10,31 +10,35 @@
             type="text"
             class="form-control border-start-0 fst-italic py-2"
             placeholder="Tìm kiếm sản phẩm..."
+            v-model="search"
           />
         </div>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example">
-          <option selected>Open this select menu</option>
-          <option value="1">One</option>
-          <option value="2">Two</option>
-          <option value="3">Three</option>
+        <select class="form-select" aria-label="Default select example" v-model="selectedCategory">
+          <option :value="undefined">Chọn danh mục</option>
+
+          <option v-for="c in categories" :key="c.id" :value="c.id">
+            {{ c.name }}
+          </option>
         </select>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example">
-          <option selected>Open this select menu</option>
-          <option value="1">One</option>
-          <option value="2">Two</option>
-          <option value="3">Three</option>
+        <select class="form-select" aria-label="Default select example" v-model="selectedAudience">
+          <option :value="undefined">Chọn khách hàng</option>
+
+          <option v-for="a in audiences" :key="a.id" :value="a.id">
+            {{ a.name }}
+          </option>
         </select>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example">
-          <option selected>Open this select menu</option>
-          <option value="1">One</option>
-          <option value="2">Two</option>
-          <option value="3">Three</option>
+        <select class="form-select" aria-label="Default select example" v-model="selectedBrand">
+          <option :value="undefined">Chọn nhãn hàng</option>
+
+          <option v-for="b in brands" :key="b.id" :value="b.id">
+            {{ b.name }}
+          </option>
         </select>
       </div>
     </div>
@@ -98,15 +102,21 @@
             :products="products"
             :handleActiveProduct="handleActiveProduct"
             :handleUpdateProduct="handleUpdateProduct"
+            :message="message"
           />
         </div>
-        <div>
+        <div v-if="!message">
           <ul class="pagination justify-content-end">
             <li class="page-item" :class="{ disabled: page === 1 }">
               <button class="page-link" @click="changePage(page - 1)">Previous</button>
             </li>
 
-            <li v-for="p in totalPages" :key="p" class="page-item" :class="{ active: page === p }">
+            <li
+              v-for="p in totalPages"
+              :key="p"
+              class="page-item"
+              :class="{ active: page === p, disabled: page === p }"
+            >
               <button class="page-link" @click="changePage(p)">
                 {{ p }}
               </button>
@@ -223,12 +233,14 @@
 import { useProductStore } from '@/stores/useProductStore.js'
 import Table from '../Table.vue'
 import { storeToRefs } from 'pinia'
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useBrandStore } from '@/stores/useBrandStore.js'
 import { useCategoryStore } from '@/stores/useCategoryStore.js'
 import * as yup from 'yup'
 import { useForm } from 'vee-validate'
 import { useNotificationStore } from '@/stores/useNotificationStore.js'
+import { useAudienceStore } from '@/stores/useAudienceStore.js'
+import { useRoute, useRouter } from 'vue-router'
 
 const notification = useNotificationStore()
 
@@ -245,15 +257,107 @@ const initialProductList = {
 
 const productStore = useProductStore()
 
-const { products, page, size, totalPages, totalElements } = storeToRefs(productStore)
+const { products, page, size, totalPages, totalElements, message } = storeToRefs(productStore)
+// Handle filter admin
 
-onMounted(async () => {
-  await productStore.fetchAllProducts({ page: page.value, size: size.value })
+const route = useRoute()
+const router = useRouter()
+
+const selectedCategory = computed({
+  get() {
+    return route.query.categoryIds ?? undefined
+  },
+
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        categoryIds: value || undefined,
+      },
+    })
+  },
 })
+
+const selectedAudience = computed({
+  get() {
+    return route.query.audienceIds ?? undefined
+  },
+
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        audienceIds: value || undefined,
+      },
+    })
+  },
+})
+
+const selectedBrand = computed({
+  get() {
+    return route.query.brandIds ?? undefined
+  },
+
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        brandIds: value || undefined,
+      },
+    })
+  },
+})
+
+const search = ref('')
+
+const audience = computed(() => route.query.audienceIds)
+const brand = computed(() => route.query.brandIds)
+const category = computed(() => route.query.categoryIds)
+
+watch(
+  () => route.query,
+  async (query) => {
+    const params = {
+      brandIds: query.brandIds
+        ? Array.isArray(query.brandIds)
+          ? query.brandIds.map(Number)
+          : [Number(query.brandIds)]
+        : [],
+
+      categoryIds: query.categoryIds
+        ? Array.isArray(query.categoryIds)
+          ? query.categoryIds.map(Number)
+          : [Number(query.categoryIds)]
+        : [],
+
+      audienceIds: query.audienceIds
+        ? Array.isArray(query.audienceIds)
+          ? query.audienceIds.map(Number)
+          : [Number(query.audienceIds)]
+        : [],
+
+      search: query.search || '',
+    }
+    await productStore.fetchAllProducts({
+      newPage: 1,
+      newSize: size.value,
+      audienceIds: params.audienceIds,
+      brandIds: params.brandIds,
+      categoryIds: params.categoryIds,
+    })
+  },
+  { immediate: true },
+)
 
 const changePage = async (p) => {
   if (p < 1 || p > totalPages.value) return
-  await productStore.fetchAllProducts({ newPage: p, newSize: size.value })
+  await productStore.fetchAllProducts({
+    newPage: p,
+    newSize: size.value,
+    audienceIds: audience.value,
+    brandIds: brand.value,
+    categoryIds: category.value,
+  })
 }
 
 // handle interactive
@@ -306,12 +410,14 @@ const handleActive = async () => {
 
 const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
+const audienceStore = useAudienceStore()
 
 const { brands } = storeToRefs(brandStore)
 const { categories } = storeToRefs(categoryStore)
+const { audiences } = storeToRefs(audienceStore)
 
 onMounted(async () => {
-  await Promise.all([categoryStore.fetchCategory(), brandStore.fetchBrand()])
+  await categoryStore.fetchCategory()
 })
 
 const schema = yup.object({
@@ -342,13 +448,14 @@ const handleUpdateProduct = (product) => {
   const brand = brands.value.find((b) => b.name === product.brand)
   const category = categories.value.find((c) => c.name === product.category)
 
-  Object.assign(form, {
-    id: productUpdate.value.id,
-    name: productUpdate.value.name,
-    categoryID: category?.id,
+  originalProduct.value = {
+    id: product.id,
+    name: product.name,
     brandID: brand?.id,
-    price: productUpdate.value.price,
-  })
+    categoryID: category?.id,
+    price: product.price,
+  }
+  setValues(originalProduct.value)
   handleOpenModal()
 }
 

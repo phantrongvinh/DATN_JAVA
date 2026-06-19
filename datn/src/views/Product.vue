@@ -4,8 +4,8 @@
       {{ label }}
     </div>
     <div class="px-4">
-      <div class="d-flex justify-content-center gap-3">
-        <div class="w-25 h-100">
+      <div class="d-flex justify-content-center align-items-stretch gap-3">
+        <div class="w-25 flex-fill pb-5">
           <div class="fs-3 fw-semibold">Filter</div>
           <div class="mt-3">
             <div class="fs-5 fw-semibold">Audience</div>
@@ -17,7 +17,7 @@
                     name="audience"
                     :id="a.name.toLowerCase()"
                     class="form-check-input"
-                    :value="a.name.toLowerCase()"
+                    :value="a.id"
                     v-model="selectedAudience"
                   />
                   <label :for="a.name.toLowerCase()" class="form-check-label">{{ a.name }}</label>
@@ -35,7 +35,7 @@
                     name="brand"
                     :id="b.name.toLowerCase()"
                     class="form-check-input"
-                    :value="b.name.toLowerCase()"
+                    :value="b.id"
                     v-model="selectedBrand"
                   />
                   <label :for="b.name.toLowerCase()" class="form-check-label">{{ b.name }}</label>
@@ -51,7 +51,7 @@
                 aria-label="Default select example"
                 v-model="selectedCategory"
               >
-                <option :value="undefined">All Categories</option>
+                <option :value="undefined">Chọn danh mục</option>
 
                 <option v-for="c in categories" :key="c.id" :value="c.id">
                   {{ c.name }}
@@ -60,7 +60,7 @@
             </div>
           </div>
         </div>
-        <div class="w-75 h-100 ps-3 border-start">
+        <div class="w-75 flex-fill ps-3 border-start pb-5">
           <div class="row g-4">
             <!-- Có products -->
             <template v-if="filterList.length > 0">
@@ -129,8 +129,6 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 
-const audience = computed(() => route.query.audience)
-const brand = computed(() => route.query.brand)
 const product = computed(() => route.query.product)
 const name = computed(() => route.query.name)
 
@@ -144,11 +142,6 @@ const categoryStore = useCategoryStore()
 const { brands } = storeToRefs(brandStore)
 const { audiences } = storeToRefs(audienceStore)
 const { categories } = storeToRefs(categoryStore)
-console.log(categories)
-
-onMounted(async () => {
-  await productStore.fetchFilterProducts({ audience: audience.value, brand: brand.value })
-})
 
 onMounted(async () => {
   await categoryStore.fetchCategory()
@@ -157,56 +150,84 @@ onMounted(async () => {
 watch(
   () => route.query,
   async (query) => {
-    await productStore.fetchFilterProducts(query)
+    const params = {
+      brandIds: query.brandIds
+        ? Array.isArray(query.brandIds)
+          ? query.brandIds.map(Number)
+          : [Number(query.brandIds)]
+        : [],
+
+      categoryIds: query.categoryIds
+        ? Array.isArray(query.categoryIds)
+          ? query.categoryIds.map(Number)
+          : [Number(query.categoryIds)]
+        : [],
+
+      audienceIds: query.audienceIds
+        ? Array.isArray(query.audienceIds)
+          ? query.audienceIds.map(Number)
+          : [Number(query.audienceIds)]
+        : [],
+
+      search: query.search || '',
+    }
+    await productStore.fetchFilterProducts(params)
   },
   { immediate: true },
 )
 
 const label = computed(() => {
-  const audience = route.query.audience
-  const brand = route.query.brand
+  const audienceIds = route.query.audienceIds
+  const brandIds = route.query.brandIds
 
-  if (!audience && !brand) {
+  if (!audienceIds && !brandIds) {
     return 'Clothing'
   }
 
   // Ưu tiên audience
-  if (audience) {
-    const audiences = Array.isArray(audience) ? audience : [audience]
+  if (audienceIds) {
+    const ids = Array.isArray(audienceIds) ? audienceIds.map(Number) : [Number(audienceIds)]
 
-    if (audiences.length === 1) {
-      return `${ulti.formatLabel(audiences[0])}'s Clothing`
+    if (ids.length === 1) {
+      const audience = audiences.value.find((a) => a.id === ids[0])
+
+      if (audience) {
+        return `${ulti.formatLabel(audience.name)}'s Clothing`
+      }
     }
 
     return 'Clothing'
   }
 
-  // Không có audience thì xét brand
-  const brands = Array.isArray(brand) ? brand : [brand]
+  // Xét brand
+  const ids = Array.isArray(brandIds) ? brandIds.map(Number) : [Number(brandIds)]
 
-  if (brands.length === 1) {
-    return `${ulti.formatLabel(brands[0])}'s Clothing`
+  if (ids.length === 1) {
+    const brand = brands.value.find((b) => b.id === ids[0])
+
+    if (brand) {
+      return `${ulti.formatLabel(brand.name)}'s Clothing`
+    }
   }
 
   return 'Clothing'
 })
-
 const filterList = computed(() => productStore.filterProducts)
 
 const selectedAudience = computed({
   get() {
-    const audience = route.query.audience
+    const audienceIds = route.query.audienceIds
 
-    if (!audience) return []
+    if (!audienceIds) return []
 
-    return Array.isArray(audience) ? audience : [audience]
+    return Array.isArray(audienceIds) ? audienceIds : [audienceIds]
   },
 
   set(value) {
     router.push({
       query: {
         ...route.query,
-        audience: value.length ? value : undefined,
+        audienceIds: value.length ? value : undefined,
       },
     })
   },
@@ -214,18 +235,18 @@ const selectedAudience = computed({
 
 const selectedBrand = computed({
   get() {
-    const brand = route.query.brand
+    const brandIds = route.query.brandIds
 
-    if (!brand) return []
+    if (!brandIds) return []
 
-    return Array.isArray(brand) ? brand : [brand]
+    return Array.isArray(brandIds) ? brandIds : [brandIds]
   },
 
   set(value) {
     router.push({
       query: {
         ...route.query,
-        brand: value.length ? value : undefined,
+        brandIds: value.length ? value : undefined,
       },
     })
   },
@@ -233,14 +254,14 @@ const selectedBrand = computed({
 
 const selectedCategory = computed({
   get() {
-    return route.query.category ?? undefined
+    return route.query.categoryIds ?? undefined
   },
 
   set(value) {
     router.push({
       query: {
         ...route.query,
-        category: value || undefined,
+        categoryIds: value || undefined,
       },
     })
   },

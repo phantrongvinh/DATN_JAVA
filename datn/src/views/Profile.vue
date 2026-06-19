@@ -1,8 +1,8 @@
 <template>
   <div class="container-fluid px-5 mt-5">
     <div class="fw-semibold" style="font-size: 32px">Hồ sơ</div>
-    <div class="row mt-5">
-      <div class="col-lg-2">
+    <div class="d-flex mt-5">
+      <div class="w-25 flex-fill pb-5">
         <div class="d-flex align-items-start">
           <ul class="nav nav-underline flex-column" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
@@ -64,7 +64,7 @@
           </ul>
         </div>
       </div>
-      <div class="col-lg-10 border-start pb-5">
+      <div class="w-75 border-start flex-fill pb-5">
         <div class="d-flex justify-content-center">
           <div class="tab-content w-100" id="pills-tabContent">
             <div
