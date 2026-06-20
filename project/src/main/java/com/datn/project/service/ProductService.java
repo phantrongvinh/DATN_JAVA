@@ -13,19 +13,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.datn.project.dto.ProductDetailDTO;
 import com.datn.project.dto.ProductFilterDTO;
+import com.datn.project.dto.ProductImageDTO;
 import com.datn.project.dto.ProductOverview;
 import com.datn.project.dto.ProductResponse;
 import com.datn.project.dto.ProductSpotlightResponse;
 import com.datn.project.dto.ProductUpdateRequest;
+import com.datn.project.dto.ProductVariantDTO;
 import com.datn.project.dto.ProductVariantResponse;
 import com.datn.project.entity.Brand;
 import com.datn.project.entity.Category;
 import com.datn.project.entity.Product;
 import com.datn.project.repository.IBrandRepository;
 import com.datn.project.repository.ICategoryRepository;
+import com.datn.project.repository.IProductImageRepository;
 import com.datn.project.repository.IProductRepository;
+import com.datn.project.repository.IProductVariantRepository;
 import com.datn.project.specification.ProductSpecification;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ProductService implements IProductService {
@@ -39,6 +46,14 @@ public class ProductService implements IProductService {
     @Autowired
     private ICategoryRepository categoryRepository;
 
+    @Autowired
+    private IProductImageRepository productImageRepository;
+
+    @Autowired
+    private IProductVariantRepository productVariantRepository;
+
+
+    // Lấy tất cả product theo filter và không bị vô hiệu hóa
     @Override
     public ResponseEntity<?> getFilterProducts(ProductFilterDTO filterDTO) {
         List<Product> products = productRepository.findAll(ProductSpecification.filter(filterDTO));
@@ -85,6 +100,7 @@ public class ProductService implements IProductService {
         return ResponseEntity.ok(responses);
     }
 
+    // lấy 10 product mới nhất để hiện lên index
     @Override
     public ResponseEntity<?> getSpotlightProducts() {
         List<Product> products = productRepository.findTop10ByDeletedAtIsNullOrderByCreatedAtDesc();
@@ -108,6 +124,7 @@ public class ProductService implements IProductService {
         return ResponseEntity.ok(responses);
     }
 
+    // lấy 5 product mới nhất để thống kê
     @Override
     public ResponseEntity<?> getTop5Product() {
         List<Product> products = productRepository.findTop5ByDeletedAtIsNullOrderByCreatedAtDesc();
@@ -132,6 +149,7 @@ public class ProductService implements IProductService {
         return ResponseEntity.ok(res);
     }
 
+    // Lấy tất cả product có filter và page để quản lý ở admin
     @Override
     public ResponseEntity<?> getAllProducts(int page, int size, ProductFilterDTO filterDTO) {
         Pageable pageable = PageRequest.of(page - 1, size);
@@ -162,6 +180,7 @@ public class ProductService implements IProductService {
         return ResponseEntity.ok(responses);
     }
 
+    // Vô hiệu hóa và khôi phục product theo id
     @Override
     public ResponseEntity<?> deleteProductById(int id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
@@ -178,6 +197,7 @@ public class ProductService implements IProductService {
         return ResponseEntity.ok("Delete product successfully");
     }
 
+    // Cập nhật product theo id
     @Override
     public ResponseEntity<?> updateProduct(ProductUpdateRequest request) {
         Product product = productRepository.findById(request.getId())
@@ -205,5 +225,54 @@ public class ProductService implements IProductService {
 
         productRepository.save(product);
         return ResponseEntity.ok("Update product successfully");
+    }
+
+    // lấy product theo id gồm các biến thể và hình ảnh của product
+    @Override
+    public ResponseEntity<?> getProductDetail(int id) {
+        Product product = productRepository.findDetailById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + id));
+
+        List<ProductImageDTO> images = productImageRepository
+                .findByProductIdOrderByIsPrimaryDesc(id)
+                .stream()
+                .map(img -> ProductImageDTO.builder()
+                        .id(img.getId())
+                        .imageUrl(img.getImageUrl())
+                        .isPrimary(img.getIsPrimary())
+                        .build())
+                .toList();
+
+        List<ProductVariantDTO> variants = productVariantRepository
+                .findByProductId(id)
+                .stream()
+                .map(v -> ProductVariantDTO.builder()
+                        .id(v.getId())
+                        .color(v.getColor())
+                        .sizeId(v.getSize().getId())
+                        .sizeName(v.getSize().getName())
+                        .stock(v.getStock())
+                        .price(v.getPrice())
+                        .sku(v.getSku())
+                        .build())
+                .toList();
+
+        ProductDetailDTO dto = ProductDetailDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .basePrice(product.getBasePrice())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
+                .brandId(product.getBrand().getId())
+                .brandName(product.getBrand().getName())
+                .brandLogo(product.getBrand().getLogo())
+                .targetAudienceId(product.getTargetAudience().getId())
+                .targetAudienceName(product.getTargetAudience().getName())
+                .images(images)
+                .variants(variants)
+                .build();
+
+        return ResponseEntity.ok(dto);
     }
 }

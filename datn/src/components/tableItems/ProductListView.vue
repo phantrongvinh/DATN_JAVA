@@ -8,8 +8,8 @@
 
     <td class="fs-14 text-center fw-bolder py-4">
       <span
-        class="bg-opacity-25 rounded-3 px-3 py-2 d-inline-block"
-        :class="d.status !== false ? 'bg-danger text-danger ' : 'bg-success text-success '"
+        class="bg-opacity-25 rounded-3 px-3 py-2 d-inline-block text-white"
+        :class="d.status !== false ? 'bg-danger  ' : 'bg-success  '"
       >
         {{ d.status !== false ? 'Deactive' : 'Active' }}
       </span>

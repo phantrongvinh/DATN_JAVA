@@ -1,28 +1,66 @@
 <template>
-  <div class="bg-light">
+  <div class="bg-gradient-danger">
     <div class="d-flex py-1 justify-content-between align-items-center container-fluid px-5 py-2">
-      <i class="fa-regular fa-futbol fs-6"></i>
+      <i class="fa-regular fa-futbol fs-6 text-white"></i>
       <div class="d-flex align-items-center">
-        <i class="fa-regular fa-user fs-6 dropdown-user cursor-pointer" v-if="isAuthenticated">
-          <div class="dropdown-menu-user mt-2 z-100 bg-white list-unstyled rounded shadow p-3">
-            <div class="d-flex justify-content-start align-items-center mb-3 h-100 mx-4">
-              <img src="/images/avatar-default.svg" alt="" class="img-fluid rounded-circle w-25" />
-              <div class="d-flex flex-column justify-content-center h-100 gap-3">
-                <div class="fw-bold fs-14">{{ user?.fullName }}</div>
-                <div class="fs-14">{{ user?.email }}</div>
+        <div class="dropdown ms-3" v-if="isAuthenticated">
+          <a href="#" class="text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-regular fa-user fs-5 cursor-pointer text-white"></i>
+          </a>
+
+          <ul
+            class="dropdown-menu dropdown-menu-end px-2 py-3 shadow border-0 z-100"
+            style="min-width: 320px"
+          >
+            <li>
+              <div class="d-flex align-items-center mb-3 px-2">
+                <img
+                  src="/images/avatar-default.svg"
+                  alt=""
+                  class="rounded-circle"
+                  width="50"
+                  height="50"
+                />
+
+                <div class="ms-3">
+                  <h6 class="mb-0">
+                    {{ user?.fullName }}
+                  </h6>
+
+                  <p class="text-sm text-secondary mb-0">
+                    {{ user?.email }}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="d-flex justify-content-between mx-4">
-              <button class="btn btn-outline-primary btn-sm rounded-5 mx-2">
-                <RouterLink class="dropdown-item" to="/profile">Hồ sơ cá nhân</RouterLink>
-              </button>
-              <button class="btn btn-outline-dark rounded-5 mx-2 btn-sm">
-                <div class="dropdown-item lh-lg" @click.prevent="handleLogout">Đăng xuất</div>
-              </button>
-            </div>
-          </div>
-        </i>
-        <RouterLink to="/login" class="text-decoration-none fw-semibold fs-14 text-hover" v-else
+            </li>
+
+            <li>
+              <hr class="horizontal dark my-2" />
+            </li>
+
+            <li>
+              <RouterLink class="dropdown-item border-radius-md" to="/profile">
+                <i class="fa-regular fa-user me-2"></i>
+                Hồ sơ cá nhân
+              </RouterLink>
+            </li>
+
+            <li>
+              <a
+                class="dropdown-item border-radius-md text-danger"
+                href="#"
+                @click.prevent="handleLogout"
+              >
+                <i class="fa-solid fa-right-from-bracket me-2"></i>
+                Đăng xuất
+              </a>
+            </li>
+          </ul>
+        </div>
+        <RouterLink
+          to="/login"
+          class="text-decoration-none fw-semibold fs-14 text-hover text-white"
+          v-else
           >Sign in</RouterLink
         >
       </div>
@@ -38,35 +76,28 @@
           <div class="col-lg-4">
             <ul class="nav nav-underline justify-content-around">
               <li class="nav-item">
-                <RouterLink to="/" class="nav-link text-decoration-none text-dark fw-semibold"
-                  >Home</RouterLink
-                >
+                <RouterLink to="/" class="nav-link text-dark fw-semibold"> Home </RouterLink>
               </li>
+
               <li
                 class="nav-item dropdown position-static"
                 v-for="audience in audienceList"
                 :key="audience.id"
               >
-                <RouterLink
-                  :to="{
-                    name: 'product',
-                    query: { audienceIds: audience.id },
-                  }"
-                  class="nav-link text-decoration-none text-dark fw-semibold"
-                  >{{ ulti.formatLabel(audience.name) }}</RouterLink
-                >
-                <ul
-                  class="dropdown-menu mt-2 border-0 rounded-0 start-0 end-0 d-flex justify-content-center"
-                >
-                  <div class="w-50 row my-3">
-                    <div
-                      class="col-lg-3 text-center my-2"
-                      v-for="brand in brandList"
-                      :key="brand.id"
-                    >
-                      <li>
+                <a href="#" class="nav-link text-dark fw-semibold" data-bs-toggle="dropdown">
+                  {{ ulti.formatLabel(audience.name) }}
+                </a>
+
+                <div class="dropdown-menu border-0 rounded-0 mt-2 start-0 end-0 shadow">
+                  <div class="container py-3">
+                    <div class="row">
+                      <div
+                        class="col-lg-3 col-md-4 col-6 mb-3"
+                        v-for="brand in brandList"
+                        :key="brand.id"
+                      >
                         <RouterLink
-                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
+                          class="text-decoration-none text-menu fw-semibold"
                           :to="{
                             name: 'product',
                             query: {
@@ -77,50 +108,48 @@
                         >
                           {{ brand.name }}
                         </RouterLink>
-                      </li>
+                      </div>
                     </div>
                   </div>
-                </ul>
+                </div>
               </li>
+
               <li class="nav-item dropdown position-static">
-                <RouterLink
-                  to="/accesories"
-                  class="nav-link text-decoration-none text-dark fw-semibold"
-                  >Accessories</RouterLink
-                >
-                <ul
-                  class="dropdown-menu mt-2 border-0 rounded-0 start-0 end-0 d-flex justify-content-center"
-                >
-                  <div class="w-50 row my-3">
-                    <div
-                      class="col-lg-3 text-center my-2"
-                      v-for="accesory in accesoryList"
-                      :key="accesory.id"
-                    >
-                      <li>
+                <a href="#" class="nav-link text-dark fw-semibold" data-bs-toggle="dropdown">
+                  Accessories
+                </a>
+
+                <div class="dropdown-menu border-0 rounded-0 mt-2 start-0 end-0 shadow">
+                  <div class="container py-3">
+                    <div class="row">
+                      <div
+                        class="col-lg-3 col-md-4 col-6 mb-3"
+                        v-for="accessory in accesoryList"
+                        :key="accessory.id"
+                      >
                         <RouterLink
-                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
-                          to="/"
+                          class="text-decoration-none text-menu fw-semibold"
+                          :to="{
+                            name: 'product',
+                            query: {
+                              accessoryIds: accessory.id,
+                            },
+                          }"
                         >
-                          {{ accesory.name }}
+                          {{ accessory.name }}
                         </RouterLink>
-                      </li>
+                      </div>
                     </div>
                   </div>
-                </ul>
+                </div>
               </li>
             </ul>
           </div>
           <div class="col-lg-4">
             <div class="d-flex justify-content-end">
-              <form class="d-flex" role="search">
-                <input
-                  class="form-control me-2"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                />
-                <button class="btn btn-outline-dark" type="submit">Search</button>
+              <form class="input-group input-group-outline w-50" role="search">
+                <label class="form-label">Search</label>
+                <input class="form-control me-2" type="search" aria-label="Search" />
               </form>
               <div class="mx-3 d-flex align-items-center">
                 <i class="fa-regular fa-heart fs-4"></i>

@@ -41,7 +41,7 @@ import authAPI from '@/api/authAPI'
 import Form from '@/components/Form.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 

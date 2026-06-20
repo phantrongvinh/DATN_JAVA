@@ -14,9 +14,15 @@ const fetchFilterProducts = async (data) => {
   return res.data
 }
 
+const fetchProductById = async (id) => {
+  const res = await axiosClient.get(`${url}/${id}`)
+  return res.data
+}
+
 const productAPI = {
   fetchSpotlightProducts,
   fetchFilterProducts,
+  fetchProductById,
 }
 
 export default productAPI
