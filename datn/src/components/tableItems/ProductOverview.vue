@@ -1,18 +1,37 @@
 <template>
-  <tr class="my-3 align-middle" v-for="d in props.data" :key="d.id">
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.name }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.category }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.brand }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ ulti.formatVND(d.price) }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">
+  <tr v-for="d in props.data" :key="d.id">
+    <td>
+      <div class="d-flex px-2 py-1">
+        <div>
+          <img
+            src="../assets/img/team-2.jpg"
+            class="avatar avatar-sm me-3 border-radius-lg"
+            alt="user1"
+          />
+        </div>
+        <div class="d-flex flex-column justify-content-center">
+          <p class="text-xs font-weight-bold mb-0">{{ d.name }}</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ d.category }}</p>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ d.brand }}</p>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ ulti.formatVND(d.price) }}</p>
+    </td>
+    <td class="align-middle text-center text-sm">
       <span
-        class="bg-opacity-25 rounded-3 px-3 py-2 d-inline-block"
+        class="badge badge-sm"
         :class="
           d.stock <= 0
-            ? 'bg-danger text-danger '
+            ? 'bg-gradient-danger  '
             : d.stock <= 15
-              ? 'bg-warning text-warning '
-              : 'bg-success text-success '
+              ? 'bg-gradient-warning  '
+              : 'bg-gradient-success  '
         "
       >
         {{ d.stock <= 0 ? 'Hết hàng' : d.stock <= 15 ? 'Sắp hết' : 'Còn hàng' }}
