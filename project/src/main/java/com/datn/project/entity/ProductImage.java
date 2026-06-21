@@ -35,4 +35,7 @@ public class ProductImage implements Serializable {
 
     @Column(name = "image_url", nullable = false, length = 255)
     private String imageUrl;
+
+    @Column(name = "is_primary")
+    private Boolean isPrimary;
 }

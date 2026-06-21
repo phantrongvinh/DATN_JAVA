@@ -1,27 +1,38 @@
 <template>
-  <table :class="isBorder ? 'table border product-table' : 'table table-borderless' + ''">
-    <thead>
-      <tr>
-        <th
-          class="fw-bold text-center text-secondary py-3 fs-5 align-top"
-          v-for="(f, key) in fields"
-          :key="key"
-        >
-          {{ f.name }}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <ProductOverview v-if="productOverview" :data="productOverview"></ProductOverview>
-      <ProductListView
-        v-if="products"
-        :data="products"
-        :interactive="props.interactive"
-        :handleActiveProduct="props.handleActiveProduct"
-        :handleUpdateProduct="props.handleUpdateProduct"
-      ></ProductListView>
-    </tbody>
-  </table>
+  <div class="card-body px-0 pb-2">
+    <div class="table-responsive p-0">
+      <table class="table align-items-center mb-0 table-fixed">
+        <thead>
+          <tr>
+            <th
+              class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2"
+              :class="
+                ['trangThai', 'bienThe'].includes(key)
+                  ? 'text-center  ps-4'
+                  : ['sanPham'].includes(key)
+                    ? 'w-25'
+                    : ''
+              "
+              v-for="(f, key) in fields"
+              :key="key"
+            >
+              {{ f.name }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ProductOverview v-if="productOverview" :data="productOverview"></ProductOverview>
+          <ProductListView
+            v-if="products"
+            :data="products"
+            :interactive="props.interactive"
+            :handleActiveProduct="props.handleActiveProduct"
+            :handleUpdateProduct="props.handleUpdateProduct"
+          ></ProductListView>
+        </tbody>
+      </table>
+    </div>
+  </div>
   <div class="text-muted font-semibold w-100 text-center" v-if="props.message">
     {{ props.message }}
   </div>
@@ -82,7 +93,6 @@ watch(
   () => props.products,
   (val) => {
     if (!val) return
-    console.log('val', val)
     products.splice(
       0,
       products.length,
@@ -97,7 +107,6 @@ watch(
         updatedAt: value.updatedAt,
       })),
     )
-    console.log(products)
   },
 )
 </script>

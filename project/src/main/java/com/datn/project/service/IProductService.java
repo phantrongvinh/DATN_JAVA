@@ -1,6 +1,7 @@
 package com.datn.project.service;
 
 
+
 import org.springframework.http.ResponseEntity;
 
 import com.datn.project.dto.ProductFilterDTO;
@@ -19,4 +20,6 @@ public interface IProductService {
     ResponseEntity<?> deleteProductById(int id);
 
     ResponseEntity<?> updateProduct(ProductUpdateRequest request);
+
+    ResponseEntity<?> getProductDetail(int id);
 }

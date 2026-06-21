@@ -57,7 +57,7 @@ const router = createRouter({
       component: () => import('../views/Accessory.vue'),
     },
     {
-      path: '/productDetail',
+      path: '/productDetail/:productId',
       name: 'productDetail',
       component: () => import('../views/ProductDetail.vue'),
     },
@@ -84,6 +84,11 @@ const router = createRouter({
       path: '/reset-password',
       name: 'reset-password',
       component: () => import('../views/ResetPassword.vue'),
+    },
+    {
+      path: '/admin-dashboard',
+      name: 'admindasboard',
+      component: () => import('../views/AdminDashboard.vue'),
     },
   ],
 })

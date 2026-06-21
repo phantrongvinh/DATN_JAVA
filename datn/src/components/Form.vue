@@ -1,28 +1,28 @@
 <template>
   <form action="">
-    <div class="mb-3" v-for="(field, key) in fields" :key="key">
-      <div class="form-label">{{ ulti.formatLabel(field.name) }}</div>
+    <div class="input-group input-group-outline mb-4" v-for="(field, key) in fields" :key="key">
+      <label class="form-label">{{ ulti.formatLabel(field.name) }}</label>
 
       <input
         v-if="field.name !== 'birthDay'"
         :type="passwordFields.includes(field.name) ? 'password' : 'text'"
-        class="form-control rounded-3"
+        class="form-control"
         :id="field.name"
         @focus="clearMessages"
         v-model="field.value"
       />
       <flat-pickr
         v-else
-        class="form-control rounded-3"
+        class="form-control"
         :id="field.name"
         :config="config"
         @focus="clearMessages"
         :model-type="'Date'"
         v-model="field.value"
       />
-      <span v-if="field.meta.touched" class="text-danger">
+      <div v-if="field.meta.touched && field.error" class="text-danger">
         {{ field.error }}
-      </span>
+      </div>
     </div>
     <div class="mb-3">
       <div class="text-danger">

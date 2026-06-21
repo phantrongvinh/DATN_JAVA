@@ -1,110 +1,166 @@
 <template>
   <div class="container-fluid">
-    <div class="fs-2 fw-bold my-5 px-4">
-      {{ label }}
+    <!-- Header của trang product -->
+    <div class="d-flex justify-content-between align-items-center px-4 mt-4 mb-5 z-100">
+      <!-- Label hiện thỉ theo filter -->
+      <div class="fs-2 fw-bold">
+        {{ label }}
+      </div>
+
+      <!-- Nút bấm để handle ẩn hiện filter -->
+      <button class="btn bg-gradient-danger mb-0 shadow" @click="showFilter = !showFilter">
+        <i class="fa-solid fa-sliders me-2"></i>
+
+        {{ showFilter ? 'Ẩn bộ lọc' : 'Hiện bộ lọc' }}
+
+        <i class="fa-solid ms-2" :class="showFilter ? 'fa-chevron-left' : 'fa-chevron-right'"></i>
+      </button>
     </div>
-    <div class="px-4">
-      <div class="d-flex justify-content-center align-items-stretch gap-3">
-        <div class="w-25 flex-fill pb-5">
-          <div class="fs-3 fw-semibold">Filter</div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Audience</div>
-            <div class="mt-2 fs-5">
-              <div class="d-flex flex-wrap">
-                <div class="mb-3 form-check w-50" v-for="a in audiences">
-                  <input
-                    type="checkbox"
-                    name="audience"
-                    :id="a.name.toLowerCase()"
-                    class="form-check-input"
-                    :value="a.id"
-                    v-model="selectedAudience"
-                  />
-                  <label :for="a.name.toLowerCase()" class="form-check-label">{{ a.name }}</label>
+
+    <!-- Content trang product -->
+    <div class="px-4 mt-5">
+      <!-- Chia grid cho content -->
+      <div class="row">
+        <!-- Filter được handle ẩn hiện theo nút bấm ở trên -->
+        <div class="col-lg-3" v-show="showFilter">
+          <div class="card position-sticky top-1 border-0 shadow-0">
+            <div class="card-header pb-0">
+              <h5>Filter</h5>
+            </div>
+            <div class="card-body">
+              <!-- Filter checkbox theo audiences -->
+              <div class="mt-3">
+                <div class="fs-5 fw-semibold">Audience</div>
+                <div class="mt-2 fs-5">
+                  <div class="d-flex flex-wrap">
+                    <div class="mb-3 form-check w-50" v-for="a in audiences">
+                      <input
+                        type="checkbox"
+                        name="audience"
+                        :id="a.name.toLowerCase()"
+                        class="form-check-input"
+                        :value="a.id"
+                        v-model="selectedAudience"
+                      />
+                      <label :for="a.name.toLowerCase()" class="form-check-label">{{
+                        a.name
+                      }}</label>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Brand</div>
-            <div class="mt-2 fs-5">
-              <div class="d-flex flex-wrap">
-                <div class="mb-3 form-check w-50" v-for="b in brands">
-                  <input
-                    type="checkbox"
-                    name="brand"
-                    :id="b.name.toLowerCase()"
-                    class="form-check-input"
-                    :value="b.id"
-                    v-model="selectedBrand"
-                  />
-                  <label :for="b.name.toLowerCase()" class="form-check-label">{{ b.name }}</label>
+              <!-- Filter checkbox theo brand -->
+              <hr class="horizontal dark my-3" />
+              <div class="mt-3">
+                <div class="fs-5 fw-semibold">Brand</div>
+                <div class="mt-2 fs-5">
+                  <div class="d-flex flex-wrap">
+                    <div class="mb-3 form-check w-50" v-for="b in brands">
+                      <input
+                        type="checkbox"
+                        name="brand"
+                        :id="b.name.toLowerCase()"
+                        class="form-check-input"
+                        :value="b.id"
+                        v-model="selectedBrand"
+                      />
+                      <label :for="b.name.toLowerCase()" class="form-check-label">{{
+                        b.name
+                      }}</label>
+                    </div>
+                  </div>
                 </div>
               </div>
+              <hr class="horizontal dark my-3" />
             </div>
           </div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Category</div>
-            <div class="mt-2 fs-5">
-              <select
-                class="form-select"
-                aria-label="Default select example"
-                v-model="selectedCategory"
-              >
+        </div>
+        <!-- Phần products list sẽ được filter theo điều kiện của side filter -->
+        <div class="ps-3 border-start pb-5" :class="showFilter ? 'col-lg-9' : 'col-lg-12'">
+          <!-- Phần filter thêm của product list: danh mục, khoảng giá, tăng dần giảm dần -->
+          <div class="d-flex justify-content-end gap-3">
+            <div class="input-group input-group-outline w-25">
+              <select class="form-control" v-model="selectedCategory">
                 <option :value="undefined">Chọn danh mục</option>
 
-                <option v-for="c in categories" :key="c.id" :value="c.id">
+                <option class="mx-2" v-for="c in categories" :key="c.id" :value="c.id">
                   {{ c.name }}
                 </option>
               </select>
             </div>
           </div>
-        </div>
-        <div class="w-75 flex-fill ps-3 border-start pb-5">
+          <hr class="my-5" />
+          <!-- Phần data product list -->
           <div class="row g-4">
-            <!-- Có products -->
             <template v-if="filterList.length > 0">
-              <div class="col-lg-4" v-for="f in filterList" :key="f.id">
-                <RouterLink
-                  :to="{
-                    name: 'productDetail',
-                    query: {
-                      ...(f.productVariant && f.productVariant.length > 0
-                        ? { productVariantId: f.productVariant[0].id }
-                        : { productId: f.id }),
-                    },
-                  }"
-                  class="text-decoration-none"
-                >
-                  <div class="card border-0 h-100">
-                    <img
-                      :src="url + '/' + f.img"
-                      class="card-img-top object-fit-contain"
-                      style="height: 400px; background-color: #e4e4e4"
-                      alt=""
-                    />
-                    <div class="card-body d-flex flex-column ps-0">
-                      <h5 class="card-title fw-bold">{{ f.name }}</h5>
-                      <p class="card-text text-muted">{{ f.category }} - {{ f.brand }}</p>
-
-                      <!-- Có product variant -->
-                      <template v-if="f.productVariant && f.productVariant.length > 0">
-                        <p class="fw-bold">
-                          {{ (f.productVariant[0].price ?? f.basePrice).toLocaleString('vi-VN') }} đ
-                        </p>
-                      </template>
-
-                      <!-- Không có variant -->
-                      <template v-else>
-                        <p class="fw-bold">{{ f.basePrice.toLocaleString('vi-VN') }} đ</p>
-                      </template>
-                    </div>
+              <div class="col-xl-4 col-md-6 mb-5 d-flex" v-for="f in filterList" :key="f.id">
+                <div class="card h-100 w-100 d-flex flex-column" data-animation="true">
+                  <!-- Image -->
+                  <div class="card-header p-0 position-relative mt-n2 mx-3 z-index-2">
+                    <a class="d-block blur-shadow-image">
+                      <img
+                        :src="url + '/' + f.img"
+                        class="img-fluid shadow border-radius-lg"
+                        style="height: 300px; width: 100%; object-fit: cover"
+                      />
+                    </a>
+                    <div
+                      class="colored-shadow"
+                      :style="{ backgroundImage: `url(${url}/${f.img})` }"
+                    ></div>
                   </div>
-                </RouterLink>
+
+                  <!-- Body -->
+                  <div class="card-body text-center d-flex flex-column flex-grow-1">
+                    <div class="d-flex mt-n4 mx-auto">
+                      <button
+                        class="btn btn-link text-danger ms-auto border-0"
+                        data-bs-toggle="tooltip"
+                        title="Favorite"
+                      >
+                        <i class="fa-regular fa-heart"></i>
+                      </button>
+                      <button
+                        class="btn btn-link text-dark me-auto border-0"
+                        data-bs-toggle="tooltip"
+                        title="Quick View"
+                      >
+                        <i class="fa-solid fa-eye"></i>
+                      </button>
+                    </div>
+
+                    <!-- Chuyển hướng product detail -->
+                    <RouterLink
+                      :to="{
+                        name: 'productDetail',
+                        params: { productId: f.id },
+                      }"
+                    >
+                      <h5 class="font-weight-normal mt-3 text-dark product-title">
+                        {{ f.name }}
+                      </h5>
+                    </RouterLink>
+
+                    <p class="text-sm text-secondary mb-0 product-meta">
+                      {{ f.category }} · {{ f.brand }}
+                    </p>
+
+                    <!-- spacer đẩy footer xuống đáy -->
+                    <div class="mt-auto"></div>
+                  </div>
+
+                  <hr class="dark horizontal my-0" />
+
+                  <!-- Footer -->
+                  <div class="card-footer d-flex align-items-center justify-content-end">
+                    <h6 class="text-danger mb-0">
+                      {{ (f.productVariant?.[0]?.price ?? f.basePrice).toLocaleString('vi-VN') }} đ
+                    </h6>
+                  </div>
+                </div>
               </div>
             </template>
 
-            <!-- Không có product -->
             <div v-else class="col-12 text-center py-5">
               <p class="text-muted fs-14">Không tìm thấy sản phẩm nào</p>
             </div>
@@ -270,4 +326,7 @@ const selectedCategory = computed({
 // url
 
 const url = 'http://localhost:8080/uploads/images'
+
+// ẩn hiện filter
+const showFilter = ref(true)
 </script>
