@@ -1,4 +1,5 @@
 @import './base.css';
+
 .hover-underline {
   text-decoration: none;
   color: rgb(131, 131, 131);
@@ -25,26 +26,25 @@
 }
 
 .text-menu {
-  color: #8a8a8a;
+  color: #344767;
+  transition: 0.2s;
 }
 
 .text-menu:hover {
-  color: black;
+  color: #e91e63;
 }
-
-.dropdown-menu-user,
-.dropdown-menu {
+.nav-item.dropdown:hover > .dropdown-menu {
   display: block;
-  opacity: 1;
-  visibility: hidden;
-  /* transform: translateY(-2px); */
-  transition: all 0.1s ease;
+  margin-top: 0;
 }
 
-.dropdown:hover .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  /* transform: translateY(0); */
+.dropdown:hover > .dropdown-menu,
+.dropdown-menu-user {
+  display: block;
+}
+
+.dropdown-menu {
+  min-width: 100%;
 }
 
 .shadow-bottom {
@@ -68,7 +68,7 @@
 }
 
 .z-100 {
-  z-index: 2000;
+  z-index: 2000 !important;
 }
 
 .dropdown-menu-user {
@@ -114,10 +114,22 @@
   background-color: rgb(218, 229, 248);
 }
 
-.product-table {
-  table-layout: fixed;
+.table-fixed {
   width: 100%;
+  table-layout: fixed;
 }
+
+.table-fixed th,
+.table-fixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td {
+  word-break: break-word;
+}
+
 .pagination .page-link {
   color: #212529;
 }

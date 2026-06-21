@@ -2,44 +2,35 @@
   <div class="d-flex justify-content-between">
     <div class="w-75 d-flex justify-content-between gap-3">
       <div class="w-40">
-        <div class="input-group mb-3">
-          <span class="input-group-text bg-white border-end-0" id="basic-addon1"
-            ><i class="fa-solid fa-magnifying-glass"></i
-          ></span>
-          <input
-            type="text"
-            class="form-control border-start-0 fst-italic py-2"
-            placeholder="Tìm kiếm sản phẩm..."
-            v-model="search"
-          />
+        <div class="input-group input-group-outline mb-3">
+          <label class="form-label">Tìm kiếm sản phẩm</label>
+
+          <input class="form-control me-2" type="search" aria-label="Search" />
         </div>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example" v-model="selectedCategory">
-          <option :value="undefined">Chọn danh mục</option>
-
-          <option v-for="c in categories" :key="c.id" :value="c.id">
-            {{ c.name }}
-          </option>
-        </select>
+        <Select
+          :data="categories"
+          v-model:selected="selectedCategory"
+          :selectedName="selectedCategoryName"
+          descript="Chọn danh mục"
+        ></Select>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example" v-model="selectedAudience">
-          <option :value="undefined">Chọn khách hàng</option>
-
-          <option v-for="a in audiences" :key="a.id" :value="a.id">
-            {{ a.name }}
-          </option>
-        </select>
+        <Select
+          :data="audiences"
+          v-model:selected="selectedAudience"
+          :selectedName="selectedAudienceName"
+          descript="Chọn loại khách hàng"
+        ></Select>
       </div>
       <div class="w-20">
-        <select class="form-select" aria-label="Default select example" v-model="selectedBrand">
-          <option :value="undefined">Chọn nhãn hàng</option>
-
-          <option v-for="b in brands" :key="b.id" :value="b.id">
-            {{ b.name }}
-          </option>
-        </select>
+        <Select
+          :data="brands"
+          v-model:selected="selectedBrand"
+          :selectedName="selectedBrandName"
+          descript="Chọn hãng"
+        ></Select>
       </div>
     </div>
     <div class="w-25 text-end">
@@ -108,7 +99,7 @@
         <div v-if="!message">
           <ul class="pagination justify-content-end">
             <li class="page-item" :class="{ disabled: page === 1 }">
-              <button class="page-link" @click="changePage(page - 1)">Previous</button>
+              <button class="page-link" @click="changePage(page - 1)"><</button>
             </li>
 
             <li
@@ -123,7 +114,7 @@
             </li>
 
             <li class="page-item" :class="{ disabled: page === totalPages }">
-              <button class="page-link" @click="changePage(page + 1)">Next</button>
+              <button class="page-link" @click="changePage(page + 1)">></button>
             </li>
           </ul>
         </div>
@@ -241,6 +232,7 @@ import { useForm } from 'vee-validate'
 import { useNotificationStore } from '@/stores/useNotificationStore.js'
 import { useAudienceStore } from '@/stores/useAudienceStore.js'
 import { useRoute, useRouter } from 'vue-router'
+import Select from '../Select.vue'
 
 const notification = useNotificationStore()
 
@@ -278,6 +270,19 @@ const selectedCategory = computed({
   },
 })
 
+const selectedCategoryName = computed(() => {
+  const ids = Array.isArray(selectedCategory.value)
+    ? selectedCategory.value
+    : [selectedCategory.value]
+
+  return (
+    categories.value
+      .filter((c) => ids.includes(String(c.id)))
+      .map((c) => c.name)
+      .join(', ') || 'Chọn danh mục'
+  )
+})
+
 const selectedAudience = computed({
   get() {
     return route.query.audienceIds ?? undefined
@@ -293,6 +298,19 @@ const selectedAudience = computed({
   },
 })
 
+const selectedAudienceName = computed(() => {
+  const ids = Array.isArray(selectedAudience.value)
+    ? selectedAudience.value
+    : [selectedAudience.value]
+
+  return (
+    audiences.value
+      .filter((a) => ids.includes(String(a.id)))
+      .map((a) => a.name)
+      .join(', ') || 'Chọn khách hàng'
+  )
+})
+
 const selectedBrand = computed({
   get() {
     return route.query.brandIds ?? undefined
@@ -306,6 +324,17 @@ const selectedBrand = computed({
       },
     })
   },
+})
+
+const selectedBrandName = computed(() => {
+  const ids = Array.isArray(selectedBrand.value) ? selectedBrand.value : [selectedBrand.value]
+
+  return (
+    brands.value
+      .filter((b) => ids.includes(String(b.id)))
+      .map((b) => b.name)
+      .join(', ') || 'Chọn hãng'
+  )
 })
 
 const search = ref('')

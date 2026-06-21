@@ -5,20 +5,24 @@ import { ref } from 'vue'
 
 export const useProductStore = defineStore('product', () => {
   // states
-  const spotlightProducts = ref([])
-  const filterProducts = ref([])
+
   const loadding = ref(false)
   const error = ref(null)
-  const productOverview = ref([])
   const message = ref('')
 
+  const productOverview = ref([])
+  const spotlightProducts = ref([])
+  const filterProducts = ref([])
   const products = ref([])
+  const product = ref()
+
   const page = ref(1)
   const size = ref(5)
   const totalPages = ref(0)
   const totalElements = ref(0)
 
   // actions
+  // fetch top 10 product mới nhất hiện ở home
   async function fetchSpotlightProducts() {
     loadding.value = true
     error.value = null
@@ -28,13 +32,14 @@ export const useProductStore = defineStore('product', () => {
       spotlightProducts.value = res
       return { success: true }
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
       loadding.value = false
     }
   }
 
+  // fetch product list theo filter điều kiện ở trang product
   async function fetchFilterProducts(data) {
     loadding.value = true
     error.value = null
@@ -46,13 +51,14 @@ export const useProductStore = defineStore('product', () => {
 
       return { success: true }
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
       loadding.value = false
     }
   }
 
+  // fetch 5 product view ở thống kê của admin
   async function fetchProductOVerview() {
     loadding.value = true
     error.value = null
@@ -62,13 +68,14 @@ export const useProductStore = defineStore('product', () => {
       productOverview.value = res
       return { success: true }
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
       loadding.value = false
     }
   }
 
+  // fetch tất cả product kể cả bị vô hiệu hóa ở trang admin để quản lý
   async function fetchAllProducts({
     newPage = page.value,
     newSize = size.value,
@@ -90,20 +97,20 @@ export const useProductStore = defineStore('product', () => {
       message.value = res.message
 
       products.value = Array.isArray(res.content) ? res.content : []
-      console.log(products.value)
 
       totalPages.value = res.page.totalPages
       totalElements.value = res.page.totalElements
       page.value = res.page.number + 1
       size.value = res.page.size
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
       loadding.value = false
     }
   }
 
+  // vô hiện hóa hoặc khôi phục product theo id
   async function deleteProductById(id) {
     loadding.value = true
     error.value = null
@@ -113,12 +120,14 @@ export const useProductStore = defineStore('product', () => {
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
       loadding.value = false
     }
   }
+
+  // cập nhật product theo id
   async function updateProductById(data) {
     loadding.value = true
     error.value = null
@@ -128,7 +137,23 @@ export const useProductStore = defineStore('product', () => {
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
     } catch (error) {
-      error.value = error
+      error.value = err.response?.data?.message
+      throw error
+    } finally {
+      loadding.value = false
+    }
+  }
+
+  // fetch product theo id có list images và list variants
+  async function fetchProductByID(id) {
+    loadding.value = true
+    error.value = null
+
+    try {
+      const res = await productAPI.fetchProductById(id)
+      product.value = res
+    } catch (error) {
+      error.value = err.response?.data?.message
       throw error
     } finally {
       loadding.value = false
@@ -136,12 +161,13 @@ export const useProductStore = defineStore('product', () => {
   }
 
   return {
-    spotlightProducts,
-    filterProducts,
     loadding,
     error,
+    spotlightProducts,
+    filterProducts,
     productOverview,
     products,
+    product,
     page,
     size,
     message,
@@ -153,5 +179,6 @@ export const useProductStore = defineStore('product', () => {
     fetchAllProducts,
     deleteProductById,
     updateProductById,
+    fetchProductByID,
   }
 })
