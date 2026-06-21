@@ -41,7 +41,7 @@
     </td>
 
     <td v-if="interactive" class="align-middle">
-      <div class="d-flex justify-content-start align-items-center gap-1">
+      <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
         <a
           class="text-secondary font-weight-bold text-xs cursor-pointer text-danger"
           data-toggle="tooltip"
@@ -50,7 +50,6 @@
         >
           {{ d.status ? 'Khôi phục' : 'Vô hiệu' }}
         </a>
-        |
         <a
           class="text-secondary font-weight-bold text-xs cursor-pointer text-warning"
           data-toggle="tooltip"

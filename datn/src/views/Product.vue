@@ -78,16 +78,13 @@
         <!-- Phần products list sẽ được filter theo điều kiện của side filter -->
         <div class="ps-3 border-start pb-5" :class="showFilter ? 'col-lg-9' : 'col-lg-12'">
           <!-- Phần filter thêm của product list: danh mục, khoảng giá, tăng dần giảm dần -->
-          <div class="d-flex justify-content-end gap-3">
-            <div class="input-group input-group-outline w-25">
-              <select class="form-control" v-model="selectedCategory">
-                <option :value="undefined">Chọn danh mục</option>
-
-                <option class="mx-2" v-for="c in categories" :key="c.id" :value="c.id">
-                  {{ c.name }}
-                </option>
-              </select>
-            </div>
+          <div class="d-flex justify-content-start gap-3">
+            <Select
+              :data="categories"
+              v-model:selected="selectedCategory"
+              :selectedName="selectedCategoryName"
+              descript="Chọn danh mục"
+            ></Select>
           </div>
           <hr class="my-5" />
           <!-- Phần data product list -->
@@ -172,6 +169,7 @@
 </template>
 
 <script setup>
+import Select from '@/components/Select.vue'
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
@@ -308,6 +306,7 @@ const selectedBrand = computed({
   },
 })
 
+// category
 const selectedCategory = computed({
   get() {
     return route.query.categoryIds ?? undefined
@@ -321,6 +320,19 @@ const selectedCategory = computed({
       },
     })
   },
+})
+
+const selectedCategoryName = computed(() => {
+  const ids = Array.isArray(selectedCategory.value)
+    ? selectedCategory.value
+    : [selectedCategory.value]
+
+  return (
+    categories.value
+      .filter((c) => ids.includes(String(c.id)))
+      .map((c) => c.name)
+      .join(', ') || 'Chọn danh mục'
+  )
 })
 
 // url

@@ -7,7 +7,7 @@
       {{ props.selectedName }}
     </button>
 
-    <ul v-if="selected" class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
+    <ul v-if="!props.title" class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
       <li>
         <a class="dropdown-item rounded-3 py-2" @click.prevent="emit('update:selected', undefined)">
           {{ props.descript }}
@@ -20,7 +20,7 @@
       </li>
     </ul>
 
-    <ul v-else-if="selectedByName" class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
+    <ul v-else class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
       <li v-for="d in props.data" :key="d.id">
         <a
           class="dropdown-item rounded-3 py-2"
