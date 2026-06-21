@@ -103,9 +103,9 @@
 </template>
 
 <script setup>
-import Account from '@/components/admin/Account.vue'
 import Overview from '@/components/admin/Overview.vue'
 import ProductView from '@/components/admin/ProductView.vue'
+
 import ulti from '@/ulti/ulti'
 import { ref } from 'vue'
 
