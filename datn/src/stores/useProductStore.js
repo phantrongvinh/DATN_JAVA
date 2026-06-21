@@ -97,7 +97,6 @@ export const useProductStore = defineStore('product', () => {
       message.value = res.message
 
       products.value = Array.isArray(res.content) ? res.content : []
-      console.log(products.value)
 
       totalPages.value = res.page.totalPages
       totalElements.value = res.page.totalElements

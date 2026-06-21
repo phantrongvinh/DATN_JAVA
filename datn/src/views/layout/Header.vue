@@ -91,6 +91,19 @@
                 <div class="dropdown-menu border-0 rounded-0 mt-2 start-0 end-0 shadow">
                   <div class="container py-3">
                     <div class="row">
+                      <div class="col-lg-3 col-md-4 col-6 mb-3">
+                        <RouterLink
+                          class="text-decoration-none text-menu fw-semibold"
+                          :to="{
+                            name: 'product',
+                            query: {
+                              audienceIds: audience.id,
+                            },
+                          }"
+                        >
+                          Tất cả
+                        </RouterLink>
+                      </div>
                       <div
                         class="col-lg-3 col-md-4 col-6 mb-3"
                         v-for="brand in brandList"
@@ -147,17 +160,17 @@
           </div>
           <div class="col-lg-4">
             <div class="d-flex justify-content-end">
-              <form class="input-group input-group-outline w-50" role="search">
-                <label class="form-label">Search</label>
+              <div class="input-group input-group-outline w-50">
+                <label class="form-label">Tìm kiếm sản phẩm</label>
                 <input class="form-control me-2" type="search" aria-label="Search" />
-              </form>
+              </div>
               <div class="mx-3 d-flex align-items-center">
                 <i class="fa-regular fa-heart fs-4"></i>
               </div>
 
-              <div class="d-flex align-items-center">
+              <RouterLink to="/cart" class="d-flex align-items-center">
                 <i class="fa-brands fa-opencart fs-4"></i>
-              </div>
+              </RouterLink>
             </div>
           </div>
         </div>

@@ -9,51 +9,60 @@
           </div>
 
           <div class="card-body p-2">
-            <button
-              class="nav-link p-2 w-100 text-start mb-2"
-              :class="
-                activeTab === 'overview'
-                  ? 'active bg-gradient-danger text-dark shadow'
-                  : 'text-dark'
-              "
-              @click="activeTab = 'overview'"
-            >
-              <i class="fa-solid fa-chart-line me-2"></i>
-              Tổng quan
-            </button>
+            <div class="nav-wrapper position-relative end-0">
+              <ul class="nav nav-pills nav-fill flex-column bg-transparent p-1">
+                <li class="nav-item">
+                  <button
+                    class="nav-link text-start"
+                    :class="{
+                      'active bg-gradient-danger text-white shadow': activeTab === 'overview',
+                    }"
+                    @click="activeTab = 'overview'"
+                  >
+                    <i class="fa-solid fa-chart-line me-2"></i>
+                    Tổng quan
+                  </button>
+                </li>
 
-            <button
-              class="nav-link p-2 w-100 text-start mb-2"
-              :class="
-                activeTab === 'product' ? 'active bg-gradient-danger text-dark shadow' : 'text-dark'
-              "
-              @click="activeTab = 'product'"
-            >
-              <i class="fa-solid fa-box me-2"></i>
-              Hàng hóa
-            </button>
+                <li class="nav-item mt-2">
+                  <button
+                    class="nav-link text-start"
+                    :class="{
+                      'active bg-gradient-danger text-white shadow': activeTab === 'product',
+                    }"
+                    @click="activeTab = 'product'"
+                  >
+                    <i class="fa-solid fa-box me-2"></i>
+                    Hàng hóa
+                  </button>
+                </li>
 
-            <button
-              class="nav-link p-2 w-100 text-start mb-2"
-              :class="
-                activeTab === 'user' ? 'active bg-gradient-danger text-dark shadow' : 'text-dark'
-              "
-              @click="activeTab = 'user'"
-            >
-              <i class="fa-solid fa-users me-2"></i>
-              Người dùng
-            </button>
-
-            <button
-              class="nav-link p-2 w-100 text-start"
-              :class="
-                activeTab === 'order' ? 'active bg-gradient-danger text-dark shadow' : 'text-dark'
-              "
-              @click="activeTab = 'order'"
-            >
-              <i class="fa-solid fa-cart-shopping me-2"></i>
-              Đơn hàng
-            </button>
+                <li class="nav-item mt-2">
+                  <button
+                    class="nav-link text-start"
+                    :class="{
+                      'active bg-gradient-danger text-white shadow': activeTab === 'user',
+                    }"
+                    @click="activeTab = 'user'"
+                  >
+                    <i class="fa-solid fa-users me-2"></i>
+                    Người dùng
+                  </button>
+                </li>
+                <li class="nav-item mt-2">
+                  <button
+                    class="nav-link text-start"
+                    :class="{
+                      'active bg-gradient-danger text-white shadow': activeTab === 'order',
+                    }"
+                    @click="activeTab = 'order'"
+                  >
+                    <i class="fa-solid fa-cart-shopping me-2"></i>
+                    Đơn hàng
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -65,7 +74,7 @@
           <div class="card-body d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Dashboard</h4>
 
-            <div class="text-secondary">
+            <div class="font-weight-bolder">
               Hôm nay:
               {{ ulti.formatDate(new Date()) }}
             </div>
@@ -105,13 +114,4 @@ const activeTab = ref('overview')
 
 <style scoped>
 /* ADMIN */
-.nav-link {
-  border-radius: 0.75rem;
-  transition: 0.3s;
-  font-weight: 600;
-}
-
-.nav-link:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.1);
-}
 </style>

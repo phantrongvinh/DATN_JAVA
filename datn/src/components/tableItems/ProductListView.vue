@@ -1,32 +1,64 @@
 <template>
-  <tr class="my-3 align-middle" v-for="d in props.data" :key="d.id">
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.name }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.category }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.brand }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ ulti.formatVND(d.price) }}</td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ d.variantCount }}</td>
+  <tr v-for="d in props.data" :key="d.id">
+    <td>
+      <div class="d-flex px-2 py-1">
+        <div>
+          <img
+            src="../assets/img/team-2.jpg"
+            class="avatar avatar-sm me-3 border-radius-lg"
+            alt="user1"
+          />
+        </div>
+        <div class="d-flex flex-column justify-content-center">
+          <p class="text-xs font-weight-bold mb-0">{{ d.name }}</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ d.category }}</p>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ d.brand }}</p>
+    </td>
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ ulti.formatVND(d.price) }}</p>
+    </td>
+    <td class="align-middle text-center text-sm">
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ d.variantCount }}</p>
+    </td>
 
-    <td class="fs-14 text-center fw-bolder py-4">
+    <td class="align-middle text-center text-md">
       <span
-        class="bg-opacity-25 rounded-3 px-3 py-2 d-inline-block text-white"
-        :class="d.status !== false ? 'bg-danger  ' : 'bg-success  '"
+        class="badge badge-sm"
+        :class="d.status !== false ? 'bg-gradient-danger  ' : 'bg-gradient-success  '"
       >
         {{ d.status !== false ? 'Deactive' : 'Active' }}
       </span>
     </td>
-    <td class="fs-14 text-center fw-bolder py-4">{{ ulti.formatDate(d.updatedAt) }}</td>
 
-    <td v-if="interactive">
-      <div class="d-flex justify-content-center align-items-center gap-1">
-        <button
-          class="btn btn-danger fs-14 w-50"
+    <td>
+      <p class="text-xs font-weight-bold text-secondary mb-0">{{ ulti.formatDate(d.updatedAt) }}</p>
+    </td>
+
+    <td v-if="interactive" class="align-middle">
+      <div class="d-flex justify-content-start align-items-center gap-1">
+        <a
+          class="text-secondary font-weight-bold text-xs cursor-pointer text-danger"
+          data-toggle="tooltip"
+          data-original-title="Edit user"
           @click.prevent="props.handleActiveProduct(d.id, d.name, d.status)"
         >
           {{ d.status ? 'Khôi phục' : 'Vô hiệu' }}
-        </button>
-        <button class="btn btn-warning fs-14 w-50" @click.prevent="props.handleUpdateProduct(d)">
+        </a>
+        |
+        <a
+          class="text-secondary font-weight-bold text-xs cursor-pointer text-warning"
+          data-toggle="tooltip"
+          data-original-title="Edit user"
+          @click.prevent="props.handleUpdateProduct(d)"
+        >
           Cập nhật
-        </button>
+        </a>
       </div>
     </td>
   </tr>
