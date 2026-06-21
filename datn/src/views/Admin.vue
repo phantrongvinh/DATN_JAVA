@@ -86,6 +86,7 @@
             >
               <Overview />
             </div>
+            
             <div
               class="tab-pane fade"
               id="pills-product"
@@ -95,6 +96,7 @@
             >
               <ProductView />
             </div>
+            
             <div
               class="tab-pane fade"
               id="pills-user"
@@ -102,8 +104,9 @@
               aria-labelledby="pills-user-tab"
               tabindex="0"
             >
-              <Account />
+              <UserView />
             </div>
+            
             <div
               class="tab-pane fade"
               id="pills-order"
@@ -111,7 +114,7 @@
               aria-labelledby="pills-order-tab"
               tabindex="0"
             >
-              đơn hàng
+              <OrderView />
             </div>
           </div>
         </div>
@@ -121,8 +124,13 @@
 </template>
 
 <script setup>
-import Account from '@/components/admin/Account.vue'
 import Overview from '@/components/admin/Overview.vue'
 import ProductView from '@/components/admin/ProductView.vue'
+
 import ulti from '@/ulti/ulti'
+
+import UserView from '@/components/admin/UserView.vue'
+import OrderView from '@/components/admin/OrderView.vue'
+
+
 </script>
