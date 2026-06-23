@@ -11,11 +11,16 @@
     </div>
     <div class="col-md-5 d-flex justify-content-between align-items-end flex-column gap-1">
       <div class="">
-        <a class="btn btn-link text-dark text-gradient mx-1 mb-0" href="javascript:;">
+        <a
+          class="btn btn-link text-dark text-gradient mx-1 mb-0"
+          @click="emit('update-quantity', { id: props.i.productVariantId, delta: -1 })"
+        >
           <i class="material-symbols-rounded">remove</i></a
         >
         <span class="">{{ props.i.quantity }}</span>
-        <a class="btn btn-link text-dark text-gradient mx-1 mb-0" href="javascript:;"
+        <a
+          class="btn btn-link text-dark text-gradient mx-1 mb-0"
+          @click="emit('update-quantity', { id: props.i.productVariantId, delta: +1 })"
           ><i class="material-symbols-rounded">add</i></a
         >
       </div>
@@ -23,7 +28,9 @@
     <div class="row w-100">
       <div class="col-md-2"></div>
       <div class="col-md-5">
-        <a class="btn btn-link text-danger text-gradient px-0 mb-0" href="javascript:;"
+        <a
+          class="btn btn-link text-danger text-gradient px-0 mb-0"
+          @click="emit('delete', props.i.productVariantId)"
           ><i class="material-symbols-rounded text-sm me-2">delete</i>Delete</a
         >
       </div>
@@ -38,8 +45,10 @@
 import ulti from '@/ulti/ulti'
 
 const props = defineProps({
-  i: Array,
+  i: Object,
 })
+
+const emit = defineEmits(['delete', 'updateQuantity'])
 
 // url
 const url = 'http://localhost:8080/uploads/images'

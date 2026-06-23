@@ -28,6 +28,8 @@
             :interactive="props.interactive"
             :handleActiveProduct="props.handleActiveProduct"
             :handleUpdateProduct="props.handleUpdateProduct"
+            :selectedIds="props.selectedIds"
+            @select-product="props.selectProduct"
           ></ProductListView>
         </tbody>
       </table>
@@ -52,6 +54,8 @@ const props = defineProps({
   handleActiveProduct: Function,
   handleUpdateProduct: Function,
   message: String,
+  selectProduct: Function,
+  selectedIds: Array,
 })
 
 const fields = reactive({})

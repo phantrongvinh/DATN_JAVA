@@ -1,4 +1,4 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,12 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductVariantResponse {
-    
+
     private int id;
     private String color;
     private String size;
     private int stock;
     private BigDecimal price;
+    private BigDecimal discountedPrice;
     private String sku;
     private LocalDateTime createdAt;
 }

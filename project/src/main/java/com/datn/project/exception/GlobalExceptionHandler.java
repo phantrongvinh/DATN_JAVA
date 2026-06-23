@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.naming.AuthenticationException;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -63,7 +64,13 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<?> handleNotFound(RuntimeException re){
-                return ResponseEntity.status(404).body(Map.of("message",re.getMessage()));
+        public ResponseEntity<?> handleNotFound(RuntimeException re) {
+                return ResponseEntity.status(404).body(Map.of("message", re.getMessage()));
         }
+
+        @ExceptionHandler(BadRequestException.class)
+        public ResponseEntity<?> handleNotFound(BadRequestException be) {
+                return ResponseEntity.status(404).body(Map.of("message", be.getMessage()));
+        }
+
 }

@@ -1,6 +1,7 @@
-package com.datn.project.dto;
+package com.datn.project.dto.user;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -10,11 +11,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileResponse {
-
+public class UserResponse {
+    private int id;
+    private String fullName;
     private String email;
     private String phone;
-    private String fullName;
     private LocalDate birthDay;
-    private List<String> roles;
+    private boolean isActive;
+    private LocalDateTime createdAt;
+    private List<RoleResponse> role;
 }

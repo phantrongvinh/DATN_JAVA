@@ -62,7 +62,7 @@ public class Voucher implements Serializable {
     private LocalDateTime endDate;
 
     @Column(name = "is_active")
-    private Boolean isActive;
+    private boolean isActive;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

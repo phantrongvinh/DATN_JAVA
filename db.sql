@@ -98,6 +98,7 @@ CREATE TABLE users(
 CREATE TABLE addresses(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
     address				TEXT NOT NULL,
+    is_primary			BOOLEAN NOT NULL DEFAULT FALSE,
     user_id				INT NOT NULL,
     CONSTRAINT FK_AD_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -171,7 +172,7 @@ CREATE TABLE orders(
 	id 					INT AUTO_INCREMENT PRIMARY KEY,
     user_id 			INT NOT NULL,
     total_price			DECIMAL(10,2),
-	` status` 			ENUM(
+	`status` 			ENUM(
 							'PENDING',
 							'CONFIRMED',
 							'SHIPPING',
@@ -254,8 +255,37 @@ CREATE TABLE password_reset_tokens(
     id 					INT AUTO_INCREMENT PRIMARY KEY,
     token				VARCHAR(500) NOT NULL,     
     expiry_date			TIMESTAMP NOT NULL,
-    email				VARCHAR(255) NOT NULL UNIQUE,
-)
+    email				VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE promotions (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    `name`           VARCHAR(255) NOT NULL,
+    discount_type   ENUM('PERCENT', 'FIXED') NOT NULL,
+    discount_value  DECIMAL(10,2) NOT NULL,
+    start_at        TIMESTAMP NOT NULL,
+    end_at          TIMESTAMP NOT NULL,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE promotion_products (
+    promotion_id    INT NOT NULL,
+    product_id      INT NOT NULL,
+    PRIMARY KEY (promotion_id, product_id),
+    CONSTRAINT FK_PP_PR FOREIGN KEY (promotion_id) REFERENCES promotions(id),
+    CONSTRAINT FK_PP_P  FOREIGN KEY (product_id)   REFERENCES products(id)
+);
+
+CREATE TABLE time_promotions (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(255) NOT NULL,
+    discount_type   ENUM('PERCENT', 'FIXED') NOT NULL,
+    discount_value  DECIMAL(10,2) NOT NULL,
+    start_time      TIME NOT NULL,  -- 09:00:00
+    end_time        TIME NOT NULL,  -- 11:00:00
+    is_active       BIT DEFAULT 1,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 INSERT INTO roles(`name`) values("USER"),("ADMIN");
 
@@ -471,3 +501,90 @@ INSERT INTO product_variants (
 (10, 'Green', 8, 8, 1490000, 'PM-GK-M-GR'),
 (10, 'Green', 9, 6, 1490000, 'PM-GK-L-GR');
 
+INSERT INTO `product_images`
+(`product_id`, `image_url`, `is_primary`)
+VALUES
+(2, 'products/adidas-predator-league-tf-2.jpg', 0),
+(2, 'products/adidas-predator-league-tf-1.jpg', 0);
+
+INSERT INTO users (full_name, email, password, phone, birth_day, provider, is_actived, created_at)
+VALUES 
+('Nguyen Van A', 'vana@gmail.com', '$2a$10$wq1x9x9x9x9x9x9x9x9x9uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0901234567', '2000-01-01', 'LOCAL', TRUE, NOW()),
+
+('Tran Thi B', 'thib@gmail.com', '$2a$10$k9b8c7d6e5f4g3h2j1k0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0912345678', '1999-05-20', 'LOCAL', TRUE, NOW()),
+
+('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'GOOGLE', TRUE, NOW());
+
+INSERT INTO addresses (address, is_primary, user_id)
+VALUES 
+('123 Nguyen Trai, Q1, HCM', TRUE, 1),
+('45 Le Loi, Q3, HCM', FALSE, 1),
+
+('88 Tran Hung Dao, Q5, HCM', TRUE, 2),
+
+('12 Pasteur, Da Nang', TRUE, 3);
+
+INSERT INTO user_roles (user_id, role_id)
+VALUES 
+(1, 1), 
+(2, 1),
+(3, 1);
+-- Thêm time_promotion_id và time_discount vào orders
+ALTER TABLE orders
+    ADD COLUMN time_promotion_id INT NULL,
+    ADD COLUMN time_discount     DECIMAL(10,2) DEFAULT 0,
+    ADD CONSTRAINT FK_O_TP FOREIGN KEY (time_promotion_id) REFERENCES time_promotions(id);
+
+-- Thêm promotion_id vào order_details để lưu product promotion đã apply
+ALTER TABLE order_details
+    ADD COLUMN promotion_id INT NULL,
+    ADD CONSTRAINT FK_OD_PR FOREIGN KEY (promotion_id) REFERENCES promotions(id);
+    
+INSERT INTO promotions (name, discount_type, discount_value, start_at, end_at) VALUES
+('Flash Sale Hè 2026', 'PERCENT', 20.00, '2026-06-01 00:00:00', '2026-12-31 23:59:59'),
+('Khuyến Mãi Tháng 5',  'FIXED',  50000.00, '2026-05-01 00:00:00', '2026-05-31 23:59:59');
+
+-- ─── Promotion Products ───────────────────────────────────────────────────────
+-- Promotion 1 (còn hạn) → product 1, 2, 3, 5, 7, 9
+INSERT INTO promotion_products (promotion_id, product_id) VALUES
+(1, 1), (1, 2), (1, 3), (1, 5), (1, 7), (1, 9);
+
+-- Promotion 2 (hết hạn) → product 4, 6, 8, 10
+INSERT INTO promotion_products (promotion_id, product_id) VALUES
+(2, 4), (2, 6), (2, 8), (2, 10);
+
+-- product 1, 3, 6 không có promotion nào → null (không insert)
+
+-- ─── Time Promotions ─────────────────────────────────────────────────────────
+
+INSERT INTO time_promotions (name, discount_type, discount_value, start_time, end_time, is_active) VALUES
+('Khung Giờ Vàng Sáng 9-10h', 'PERCENT', 15.00, '09:00:00', '10:00:00', 1),
+('Khung Giờ Vàng Chiều 4-6h',  'FIXED',  300000.00, '16:00:00', '18:00:00', 1);
+
+INSERT INTO vouchers (code, description, discount_type, discount_value, min_order_value, max_discount, quantity, used_count, start_date, end_date, is_active) VALUES
+
+-- Giảm % có giới hạn max
+('SUMMER20',    'Giảm 20% tối đa 100.000đ',         'PERCENT', 20.00,  200000.00, 100000.00, 100, 0,  '2026-06-01 00:00:00', '2026-08-31 23:59:59', TRUE),
+('WELCOME10',   'Giảm 10% cho đơn từ 500.000đ',      'PERCENT', 10.00,  500000.00, 50000.00,  50,  0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE),
+
+-- Giảm % không giới hạn max
+('SALE30',      'Giảm 30% không giới hạn',            'PERCENT', 30.00,  300000.00, NULL,      30,  0,  '2026-06-20 00:00:00', '2026-06-30 23:59:59', TRUE),
+
+-- Giảm tiền cố định
+('FREESHIP',    'Giảm 50.000đ phí ship',              'FIXED',   50000.00,  0.00,   NULL,      200, 0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE),
+('SAVE100K',    'Giảm 100.000đ cho đơn từ 1.000.000', 'FIXED',  100000.00, 1000000.00, NULL,   50,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE),
+
+-- Hết hạn
+('EXPIRED50',   'Giảm 50% (đã hết hạn)',              'PERCENT', 50.00,  100000.00, 200000.00, 100, 80, '2026-01-01 00:00:00', '2026-05-31 23:59:59', FALSE),
+
+-- Hết lượt
+('SOLDOUT',     'Giảm 200.000đ (đã hết lượt)',        'FIXED',  200000.00, 500000.00, NULL,    10,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE);
+
+INSERT INTO payment_methods (name) VALUES
+('COD'),
+('VNPAY'),
+('MOMO');
+ALTER TABLE orders
+    ADD COLUMN payment_status       	ENUM('PENDING','PAID','FAILED') DEFAULT 'PENDING',
+    ADD COLUMN payment_transaction_id 	VARCHAR(255) NULL,
+	ADD COLUMN tracking_code 			VARCHAR(255) NULL;

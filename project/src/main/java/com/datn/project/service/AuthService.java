@@ -21,9 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.datn.project.config.JwtFilter;
-import com.datn.project.dto.LoginRequest;
-import com.datn.project.dto.ProfileResponse;
-import com.datn.project.dto.RegisterRequest;
+import com.datn.project.dto.auth.LoginRequest;
+import com.datn.project.dto.auth.ProfileResponse;
+import com.datn.project.dto.auth.RegisterRequest;
 import com.datn.project.entity.AuthProvider;
 import com.datn.project.entity.ForgotPasswordToken;
 import com.datn.project.entity.Role;

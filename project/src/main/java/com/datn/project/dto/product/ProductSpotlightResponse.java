@@ -1,4 +1,4 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

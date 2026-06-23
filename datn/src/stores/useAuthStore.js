@@ -1,6 +1,7 @@
 import authAPI from '@/api/authAPI'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { useCartStore } from './useCartStore'
 
 export const useAuthStore = defineStore('auth', () => {
   // states
@@ -13,6 +14,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
+  const cartStore = useCartStore()
+
   // actions
   async function login(data) {
     loadding.value = true
@@ -20,12 +23,17 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const res = await authAPI.login(data)
+
       token.value = res.token
       resend.value = false
 
       localStorage.setItem('token', res.token)
 
       await me()
+
+      await cartStore.mergeCartToServer()
+      cartStore.clearLocal()
+      await cartStore.fetchCart()
     } catch (err) {
       error.value = err.response?.data?.message
       if (error.value === 'Account not activated') {

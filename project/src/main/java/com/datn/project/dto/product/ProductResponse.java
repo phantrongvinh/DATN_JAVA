@@ -1,8 +1,10 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.datn.project.dto.PromotionResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,4 +26,8 @@ public class ProductResponse {
     private boolean isAccessory;
     private String img;
     private List<ProductVariantResponse> productVariant;
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+    private BigDecimal discountedPrice;
+    private PromotionResponse promotion;
 }

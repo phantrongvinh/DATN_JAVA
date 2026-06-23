@@ -15,6 +15,7 @@ export const useProductStore = defineStore('product', () => {
   const filterProducts = ref([])
   const products = ref([])
   const product = ref()
+  const productOnSale = ref([])
 
   const page = ref(1)
   const size = ref(5)
@@ -39,6 +40,24 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
+  // fetch product on sale ở home
+  async function fetchProductOnSale() {
+    loadding.value = true
+    error.value = null
+
+    try {
+      const res = await productAPI.fetchProductOnSale()
+      productOnSale.value = res
+
+      return { success: true }
+    } catch (error) {
+      error.value = err.response?.data?.message
+      return { success: false, errorMessages: error.message }
+    } finally {
+      loadding.value = false
+    }
+  }
+
   // fetch product list theo filter điều kiện ở trang product
   async function fetchFilterProducts(data) {
     loadding.value = true
@@ -48,6 +67,7 @@ export const useProductStore = defineStore('product', () => {
       const res = await productAPI.fetchFilterProducts(data)
 
       filterProducts.value = res
+      console.log(filterProducts.value)
 
       return { success: true }
     } catch (error) {
@@ -164,6 +184,7 @@ export const useProductStore = defineStore('product', () => {
     loadding,
     error,
     spotlightProducts,
+    productOnSale,
     filterProducts,
     productOverview,
     products,
@@ -180,5 +201,6 @@ export const useProductStore = defineStore('product', () => {
     deleteProductById,
     updateProductById,
     fetchProductByID,
+    fetchProductOnSale,
   }
 })
