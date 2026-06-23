@@ -40,8 +40,8 @@
       <p class="text-xs font-weight-bold text-secondary mb-0">{{ ulti.formatDate(d.updatedAt) }}</p>
     </td>
 
-    <td v-if="interactive" class="align-middle">
-      <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
+    <td class="align-middle">
+      <div class="d-flex justify-content-start align-items-center gap-2">
         <a
           class="text-secondary font-weight-bold text-xs cursor-pointer text-danger"
           data-toggle="tooltip"
@@ -60,6 +60,17 @@
         </a>
       </div>
     </td>
+    <td class="align-middle">
+      <div class="form-check">
+        <input
+          type="checkbox"
+          :id="d.id"
+          class="form-check-input"
+          :checked="props.selectedIds.includes(d.id)"
+          @change="emit('select-product', d.id)"
+        />
+      </div>
+    </td>
   </tr>
 </template>
 <script setup>
@@ -70,5 +81,11 @@ const props = defineProps({
   interactive: Boolean,
   handleActiveProduct: Function,
   handleUpdateProduct: Function,
+  selectedIds: Array,
 })
+
+defineOptions({
+  inheritAttrs: false,
+})
+const emit = defineEmits(['select-product'])
 </script>

@@ -94,6 +94,8 @@
             :handleActiveProduct="handleActiveProduct"
             :handleUpdateProduct="handleUpdateProduct"
             :message="message"
+            :selectProduct="selectProduct"
+            :selectedIds="selectedIds"
           />
         </div>
         <div v-if="!message">
@@ -245,6 +247,7 @@ const initialProductList = {
   trangThai: 'Trạng thái',
   ngayCapNhat: 'Ngày cập nhật',
   thaoTac: 'Thao tác',
+  check: '',
 }
 
 const productStore = useProductStore()
@@ -517,4 +520,17 @@ const handleConfirmUpdate = handleSubmit(async (values) => {
   }
   handleOpenModal()
 })
+
+// handle select product
+const selectedIds = ref([])
+
+const selectProduct = (id) => {
+  const index = selectedIds.value.indexOf(id)
+  if (index === -1) {
+    selectedIds.value.push(id)
+  } else {
+    selectedIds.value.splice(index, 1)
+  }
+  console.log(selectedIds.value)
+}
 </script>

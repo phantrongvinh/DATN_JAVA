@@ -23,7 +23,7 @@
       <div class="row">
         <!-- Filter được handle ẩn hiện theo nút bấm ở trên -->
         <div class="col-lg-3" v-show="showFilter">
-          <div class="card position-sticky top-1 border-0 shadow-0">
+          <div class="card position-sticky top-1 border-0">
             <div class="card-header pb-0">
               <h5>Filter</h5>
             </div>
@@ -71,14 +71,13 @@
                   </div>
                 </div>
               </div>
-              <hr class="horizontal dark my-3" />
             </div>
           </div>
         </div>
         <!-- Phần products list sẽ được filter theo điều kiện của side filter -->
         <div class="ps-3 border-start pb-5" :class="showFilter ? 'col-lg-9' : 'col-lg-12'">
           <!-- Phần filter thêm của product list: danh mục, khoảng giá, tăng dần giảm dần -->
-          <div class="d-flex justify-content-start gap-3">
+          <div class="d-flex justify-content-start gap-3" v-if="showFilter">
             <Select
               :data="categories"
               v-model:selected="selectedCategory"
@@ -150,9 +149,17 @@
 
                   <!-- Footer -->
                   <div class="card-footer d-flex align-items-center justify-content-end">
-                    <h6 class="text-danger mb-0">
-                      {{ (f.productVariant?.[0]?.price ?? f.basePrice).toLocaleString('vi-VN') }} đ
-                    </h6>
+                    <div class="d-flex gap-2 align-items-center">
+                      <span
+                        v-if="f.discountedPrice < f.minPrice"
+                        class="text-muted text-decoration-line-through"
+                      >
+                        {{ ulti.formatVND(f.minPrice) }}
+                      </span>
+                      <h6 class="text-danger mb-0">
+                        {{ ulti.formatVND(f.discountedPrice ?? f.minPrice) }}
+                      </h6>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -182,9 +189,6 @@ import { useRoute, useRouter } from 'vue-router'
 // lấy param từ route
 const route = useRoute()
 const router = useRouter()
-
-const product = computed(() => route.query.product)
-const name = computed(() => route.query.name)
 
 // fetch data
 

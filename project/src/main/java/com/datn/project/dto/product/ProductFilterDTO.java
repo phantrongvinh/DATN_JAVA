@@ -1,5 +1,6 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -14,4 +15,10 @@ public class ProductFilterDTO {
     private List<Integer> categoryIds;
     private List<Integer> audienceIds;
     private String search;
+    private Boolean onSale;
+
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+
+    private String sortBy;
 }

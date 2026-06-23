@@ -1,4 +1,4 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 
@@ -17,6 +17,7 @@ public class ProductVariantDTO {
     private Integer sizeId;
     private String sizeName;
     private Integer stock;
+    private BigDecimal discountedPrice;
     private BigDecimal price;
     private String sku;
 }

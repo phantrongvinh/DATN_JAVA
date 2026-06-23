@@ -1,7 +1,9 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import com.datn.project.dto.PromotionResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +31,9 @@ public class ProductDetailDTO {
     private List<ProductImageDTO> images;
     private List<ProductVariantDTO> variants;
 
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+    private BigDecimal discountedMinPrice;
+
+    private PromotionResponse promotion;
 }
-
-
-

@@ -90,6 +90,12 @@ const router = createRouter({
       name: 'admindasboard',
       component: () => import('../views/AdminDashboard.vue'),
     },
+    {
+      path: '/payment/vnpay-return',
+      name: 'VNPayReturn',
+      component: () => import('@/views/PaymentReturn.vue'),
+      meta: { requiresAuth: false },
+    },
   ],
 })
 

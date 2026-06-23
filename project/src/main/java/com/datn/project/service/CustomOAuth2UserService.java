@@ -46,7 +46,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newUser.setFullName(name);
             newUser.setPhone("");
             newUser.setActived(true);
-            newUser.setAuthProvider(AuthProvider.GOOLE);
+            newUser.setAuthProvider(AuthProvider.GOOGLE);
             newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             Role userRole = roleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Role not found"));
 

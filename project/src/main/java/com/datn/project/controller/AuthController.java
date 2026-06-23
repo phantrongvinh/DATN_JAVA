@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datn.project.dto.LoginRequest;
-import com.datn.project.dto.RegisterRequest;
-import com.datn.project.dto.ResendMailRequest;
+import com.datn.project.dto.auth.LoginRequest;
+import com.datn.project.dto.auth.RegisterRequest;
+import com.datn.project.dto.auth.ResendMailRequest;
 import com.datn.project.service.IAuthService;
 
 import jakarta.servlet.http.HttpServletRequest;

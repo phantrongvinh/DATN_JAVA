@@ -3,6 +3,7 @@ package com.datn.project.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -79,11 +80,29 @@ public class SecurityConfig {
                         }))
                 .authorizeHttpRequests(auth -> {
                     auth
+                            // ─── Auth ────────────────────────────────────────
                             .requestMatchers("/api/v1/auth/me").authenticated()
                             .requestMatchers("/api/v1/auth/logout").authenticated()
                             .requestMatchers("/api/v1/auth/**").permitAll()
-                            .requestMatchers("/api/v1/products/**").permitAll()
+
+                            // ─── Public ──────────────────────────────────────
+                            .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/promotions/**").permitAll()
+
+                            // ─── Admin ───────────────────────────────────────
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/promotions/**").hasRole("ADMIN")
+
+                            // ─── User (đã login) ─────────────────────────────
+                            .requestMatchers("/api/v1/cart/**").authenticated()
+                            .requestMatchers("/api/v1/orders/**").authenticated()
+
+                            // ─── Promotion/ Voucher ──────────────────────────
+                            .requestMatchers("/api/v1/vouchers/**").authenticated()
+
                             .anyRequest().permitAll();
                 })
                 .oauth2Login(oauth2 -> oauth2

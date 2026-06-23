@@ -3,21 +3,63 @@ import { RouterView } from 'vue-router'
 import Header from './views/layout/Header.vue'
 import Footer from './views/layout/Footer.vue'
 import { useNotificationStore } from './stores/useNotificationStore.js'
+import { Transition } from 'vue'
 
 const notification = useNotificationStore()
+
+import { computed } from 'vue'
+
+const icon = computed(() => {
+  switch (notification.type) {
+    case 'success':
+      return 'check_circle'
+    case 'error':
+      return 'error'
+    case 'warning':
+      return 'warning'
+    default:
+      return 'info'
+  }
+})
+
+const iconClass = computed(() => {
+  switch (notification.type) {
+    case 'success':
+      return 'text-success'
+    case 'error':
+      return 'text-danger'
+    case 'warning':
+      return 'text-warning'
+    default:
+      return 'text-info'
+  }
+})
 </script>
 
 <template>
-  <div
-    v-if="notification.show"
-    class="toast-notification shadow-lg rounded overflow-hidden border fst-italic d-flex flex-column align-items-center"
-  >
-    <div class="m-3">
-      {{ notification.message }}
+  <Transition name="toast">
+    <div v-if="notification.show" class="toast-notification bg-white shadow rounded-3">
+      <div class="d-flex align-items-center px-3 py-2">
+        <i class="material-symbols-rounded me-2" :class="iconClass">
+          {{ icon }}
+        </i>
+
+        <div class="flex-grow-1">
+          <div class="fw-bold">Notification</div>
+          <small class="text-muted">
+            {{ notification.message }}
+          </small>
+        </div>
+
+        <button class="btn-close ms-3" @click="notification.show = false"></button>
+      </div>
+
+      <hr class="m-0" />
+
+      <div class="toast-progress" :class="notification.type"></div>
     </div>
-    <div class="py-2 w-100 m-0" :class="notification.type"></div>
-  </div>
-  <div class="d-flex flex-column">
+  </Transition>
+  <div class="d-flex flex-column min-vh-100">
     <Header></Header>
 
     <div id="main" class="flex-grow-1">
@@ -28,4 +70,45 @@ const notification = useNotificationStore()
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 340px;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.toast-progress {
+  height: 4px;
+}
+
+.toast-progress.success {
+  background: #4caf50;
+}
+
+.toast-progress.error {
+  background: #f44335;
+}
+
+.toast-progress.warning {
+  background: #fb8c00;
+}
+
+.toast-progress.info {
+  background: #1a73e8;
+}
+
+/* Animation */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+</style>

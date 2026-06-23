@@ -47,7 +47,35 @@
 
             ⭐⭐⭐⭐⭐ (32 đánh giá)
 
-            <h3 class="text-gradient text-danger mt-3">{{ ulti.formatVND(selectPrice) }}</h3>
+            <div v-if="displayPrice" class="my-3">
+              <!-- giá gốc gạch ngang nếu có giảm -->
+              <span
+                v-if="displayPrice.discounted < displayPrice.original"
+                class="text-muted text-decoration-line-through me-2"
+              >
+                {{ ulti.formatVND(displayPrice.original) }}
+                <span v-if="displayPrice.isRange">
+                  - {{ ulti.formatVND(displayPrice.maxPrice) }}</span
+                >
+              </span>
+
+              <!-- giá hiển thị -->
+              <h3 class="text-gradient text-danger mb-0">
+                {{ ulti.formatVND(displayPrice.discounted) }}
+                <span v-if="displayPrice.isRange" class="fs-6">
+                  - {{ ulti.formatVND(displayPrice.maxPrice) }}
+                </span>
+              </h3>
+
+              <!-- badge promotion -->
+              <span v-if="product.promotion" class="badge bg-danger mt-1">
+                {{
+                  product.promotion.discountType === 'percent'
+                    ? `-${product.promotion.discountValue}%`
+                    : `-${ulti.formatVND(product.promotion.discountValue)}`
+                }}
+              </span>
+            </div>
 
             <span class="badge bg-gradient-success"> Còn hàng </span>
 
@@ -219,6 +247,8 @@ import { storeToRefs } from 'pinia'
 import ulti from '@/ulti/ulti'
 import Select from '@/components/Select.vue'
 import { useCartStore } from '@/stores/useCartStore'
+import { useCart } from '@/composables/useCart'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 const thumbsSwiper = ref(null)
 const setThumbsSwiper = (swiper) => {
@@ -272,10 +302,6 @@ const currentVariant = computed(() => {
   )
 })
 
-const selectPrice = computed(() => {
-  return currentVariant.value?.price
-})
-
 watch(product, (newProduct) => {
   if (newProduct?.variants?.length) {
     selectedColor.value = colors.value[0]
@@ -287,35 +313,67 @@ watch(selectedColor, () => {
   selectedSize.value = availableSizes.value[0]?.sizeName
 })
 
+// hanle price
+const displayPrice = computed(() => {
+  if (!product.value) return null
+
+  if (!currentVariant.value) {
+    return {
+      original: product.value.minPrice,
+      discounted: product.value.discountedMinPrice,
+      isRange: product.value.minPrice !== product.value.maxPrice,
+      maxPrice: product.value.maxPrice,
+    }
+  }
+
+  return {
+    original: currentVariant.value.price,
+    discounted: currentVariant.value.discountedPrice,
+    isRange: false,
+    maxPrice: null,
+  }
+})
+
 // hanlde add to cart
 const quantityMessage = ref('')
 
-const cartStore = useCartStore()
+const { addItem } = useCart()
 
-const { items } = storeToRefs(cartStore)
+const notification = useNotificationStore()
 
 watch(quantity, (newQuantity) => {
   if (newQuantity) quantityMessage.value = ''
 })
 
-const handleAddToCart = () => {
-  if (quantity.value !== 0) {
-    const image = product.value.images.find((i) => i.isPrimary)
-
-    const data = {
-      name: product.value.name,
-      productVariantId: currentVariant.value.id,
-      sku: currentVariant.value.sku,
-      image: image.imageUrl,
-      size: currentVariant.value.sizeName,
-      color: currentVariant.value.color,
-      quantity: quantity.value,
-      price: currentVariant.value.price,
-    }
-    cartStore.addItem(data)
-  } else {
-    quantityMessage.value = 'Vui lòng chọn số lượng'
+const handleAddToCart = async () => {
+  if (!currentVariant.value) {
+    quantityMessage.value = 'Vui lòng chọn màu và size'
+    return
   }
+
+  if (quantity.value <= 0) {
+    quantityMessage.value = 'Vui lòng chọn số lượng'
+    return
+  }
+
+  const image = product.value.images.find((i) => i.isPrimary) ?? product.value.images[0]
+
+  const data = {
+    name: product.value.name,
+    productVariantId: currentVariant.value.id,
+    sku: currentVariant.value.sku,
+    image: image?.imageUrl,
+    size: currentVariant.value.sizeName,
+    color: currentVariant.value.color,
+    quantity: quantity.value,
+    price: currentVariant.value.discountedPrice ?? currentVariant.value.price, // giá sau giảm
+  }
+
+  await addItem(data)
+  notification.notify(
+    `Thêm ${data.name} size ${data.sizeName} số lượng ${data.quantity} thành công`,
+    'success',
+  )
 }
 </script>
 

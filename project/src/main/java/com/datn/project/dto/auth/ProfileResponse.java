@@ -1,6 +1,7 @@
-package com.datn.project.dto;
+package com.datn.project.dto.auth;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,13 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequest {
+public class ProfileResponse {
 
     private String email;
-    private String password;
-    private String confirmPassword;
-    private String fullName;
     private String phone;
+    private String fullName;
     private LocalDate birthDay;
-
+    private List<String> roles;
 }

@@ -1,4 +1,4 @@
-package com.datn.project.dto;
+package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

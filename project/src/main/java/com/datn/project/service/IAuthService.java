@@ -2,8 +2,8 @@ package com.datn.project.service;
 
 import org.springframework.http.ResponseEntity;
 
-import com.datn.project.dto.LoginRequest;
-import com.datn.project.dto.RegisterRequest;
+import com.datn.project.dto.auth.LoginRequest;
+import com.datn.project.dto.auth.RegisterRequest;
 import com.datn.project.entity.User;
 
 import jakarta.servlet.http.HttpServletRequest;

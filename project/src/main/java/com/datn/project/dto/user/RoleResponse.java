@@ -1,14 +1,12 @@
-package com.datn.project.dto;
+package com.datn.project.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-public class LoginRequest {
-
-    private String email;
-    private String password;
+public class RoleResponse {
+    private String roleName;
 }

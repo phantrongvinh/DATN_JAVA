@@ -34,15 +34,13 @@
     </div>
     <div class="mb-3" v-if="props.interactive">
       <div class="d-flex justify-content-between">
-        <div class="form-check">
+        <div class="form-check ps-0">
           <input type="checkbox" name="rememberMe" id="rememberMe" class="form-check-input" />
-          <label class="form-check-label text-secondary fs-6">Remember me</label>
+          <label class="form-check-label text-secondary">Remember me</label>
         </div>
 
         <div class="text-secondary">
-          <RouterLink to="/forgot-password" class="fs-6 hover-underline"
-            >Forgot password?</RouterLink
-          >
+          <RouterLink to="/forgot-password" class="hover-underline">Forgot password?</RouterLink>
         </div>
       </div>
     </div>
