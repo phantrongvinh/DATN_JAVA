@@ -88,8 +88,8 @@
           <hr class="my-5" />
           <!-- Phần data product list -->
           <div class="row g-4">
-            <template v-if="filterList.length > 0">
-              <div class="col-xl-4 col-md-6 mb-5 d-flex" v-for="f in filterList" :key="f.id">
+            <template v-if="filterProducts && filterProducts.length > 0">
+              <div class="col-xl-4 col-md-6 mb-5 d-flex" v-for="f in filterProducts" :key="f.id">
                 <div class="card h-100 w-100 d-flex flex-column" data-animation="true">
                   <!-- Image -->
                   <div class="card-header p-0 position-relative mt-n2 mx-3 z-index-2">
@@ -227,7 +227,11 @@ watch(
           : [Number(query.audienceIds)]
         : [],
 
-      search: query.search || '',
+      search: query.search || null,
+      onSale: null,
+      minPrice: null,
+      maxPrice: null,
+      sortBy: null,
     }
     await productStore.fetchFilterProducts(params)
   },
@@ -270,7 +274,7 @@ const label = computed(() => {
 
   return 'Clothing'
 })
-const filterList = computed(() => productStore.filterProducts)
+const { filterProducts } = storeToRefs(productStore)
 
 const selectedAudience = computed({
   get() {

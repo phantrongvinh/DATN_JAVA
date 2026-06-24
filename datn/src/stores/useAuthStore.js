@@ -30,6 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', res.token)
 
       await me()
+      console.log(user.value)
 
       await cartStore.mergeCartToServer()
       cartStore.clearLocal()

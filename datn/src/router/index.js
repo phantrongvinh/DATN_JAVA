@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
+import Home from '../views/TestHome.vue'
 import { useAuthStore } from '@/stores/useAuthStore.js'
 import { storeToRefs } from 'pinia'
+import { useCartStore } from '@/stores/useCartStore.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,11 +39,11 @@ const router = createRouter({
       component: () => import('../views/Profile.vue'),
       meta: {
         requiresAuth: true,
-        roles: ['USER'],
+        roles: ['USER', 'ADMIN'],
       },
     },
     {
-      path: '/product',
+      path: '/products',
       name: 'product',
       component: () => import('../views/Product.vue'),
     },
@@ -86,9 +87,18 @@ const router = createRouter({
       component: () => import('../views/ResetPassword.vue'),
     },
     {
-      path: '/admin-dashboard',
-      name: 'admindasboard',
-      component: () => import('../views/AdminDashboard.vue'),
+      path: '/checkout',
+      name: 'checkout',
+      component: () => import('../views/CheckOut.vue'),
+      meta: { requiresAuth: true },
+      beforeEnter: (to, from, next) => {
+        const cartStore = useCartStore()
+        if (!cartStore.items || cartStore.items.length === 0) {
+          next('/cart')
+        } else {
+          next()
+        }
+      },
     },
     {
       path: '/payment/vnpay-return',

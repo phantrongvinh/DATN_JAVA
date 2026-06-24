@@ -31,6 +31,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       const res = await productAPI.fetchSpotlightProducts()
       spotlightProducts.value = res
+
       return { success: true }
     } catch (error) {
       error.value = err.response?.data?.message
@@ -66,8 +67,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       const res = await productAPI.fetchFilterProducts(data)
 
-      filterProducts.value = res
-      console.log(filterProducts.value)
+      filterProducts.value = res.content
 
       return { success: true }
     } catch (error) {

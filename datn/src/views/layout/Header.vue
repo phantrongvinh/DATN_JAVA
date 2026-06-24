@@ -1,185 +1,128 @@
 <template>
-  <div class="bg-gradient-danger">
-    <div class="d-flex py-1 justify-content-between align-items-center container-fluid px-5 py-2">
-      <i class="fa-regular fa-futbol fs-6 text-white"></i>
-      <div class="d-flex align-items-center">
-        <div class="dropdown ms-3" v-if="isAuthenticated">
-          <a href="#" class="text-dark" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa-regular fa-user fs-5 cursor-pointer text-white"></i>
-          </a>
+  <header
+    class="sticky top-0 z-50 w-full border-b bg-background/85 backdrop-blur-md"
+    :class="{ 'shadow-sm': scrolled }"
+  >
+    <div class="container-x flex h-16 items-center justify-between gap-6">
+      <!-- Logo -->
+      <RouterLink to="/" class="flex items-baseline gap-1">
+        <span class="font-display text-2xl font-semibold tracking-tight"> Maison </span>
+        <span class="font-display text-2xl italic text-gold"> Calcio </span>
+      </RouterLink>
 
-          <ul
-            class="dropdown-menu dropdown-menu-end px-2 py-3 shadow border-0 z-100"
-            style="min-width: 320px"
-          >
-            <li>
-              <div class="d-flex align-items-center mb-3 px-2">
-                <img
-                  src="/images/avatar-default.svg"
-                  alt=""
-                  class="rounded-circle"
-                  width="50"
-                  height="50"
-                />
-
-                <div class="ms-3">
-                  <h6 class="mb-0">
-                    {{ user?.fullName }}
-                  </h6>
-
-                  <p class="text-sm text-secondary mb-0">
-                    {{ user?.email }}
-                  </p>
-                </div>
-              </div>
-            </li>
-
-            <li>
-              <hr class="horizontal dark my-2" />
-            </li>
-
-            <li>
-              <RouterLink class="dropdown-item border-radius-md" to="/profile">
-                <i class="fa-regular fa-user me-2"></i>
-                Hồ sơ cá nhân
-              </RouterLink>
-            </li>
-
-            <li>
-              <a
-                class="dropdown-item border-radius-md text-danger"
-                href="#"
-                @click.prevent="handleLogout"
-              >
-                <i class="fa-solid fa-right-from-bracket me-2"></i>
-                Đăng xuất
-              </a>
-            </li>
-          </ul>
-        </div>
+      <!-- Navigation -->
+      <nav class="hidden items-center gap-8 md:flex">
         <RouterLink
-          to="/login"
-          class="text-decoration-none fw-semibold fs-14 text-hover text-white"
-          v-else
-          >Sign in</RouterLink
+          to="/"
+          class="text-sm tracking-wide text-foreground/80 transition-colors hover:text-foreground"
+          active-class="font-medium text-foreground"
+          >Home</RouterLink
         >
+        <RouterLink
+          v-for="audience in audiences"
+          :key="audience.id"
+          :to="{
+            name: 'product',
+            query: {
+              audienceIds: audience.id,
+            },
+          }"
+          class="text-sm tracking-wide text-foreground/80 transition-colors hover:text-foreground"
+          active-class="font-medium text-foreground"
+        >
+          {{ audience.name }}
+        </RouterLink>
+      </nav>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-1">
+        <!-- Search -->
+        <button aria-label="Tìm kiếm" class="rounded-full p-2 hover:bg-accent">
+          <Search size="20" />
+        </button>
+
+        <!-- User -->
+        <DropdownMenu v-if="isAuthenticated">
+          <DropdownMenuTrigger as-child>
+            <button
+              class="flex items-center gap-2 rounded-full px-2 py-1.5 text-sm hover:bg-accent"
+            >
+              <UserCircle2 size="20" />
+
+              <span class="hidden max-w-[120px] truncate sm:inline">
+                {{ user.fullName }}
+              </span>
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent class="w-56">
+            <DropdownMenuLabel>
+              <div class="font-normal">
+                <p class="text-sm font-medium">
+                  {{ user.fullName }}
+                </p>
+
+                <p class="truncate text-xs text-muted-foreground">
+                  {{ user.email }}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            <RouterLink to="/profile">
+              <DropdownMenuItem>
+                <User class="mr-2 h-4 w-4" />
+                Hồ sơ cá nhân
+              </DropdownMenuItem>
+            </RouterLink>
+
+            <DropdownMenuItem @click.prevent="handleLogout">
+              <LogOut class="mr-2 h-4 w-4" />
+              Đăng xuất
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <!-- Login -->
+        <RouterLink v-else to="/login" class="rounded-full p-2 hover:bg-accent">
+          <User size="20" />
+        </RouterLink>
+
+        <!-- Cart -->
+        <RouterLink to="/cart">
+          <button
+            aria-label="Giỏ hàng"
+            class="relative rounded-full p-2 hover:bg-accent cursor-pointer"
+          >
+            <ShoppingBag size="20" />
+
+            <span
+              class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[10px] font-medium text-ivory"
+            >
+              3
+            </span>
+          </button>
+        </RouterLink>
       </div>
     </div>
-  </div>
-  <div class="sticky-top bg-white border-bottom">
-    <div class="container-fluid">
-      <nav class="px-5">
-        <div class="row py-2">
-          <div class="col-lg-4">
-            <i class="fa-solid fa-fire-flame-simple fs-2"></i>
-          </div>
-          <div class="col-lg-4">
-            <ul class="nav nav-underline justify-content-around">
-              <li class="nav-item">
-                <RouterLink to="/" class="nav-link text-dark fw-semibold"> Home </RouterLink>
-              </li>
-
-              <li
-                class="nav-item dropdown position-static"
-                v-for="audience in audienceList"
-                :key="audience.id"
-              >
-                <a href="#" class="nav-link text-dark fw-semibold" data-bs-toggle="dropdown">
-                  {{ ulti.formatLabel(audience.name) }}
-                </a>
-
-                <div class="dropdown-menu border-0 rounded-0 mt-2 start-0 end-0 shadow">
-                  <div class="container py-3">
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 col-6 mb-3">
-                        <RouterLink
-                          class="text-decoration-none text-menu fw-semibold"
-                          :to="{
-                            name: 'product',
-                            query: {
-                              audienceIds: audience.id,
-                            },
-                          }"
-                        >
-                          Tất cả
-                        </RouterLink>
-                      </div>
-                      <div
-                        class="col-lg-3 col-md-4 col-6 mb-3"
-                        v-for="brand in brandList"
-                        :key="brand.id"
-                      >
-                        <RouterLink
-                          class="text-decoration-none text-menu fw-semibold"
-                          :to="{
-                            name: 'product',
-                            query: {
-                              audienceIds: audience.id,
-                              brandIds: brand.id,
-                            },
-                          }"
-                        >
-                          {{ brand.name }}
-                        </RouterLink>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li class="nav-item dropdown position-static">
-                <a href="#" class="nav-link text-dark fw-semibold" data-bs-toggle="dropdown">
-                  Accessories
-                </a>
-
-                <div class="dropdown-menu border-0 rounded-0 mt-2 start-0 end-0 shadow">
-                  <div class="container py-3">
-                    <div class="row">
-                      <div
-                        class="col-lg-3 col-md-4 col-6 mb-3"
-                        v-for="accessory in accesoryList"
-                        :key="accessory.id"
-                      >
-                        <RouterLink
-                          class="text-decoration-none text-menu fw-semibold"
-                          :to="{
-                            name: 'product',
-                            query: {
-                              accessoryIds: accessory.id,
-                            },
-                          }"
-                        >
-                          {{ accessory.name }}
-                        </RouterLink>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div class="col-lg-4">
-            <div class="d-flex justify-content-end">
-              <div class="input-group input-group-outline w-50">
-                <label class="form-label">Tìm kiếm sản phẩm</label>
-                <input class="form-control me-2" type="search" aria-label="Search" />
-              </div>
-              <div class="mx-3 d-flex align-items-center">
-                <i class="fa-regular fa-heart fs-4"></i>
-              </div>
-
-              <RouterLink to="/cart" class="d-flex align-items-center">
-                <i class="fa-brands fa-opencart fs-4"></i>
-              </RouterLink>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  </div>
+  </header>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { Search, ShoppingBag, User, LogOut, UserCircle2 } from 'lucide-vue-next'
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useBrandStore } from '@/stores/useBrandStore'
@@ -187,11 +130,12 @@ import { useCategoryStore } from '@/stores/useCategoryStore'
 import ulti from '@/ulti/ulti'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+
+const scrolled = ref(false)
 
 const router = useRouter()
 
-// stores
+// // stores
 const audienceStore = useAudienceStore()
 const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
@@ -205,9 +149,9 @@ onMounted(async () => {
   ])
 })
 
-const { audiences: audienceList } = storeToRefs(audienceStore)
-const { brands: brandList } = storeToRefs(brandStore)
-const { accessories: accesoryList } = storeToRefs(categoryStore)
+const { audiences } = storeToRefs(audienceStore)
+const { brands } = storeToRefs(brandStore)
+const { accessories } = storeToRefs(categoryStore)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const { user } = storeToRefs(authStore)
 
