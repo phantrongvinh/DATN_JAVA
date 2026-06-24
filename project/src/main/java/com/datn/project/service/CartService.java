@@ -3,7 +3,6 @@ package com.datn.project.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,6 @@ import com.datn.project.entity.ProductVariant;
 import com.datn.project.entity.User;
 import com.datn.project.repository.ICartItemRepository;
 import com.datn.project.repository.ICartRepository;
-import com.datn.project.repository.IProductRepository;
 import com.datn.project.repository.IProductVariantRepository;
 import com.datn.project.repository.IUserRepository;
 
@@ -139,5 +137,12 @@ public class CartService implements ICartService {
             cartItemRepository.save(item);
             return ResponseEntity.ok("Cập nhật thành công");
         }
+    }
+
+    @Override
+    @Transactional
+    public void clearCart(int userId) {
+        Cart cart = getOrCreateCart(userId);
+        cartItemRepository.deleteAllByCartId(cart.getId());
     }
 }

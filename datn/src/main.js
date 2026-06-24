@@ -1,4 +1,4 @@
-import './assets/main.css'
+import '@/assets/main.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -9,13 +9,8 @@ import router from './router'
 import VueVirtualScroller from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useAuthStore } from './stores/useAuthStore'
-// CSS
-import './assets/css/nucleo-icons.css'
-import './assets/css/nucleo-svg.css'
-import './assets/css/material-dashboard.css'
 
 // Dashboard JS
-import './assets/js/material-dashboard.min.js'
 
 import Scrollbar from 'smooth-scrollbar'
 

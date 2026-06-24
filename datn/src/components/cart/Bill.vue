@@ -96,11 +96,9 @@ const {
   voucher,
   voucherCode,
   voucherError,
-  loading,
   error,
   handleApplyVoucher,
   removeVoucher,
-  checkout,
 } = useCheckout()
 
 // const form = reactive({

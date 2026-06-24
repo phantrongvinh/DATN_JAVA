@@ -19,5 +19,7 @@ public interface ICartService {
     ResponseEntity<?> removeItem(int userId, int variantId);
 
     ResponseEntity<?> updateQuantity(int userId,int variantId, int quantity);
+
+    void clearCart(int userId);
     
 } 

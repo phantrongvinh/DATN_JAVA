@@ -588,3 +588,6 @@ ALTER TABLE orders
     ADD COLUMN payment_status       	ENUM('PENDING','PAID','FAILED') DEFAULT 'PENDING',
     ADD COLUMN payment_transaction_id 	VARCHAR(255) NULL,
 	ADD COLUMN tracking_code 			VARCHAR(255) NULL;
+    
+ALTER TABLE addresses ADD COLUMN receiver_name VARCHAR(100);
+ALTER TABLE addresses ADD COLUMN receiver_phone VARCHAR(15);

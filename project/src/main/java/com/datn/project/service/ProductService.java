@@ -20,10 +20,10 @@ import org.springframework.stereotype.Service;
 import com.datn.project.dto.PromotionResponse;
 import com.datn.project.dto.product.ProductDetailDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
+import com.datn.project.dto.product.ProductHomeView;
 import com.datn.project.dto.product.ProductImageDTO;
 import com.datn.project.dto.product.ProductOverview;
 import com.datn.project.dto.product.ProductResponse;
-import com.datn.project.dto.product.ProductSpotlightResponse;
 import com.datn.project.dto.product.ProductUpdateRequest;
 import com.datn.project.dto.product.ProductVariantDTO;
 import com.datn.project.dto.product.ProductVariantResponse;
@@ -35,9 +35,7 @@ import com.datn.project.entity.ProductVariant;
 import com.datn.project.entity.Promotion;
 import com.datn.project.repository.IBrandRepository;
 import com.datn.project.repository.ICategoryRepository;
-import com.datn.project.repository.IProductImageRepository;
 import com.datn.project.repository.IProductRepository;
-import com.datn.project.repository.IProductVariantRepository;
 import com.datn.project.specification.ProductSpecification;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -53,12 +51,6 @@ public class ProductService implements IProductService {
 
         @Autowired
         private ICategoryRepository categoryRepository;
-
-        @Autowired
-        private IProductImageRepository productImageRepository;
-
-        @Autowired
-        private IProductVariantRepository productVariantRepository;
 
         @Autowired
         private IPromotionService promotionService;
@@ -214,35 +206,6 @@ public class ProductService implements IProductService {
                                 "hasNext", products.hasNext(),
                                 "page", page,
                                 "size", size));
-        }
-
-        // lấy 10 product mới nhất để hiện lên index
-
-        private ProductSpotlightResponse toSpotlight(Product p) {
-
-                ProductSpotlightResponse response = new ProductSpotlightResponse();
-
-                response.setId(p.getId());
-                response.setName(p.getName());
-
-                response.setImg(
-                                p.getProductImages()
-                                                .stream()
-                                                .findFirst()
-                                                .map(ProductImage::getImageUrl)
-                                                .orElse(null));
-
-                return response;
-        }
-
-        @Override
-        public ResponseEntity<?> getSpotlightProducts() {
-                List<Product> products = productRepository.findTop10ByDeletedAtIsNullOrderByCreatedAtDesc();
-
-                return ResponseEntity.ok(
-                                products.stream()
-                                                .map(this::toSpotlight)
-                                                .toList());
         }
 
         // lấy 5 product mới nhất để thống kê
@@ -421,12 +384,89 @@ public class ProductService implements IProductService {
                                 toDetailResponse(product));
         }
 
+        @Override
+        public ResponseEntity<?> getSpotlightProducts() {
+                List<ProductHomeView> responses = productRepository.findTop4ByDeletedAtIsNullOrderByCreatedAtDesc()
+                                .stream()
+                                .map(product -> {
+                                        ProductHomeView res = new ProductHomeView();
+                                        res.setCategoryName(product.getCategory().getName());
+                                        res.setId(product.getId());
+                                        res.setName(product.getName());
+                                        res.setBrandName(product.getBrand().getName());
+
+                                        ProductImage productImage = product.getProductImages().stream()
+                                                        .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
+                                                        .findFirst()
+                                                        .orElse(null);
+                                        res.setImage(productImage.getImageUrl());
+                                        // Min và Max price
+                                        BigDecimal minPrice = product.getProductVariants()
+                                                        .stream()
+                                                        .map(ProductVariant::getPrice)
+                                                        .min(BigDecimal::compareTo)
+                                                        .orElse(product.getBasePrice());
+
+                                        // Promotion tốt nhất
+                                        Optional<Promotion> promo = getBestPromotion(product, minPrice);
+                                        PromotionResponse promoResponse = promo
+                                                        .map(this::toPromotionResponse)
+                                                        .orElse(null);
+
+                                        BigDecimal discountedMinPrice = promo
+                                                        .map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
+                                                        .orElse(minPrice);
+
+                                        res.setPrice(minPrice);
+                                        res.setDiscountPrice(discountedMinPrice);
+                                        res.setPromotion(promoResponse);
+                                        return res;
+                                })
+                                .toList();
+                return ResponseEntity.ok(responses);
+
+        }
+
         // Lấy product theo chương trình khuyến mãi
         @Override
         public ResponseEntity<?> getProductOnSale() {
-                List<ProductResponse> responses = productRepository.findProductsOnSale(PageRequest.of(0, 6))
+
+                List<ProductHomeView> responses = productRepository.findProductsOnSale(PageRequest.of(0, 4))
                                 .stream()
-                                .map(this::toResponse)
+                                .map(product -> {
+                                        ProductHomeView res = new ProductHomeView();
+                                        res.setCategoryName(product.getCategory().getName());
+                                        res.setId(product.getId());
+                                        res.setName(product.getName());
+                                        res.setBrandName(product.getBrand().getName());
+
+                                        ProductImage productImage = product.getProductImages().stream()
+                                                        .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
+                                                        .findFirst()
+                                                        .orElse(null);
+                                        res.setImage(productImage.getImageUrl());
+
+                                        // Min và Max price
+                                        BigDecimal minPrice = product.getProductVariants()
+                                                        .stream()
+                                                        .map(ProductVariant::getPrice)
+                                                        .min(BigDecimal::compareTo)
+                                                        .orElse(product.getBasePrice());
+
+                                        // Promotion tốt nhất
+                                        Optional<Promotion> promo = getBestPromotion(product, minPrice);
+                                        PromotionResponse promoResponse = promo
+                                                        .map(this::toPromotionResponse)
+                                                        .orElse(null);
+                                        BigDecimal discountedMinPrice = promo
+                                                        .map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
+                                                        .orElse(minPrice);
+
+                                        res.setPrice(minPrice);
+                                        res.setDiscountPrice(discountedMinPrice);
+                                        res.setPromotion(promoResponse);
+                                        return res;
+                                })
                                 .toList();
 
                 return ResponseEntity.ok(responses);

@@ -112,7 +112,9 @@ export function useCheckout() {
         paymentMethodId: form.paymentMethodId,
       }
 
-      const order = await orderAPI.placeOrder(payload)
+      const orderId = await orderAPI.placeOrder(payload)
+
+      console.log(orderId)
 
       if (authStore.isAuthenticated) {
         await cartStore.fetchCart()
@@ -120,27 +122,21 @@ export function useCheckout() {
         cartStore.clearLocal()
       }
 
-      // COD → redirect thẳng
-    if (form.paymentMethodId === 1) {
-      await handlePostOrder()
-      router.push(`/orders/${order.id}`)
-      return
-    }
+      // COD
+      if (form.paymentMethodId === 1) {
+        await handlePostOrder()
+        router.push(`/orders/${orderId}`)
+        return
+      }
 
-    // VNPAY
-    if (form.paymentMethodId === 2) {
-      const res = await axiosClient.get(`/api/v1/payment/vnpay/${order.id}`)
-      window.location.href = res.data.paymentUrl // redirect sang VNPay
-      return
-    }
+      // VNPAY
+      if (form.paymentMethodId === 2) {
+        const res = await axiosClient.get(`/api/v1/payment/vnpay/${orderId.data}`)
+        window.location.href = res.data.paymentUrl
+        return
+      }
 
-    // // MOMO
-    // if (form.paymentMethodId === 3) {
-    //   const res = await axiosClient.get(`/api/v1/payment/momo/${order.id}`)
-    //   window.location.href = res.data.paymentUrl // redirect sang MoMo
-    // }
-
-      router.push(`/orders/${order.id}`)
+      router.push(`/orders/${orderId}`)
     } catch (err) {
       error.value = err.response?.data?.message ?? 'Đặt hàng thất bại'
       throw err
@@ -150,12 +146,12 @@ export function useCheckout() {
   }
 
   const handlePostOrder = async () => {
-  if (authStore.isAuthenticated) {
-    await cartStore.fetchCart()
-  } else {
-    cartStore.clearLocal()
+    if (authStore.isAuthenticated) {
+      await cartStore.fetchCart()
+    } else {
+      cartStore.clearLocal()
+    }
   }
-}
 
   onMounted(async () => {
     await loadTimePromotion()

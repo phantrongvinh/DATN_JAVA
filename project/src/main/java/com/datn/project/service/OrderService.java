@@ -26,7 +26,6 @@ import com.datn.project.entity.Promotion;
 import com.datn.project.entity.TimePromotion;
 import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
-import com.datn.project.exception.GlobalExceptionHandler;
 import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IPaymentMethodRepository;
 import com.datn.project.repository.IProductVariantRepository;
@@ -57,6 +56,9 @@ public class OrderService implements IOrderService {
 
         @Autowired
         private IUserRepository userRepository;
+
+        @Autowired
+        private ICartService cartService;
 
         @Transactional
         @Override
@@ -145,7 +147,7 @@ public class OrderService implements IOrderService {
                 order.setTimePromotion(timePromo.orElse(null));
 
                 mapToResponse(orderRepository.save(order));
-
+                cartService.clearCart(userId);
                 return ResponseEntity.ok(order.getId());
         }
 
@@ -221,10 +223,11 @@ public class OrderService implements IOrderService {
                 response.setShippingAddress(order.getShippingAddress());
                 response.setStatus(order.getStatus().name());
                 response.setTimeDiscount(order.getTimeDiscount());
-                response.setTimePromotionName(order.getTimePromotion().getName());
+                response.setTimePromotionName(
+                                order.getTimePromotion() != null ? order.getTimePromotion().getName() : null);
                 response.setTotalPrice(order.getTotalPrice());
                 response.setTrackingCode(order.getTrackingCode());
-                response.setVoucherCode(order.getVoucher().getCode());
+                response.setVoucherCode(order.getVoucher() != null ? order.getVoucher().getCode() : null);
 
                 return ResponseEntity.ok(response);
         }

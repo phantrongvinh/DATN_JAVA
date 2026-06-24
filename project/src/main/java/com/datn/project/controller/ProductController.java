@@ -37,6 +37,8 @@ public class ProductController {
         ProductFilterDTO filter = new ProductFilterDTO(audienceIds, brandIds, categoryIds, search, onSale, minPrice,
                 maxPrice, sortBy);
 
+        System.out.println(filter);
+
         return ResponseEntity.ok(productService.getFilterProducts(filter, page, size)).getBody();
     }
 

@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.datn.project.dto.user.AddressResponse;
+import com.datn.project.dto.adress.AddressResponse;
 import com.datn.project.dto.user.RoleResponse;
 import com.datn.project.dto.user.UserDetailResponse;
 import com.datn.project.dto.user.UserFilterDTO;
@@ -82,7 +82,8 @@ public class UserService implements IUserService {
         response.setAuthProvider(user.getAuthProvider());
 
         response.setAddresses(user.getAddresses().stream()
-                .map(a -> new AddressResponse(a.getId(), a.getAddress(), a.isPrimary()))
+                .map(a -> new AddressResponse(a.getId(), a.getAddress(), a.getReceiverName(), a.getReceiverPhone(),
+                        a.isPrimary()))
                 .toList());
 
         response.setTotalOrders(userRepository.countOrdersByUserId(id));

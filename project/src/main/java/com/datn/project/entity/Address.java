@@ -32,11 +32,17 @@ public class Address implements Serializable {
     @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name="is_primary")
+    @Column(name = "is_primary")
     private boolean isPrimary;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "receiver_name")
+    private String receiverName;
+
+    @Column(name = "receiver_phone")
+    private String receiverPhone;
 
 }

@@ -59,10 +59,10 @@ const iconClass = computed(() => {
       <div class="toast-progress" :class="notification.type"></div>
     </div>
   </Transition>
-  <div class="d-flex flex-column min-vh-100">
+  <div class="flex min-h-screen flex-col">
     <Header></Header>
 
-    <div id="main" class="flex-grow-1">
+    <div class="flex-1">
       <RouterView />
     </div>
 
