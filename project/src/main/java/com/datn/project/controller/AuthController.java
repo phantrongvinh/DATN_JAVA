@@ -77,7 +77,7 @@ public class AuthController {
         return ResponseEntity.ok(
                 Map.of(
                         "message",
-                        "Activation email sent"));
+                        "Mã kích hoạt đã được gửi đến mail của bạn"));
     }
 
     @GetMapping("/me")

@@ -2,7 +2,9 @@ package com.datn.project.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +38,7 @@ public class VoucherService implements IVoucherService {
             throw new BadRequestException("Mã giảm giá đã hết lượt sử dụng");
         if (voucher.getMinOrderValue() != null && orderTotal.compareTo(voucher.getMinOrderValue()) < 0)
             throw new BadRequestException(
-                    "Đơn hàng tối thiểu " + voucher.getMinOrderValue() + " để dùng mã này");
+                    "Đơn hàng tối thiểu " + NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(voucher.getMinOrderValue())  + " để dùng mã này");
 
         return voucher;
     }

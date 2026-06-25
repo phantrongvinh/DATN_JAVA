@@ -103,6 +103,9 @@ public class SecurityConfig {
                             // ─── Promotion/ Voucher ──────────────────────────
                             .requestMatchers("/api/v1/vouchers/**").authenticated()
 
+                            // ─── Payment ─────────────────────────────────────
+                            .requestMatchers("/api/v1/payment/**").permitAll()
+
                             .anyRequest().permitAll();
                 })
                 .oauth2Login(oauth2 -> oauth2

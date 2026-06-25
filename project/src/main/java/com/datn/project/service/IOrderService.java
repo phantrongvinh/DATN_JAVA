@@ -17,4 +17,6 @@ public interface IOrderService {
     void confirmPayment(Integer orderId, String transactionId);
 
     ResponseEntity<?> getOrdersByIdByUser(int id, int userid);
+
+    ResponseEntity<?> getAllMyOrder(int userId);
 }

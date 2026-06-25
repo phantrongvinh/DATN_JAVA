@@ -45,10 +45,10 @@ public class User implements Serializable {
     @Column(name = "password", nullable = false, length = 500)
     private String password;
 
-    @Column(name = "phone", nullable = false, length = 15)
+    @Column(name = "phone", length = 15)
     private String phone;
 
-    @Column(name = "birth_day", nullable = false)
+    @Column(name = "birth_day")
     private LocalDate birthDay;
 
     @Column(name = "created_at", insertable = false, updatable = false)

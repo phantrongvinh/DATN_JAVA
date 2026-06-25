@@ -103,6 +103,9 @@ public class Order implements Serializable {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         status = OrderStatus.PENDING;
+        paymentStatus = PaymentStatus.PENDING;
+        timeDiscount = timeDiscount == null ? BigDecimal.ZERO : timeDiscount;
+        discountAmount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
     }
 
     @PreUpdate

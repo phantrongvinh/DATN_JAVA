@@ -84,8 +84,8 @@ CREATE TABLE users(
     full_name 			NVARCHAR(100) NOT NULL,
     email				VARCHAR(255) NOT NULL UNIQUE,
     `password`			VARCHAR(500) NOT NULL,
-    phone				VARCHAR(15) NOT NULL,
-    birth_day           TIMESTAMP NOT NULL,
+    phone				VARCHAR(15) ,
+    birth_day           TIMESTAMP ,
      -- 'local' hoặc 'google'
     provider      		VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
  
