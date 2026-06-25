@@ -31,6 +31,8 @@ public class VoucherController {
                 "code", voucher.getCode(),
                 "discountType", voucher.getDiscountType().name().toLowerCase(),
                 "discountValue", voucher.getDiscountValue(),
-                "discount", discount));
+                "discount", discount,
+                "minOrderValue", voucher.getMinOrderValue(),
+                "maxDiscount", voucher.getMaxDiscount()));
     }
 }

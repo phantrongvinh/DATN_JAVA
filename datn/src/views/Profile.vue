@@ -1,132 +1,76 @@
 <template>
-  <div class="container-fluid py-5">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-lg-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="nav-wrapper position-relative end-0">
-              <ul class="nav nav-pills nav-fill flex-column bg-transparent p-1">
-                <li class="nav-item">
-                  <button
-                    class="nav-link text-start"
-                    :class="{
-                      'active bg-gradient-danger text-white shadow': activeTab === 'profile',
-                    }"
-                    @click="activeTab = 'profile'"
-                  >
-                    <i class="fa-regular fa-user me-2"></i>
-                    Hồ sơ
-                  </button>
-                </li>
+  <!-- Content -->
+  <section>
+    <!-- Profile Card -->
+    <div class="border border-border p-8">
+      <h2 class="font-display text-2xl">Thông tin cá nhân</h2>
 
-                <li class="nav-item mt-2">
-                  <button
-                    class="nav-link text-start"
-                    :class="{
-                      'active bg-gradient-danger text-white shadow': activeTab === 'like',
-                    }"
-                    @click="activeTab = 'like'"
-                  >
-                    <i class="fa-regular fa-heart me-2"></i>
-                    Yêu thích
-                  </button>
-                </li>
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <Info label="Họ và tên" :value="user.fullName || 'Chưa cập nhật'" />
 
-                <li class="nav-item mt-2">
-                  <button
-                    class="nav-link text-start"
-                    :class="{
-                      'active bg-gradient-danger text-white shadow': activeTab === 'password',
-                    }"
-                    @click="activeTab = 'password'"
-                  >
-                    <i class="fa-solid fa-key me-2"></i>
-                    Đổi mật khẩu
-                  </button>
-                </li>
+        <Info label="Email" :value="user.email" />
 
-                <li class="nav-item mt-2">
-                  <button
-                    class="nav-link text-start"
-                    :class="{
-                      'active bg-gradient-danger text-white shadow': activeTab === 'update',
-                    }"
-                    @click="activeTab = 'update'"
-                  >
-                    <i class="fa-solid fa-pen me-2"></i>
-                    Cập nhật thông tin
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <Info label="Số điện thoại" :value="user.phone || 'Chưa cập nhật'" />
+
+        <Info label="Ngày sinh" :value="user.birthDay || 'Chưa cập nhật'" />
       </div>
 
-      <!-- Content -->
-      <div class="col-lg-9">
-        <div class="card">
-          <div class="card-body">
-            <div v-if="activeTab === 'profile'">
-              <h5>Đơn hàng</h5>
+      <button
+        class="mt-8 border border-foreground px-6 py-2.5 text-xs uppercase tracking-widest transition-colors hover:bg-foreground hover:text-background"
+      >
+        Chỉnh sửa
+      </button>
+    </div>
 
-              <div class="row mt-4">
-                <div class="col-lg-8">
-                  <div class="card shadow-sm">
-                    <div class="card-body">đơn hàng 1</div>
-                  </div>
-                </div>
+    <!-- Stats -->
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+      <div v-for="stat in stats" :key="stat.label" class="border border-border p-6">
+        <p class="text-[11px] uppercase tracking-widest text-muted-foreground">
+          {{ stat.label }}
+        </p>
 
-                <div class="col-lg-4">
-                  <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                      <img
-                        src="/images/avatar-default.svg"
-                        class="rounded-circle mb-3"
-                        width="100"
-                      />
-
-                      <h6>{{ user?.fullName }}</h6>
-
-                      <p class="text-sm text-secondary mb-1">
-                        {{ user?.email }}
-                      </p>
-
-                      <p class="text-sm text-secondary mb-1">
-                        {{ ulti.formatDate(user?.birthDay) }}
-                      </p>
-
-                      <p class="text-sm text-secondary">
-                        {{ user?.phone }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-else-if="activeTab === 'like'">Like</div>
-
-            <div v-else-if="activeTab === 'password'">Change Password</div>
-
-            <div v-else-if="activeTab === 'update'">Update Profile</div>
-          </div>
-        </div>
+        <p class="mt-2 font-display text-3xl">
+          {{ stat.value }}
+        </p>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
+import Info from '@/components/site/Info.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
-import ulti from '@/ulti/ulti'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { watch } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const { user } = storeToRefs(authStore)
 
-const activeTab = ref('profile')
+watch(
+  user,
+  (newUser) => {
+    if (!newUser) {
+      router.push('/login')
+    }
+  },
+  { immediate: true },
+)
+
+const stats = [
+  {
+    label: 'Đơn hàng',
+    value: '0',
+  },
+  {
+    label: 'Điểm tích lũy',
+    value: '120',
+  },
+  {
+    label: 'Hạng thành viên',
+    value: 'Silver',
+  },
+]
 </script>

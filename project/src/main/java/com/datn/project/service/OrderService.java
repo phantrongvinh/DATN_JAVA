@@ -3,15 +3,16 @@ package com.datn.project.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.datn.project.dto.order.MyOrderResponse;
 import com.datn.project.dto.order.OrderDetailResponse;
 import com.datn.project.dto.order.OrderItemRequest;
 import com.datn.project.dto.order.OrderRequest;
@@ -59,6 +60,9 @@ public class OrderService implements IOrderService {
 
         @Autowired
         private ICartService cartService;
+
+        @Autowired
+        private GHNService ghnService;
 
         @Transactional
         @Override
@@ -145,9 +149,27 @@ public class OrderService implements IOrderService {
                 order.setTimeDiscount(timeDiscount);
                 order.setFinalPrice(finalPrice);
                 order.setTimePromotion(timePromo.orElse(null));
+                Order savedOrder = orderRepository.save(order);
 
-                mapToResponse(orderRepository.save(order));
-                cartService.clearCart(userId);
+                // ─── COD: confirm luôn + tạo shipment ────────────
+                if (request.getPaymentMethodId() == 1) {
+                        savedOrder.setPaymentStatus(PaymentStatus.PAID);
+                        savedOrder.setStatus(OrderStatus.CONFIRMED);
+                        orderRepository.save(savedOrder);
+                        ghnService.createShipment(savedOrder.getId());
+                        cartService.clearCart(userId);
+                }
+
+                // ─── VNPAY: chỉ tạo order, chờ callback ─────────
+                if (request.getPaymentMethodId() == 2) {
+                        savedOrder.setPaymentStatus(PaymentStatus.PENDING);
+                        savedOrder.setStatus(OrderStatus.PENDING);
+                        orderRepository.save(savedOrder);
+                        // KHÔNG gọi GHN và KHÔNG clear cart ở đây
+                        // GHN + clear cart sẽ được gọi trong vnpayCallback sau khi thanh toán thành
+                        // công
+                }
+
                 return ResponseEntity.ok(order.getId());
         }
 
@@ -213,6 +235,14 @@ public class OrderService implements IOrderService {
 
                 OrderResponse response = new OrderResponse();
 
+                response.setItems(order.getOrderDetails().stream().map(i -> {
+                        OrderDetailResponse item = new OrderDetailResponse(i.getId(), i.getProductName(), i.getColor(),
+                                        i.getSizeName(), i.getQuantity(), null, i.getPrice(),
+                                        i.getPromotion() != null ? order.getTimePromotion().getName() : null);
+
+                        return item;
+
+                }).toList());
                 response.setCreatedAt(order.getCreatedAt());
                 response.setDiscountAmount(order.getDiscountAmount());
                 response.setFinalPrice(order.getFinalPrice());
@@ -228,7 +258,38 @@ public class OrderService implements IOrderService {
                 response.setTotalPrice(order.getTotalPrice());
                 response.setTrackingCode(order.getTrackingCode());
                 response.setVoucherCode(order.getVoucher() != null ? order.getVoucher().getCode() : null);
+                response.setPaymentMethod(order.getPaymentMethod().getName());
 
                 return ResponseEntity.ok(response);
+        }
+
+        @Override
+        public ResponseEntity<?> getAllMyOrder(int userId) {
+                List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+                if (orders.isEmpty()) {
+                        return ResponseEntity.ok(Map.of("message", "Chưa có đơn hàng"));
+                }
+
+                List<MyOrderResponse> responses = orders.stream().map(o -> {
+                        MyOrderResponse response = new MyOrderResponse();
+                        response.setId(o.getId());
+                        response.setCreatedAt(o.getCreatedAt());
+                        response.setItems(o.getOrderDetails().stream().map(i -> {
+                                OrderDetailResponse orderDetailResponse = new OrderDetailResponse(i.getId(),
+                                                i.getProductName(), i.getColor(), i.getSizeName(), i.getQuantity(),
+                                                null, i.getPrice(),
+                                                i.getPromotion() != null ? i.getPromotion().getName() : null);
+                                return orderDetailResponse;
+                        }).toList());
+
+                        response.setPaymentStatus(null);
+                        response.setPrice(o.getFinalPrice());
+                        response.setStatus(o.getStatus().name());
+                        response.setTrackingCode(o.getTrackingCode());
+                        response.setPaymentMethod(o.getPaymentMethod().getName());
+                        return response;
+                }).toList();
+                return ResponseEntity.ok(responses);
         }
 }

@@ -18,6 +18,8 @@ import com.datn.project.repository.IUserRepository;
 import com.datn.project.security.CustomUserDetail;
 import com.datn.project.service.IOrderService;
 
+import jakarta.transaction.Transactional;
+
 @RestController
 @RequestMapping(value = "/api/v1/orders")
 public class OrderController {
@@ -39,12 +41,18 @@ public class OrderController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> placeOrder(@RequestBody OrderRequest request) throws BadRequestException {
         return ResponseEntity.ok(orderService.placeOrder(getCurrentUserId(), request)).getBody();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getMyOrders(@PathVariable(value = "id") int id) {
-        return ResponseEntity.ok(orderService.getOrdersByIdByUser(id, getCurrentUserId()));
+        return ResponseEntity.ok(orderService.getOrdersByIdByUser(id, getCurrentUserId())).getBody();
+    }
+
+    @GetMapping()
+    public ResponseEntity<?> getAllMyOrders() {
+        return ResponseEntity.ok(orderService.getAllMyOrder(getCurrentUserId())).getBody();
     }
 }

@@ -82,6 +82,39 @@ const {
 </script>
 
 <template>
+  <!-- SUCCESS -->
+  <!-- <div v-if="orderId" class="container mx-auto py-24">
+    <div class="flex flex-col items-center text-center">
+      <CheckCircle2 class="h-16 w-16 text-green-500" :stroke-width="1" />
+
+      <h1 class="mt-6 text-4xl font-bold">Cảm ơn bạn!</h1>
+
+      <p class="mt-3 max-w-md text-gray-500">
+        Đơn hàng
+
+        <span class="font-semibold text-black"> #{{ orderId }} </span>
+
+        đã được tiếp nhận.
+      </p>
+
+      <div class="mt-8 flex gap-3">
+        <RouterLink
+          to="/account/orders"
+          class="bg-black px-6 py-3 text-xs uppercase tracking-widest text-white"
+        >
+          Xem đơn hàng
+        </RouterLink>
+
+        <RouterLink
+          to="/products"
+          class="border border-black px-6 py-3 text-xs uppercase tracking-widest"
+        >
+          Mua tiếp
+        </RouterLink>
+      </div>
+    </div>
+  </div> -->
+
   <!-- CHECKOUT -->
   <div class="container-x py-16">
     <div class="grid gap-10 lg:grid-cols-[1fr_400px]">
@@ -265,19 +298,17 @@ const {
               <div v-if="timeDiscount > 0" class="flex justify-between text-green-600">
                 <div>
                   Khung giờ vàng
-                  <div class="flex justify-between gap-2 mt-2">
-                    <span class="rounded bg-red-100 px-2 py-1 text-xs text-red-600">
-                      {{ timeLeft }}
-                    </span>
+                  <span class="ml-2 rounded bg-green-100 px-2 py-1 text-xs text-green-600">
+                    {{ timeLeft }}
+                  </span>
 
-                    <span class="rounded bg-green-100 px-2 py-1 text-xs text-green-600">
-                      {{
-                        timePromotion.discountType === 'PERCENT'
-                          ? `-${timePromotion.discountValue}%`
-                          : `-${ulti.formatVND(timePromotion.discountValue)}`
-                      }}
-                    </span>
-                  </div>
+                  <span class="ml-2 rounded bg-red-100 px-2 py-1 text-xs text-red-600">
+                    {{
+                      timePromotion.discountType === 'percent'
+                        ? `-${timePromotion.discountValue}%`
+                        : `-${ulti.formatVND(timePromotion.discountValue)}`
+                    }}
+                  </span>
                 </div>
                 <span class="font-medium text-green-600">
                   -{{ ulti.formatVND(timeDiscount) }}

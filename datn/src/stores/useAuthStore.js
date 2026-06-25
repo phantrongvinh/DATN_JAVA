@@ -12,6 +12,8 @@ export const useAuthStore = defineStore('auth', () => {
   const resend = ref(false)
   const message = ref('')
 
+  const isAdmin = computed(() => user.value?.roles?.some((r) => r === 'ADMIN') ?? false)
+
   const isAuthenticated = computed(() => !!token.value)
 
   const cartStore = useCartStore()
@@ -30,14 +32,13 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', res.token)
 
       await me()
-      console.log(user.value)
 
       await cartStore.mergeCartToServer()
       cartStore.clearLocal()
       await cartStore.fetchCart()
     } catch (err) {
       error.value = err.response?.data?.message
-      if (error.value === 'Account not activated') {
+      if (error.value === 'Tài khoản chưa được kích hoạt, hãy gửi lại mã kích hoạt') {
         resend.value = true
       }
       throw err
@@ -58,6 +59,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.register(data)
       message.value = res
+
+      console.log(message.value)
     } catch (err) {
       error.value = err.response?.data?.message
       throw err
@@ -85,7 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.resend(email)
       message.value = res.message
-      resend.value = false
+      resend.value = ''
     } catch (error) {
       error.value = error
       return { success: false, errorMessages: error.message }
@@ -132,6 +135,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user,
+    isAdmin,
     loadding,
     error,
     login,

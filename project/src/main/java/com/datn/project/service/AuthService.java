@@ -89,8 +89,6 @@ public class AuthService implements IAuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
-        user.setPhone(request.getPhone());
-        user.setBirthDay(request.getBirthDay());
         user.setActived(false);
         user.setAuthProvider(AuthProvider.LOCAL);
 
@@ -264,7 +262,7 @@ public class AuthService implements IAuthService {
 
     private void sendResetPassword(User user, String token) {
         String link = "http://localhost:5173/reset-password?token=" + token;
-        mailService.sendMessageEmail(user.getEmail(), "Khôi phục mật khẩu", "Click here to change password: " + link);
+        mailService.sendMessageEmail(user.getEmail(), "Khôi phục mật khẩu", "Bấm vào đây để cập nhật mật khẩu mới: " + link);
 
     }
 

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/TestHome.vue'
+import Home from '../views/Home.vue'
 import { useAuthStore } from '@/stores/useAuthStore.js'
 import { storeToRefs } from 'pinia'
 import { useCartStore } from '@/stores/useCartStore.js'
@@ -29,6 +29,7 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: () => import('../views/Register.vue'),
+
       meta: {
         guestOnly: true,
       },
@@ -36,15 +37,41 @@ const router = createRouter({
     {
       path: '/profile',
       name: 'profile',
-      component: () => import('../views/Profile.vue'),
+      component: () => import('../views/layout/AccountLayout.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/Profile.vue'),
+        },
+        {
+          path: 'orders',
+          component: () => import('../views/MyOrderPage.vue'),
+        },
+        // {
+        //   path: 'wishlist',
+        //   component: WishlistPage,
+        // },
+        // {
+        //   path: 'addresses',
+        //   component: AddressPage,
+        // },
+      ],
       meta: {
         requiresAuth: true,
         roles: ['USER', 'ADMIN'],
       },
     },
     {
+      path: '/orders/:id',
+      name: 'orderDetaik',
+      component: () => import('../views/OrderDetail.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/products',
-      name: 'product',
+      name: 'products',
       component: () => import('../views/Product.vue'),
     },
     {
@@ -106,7 +133,17 @@ const router = createRouter({
       component: () => import('@/views/PaymentReturn.vue'),
       meta: { requiresAuth: false },
     },
+    {
+      path: '/test',
+      name: 'test',
+      component: () => import('../views/Test.vue'),
+    },
   ],
+  scrollBehavior(to, from) {
+    if (to.path !== from.path) {
+      return { top: 0 }
+    }
+  },
 })
 
 router.beforeEach((to) => {

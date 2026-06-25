@@ -1,338 +1,95 @@
-<template>
-  <div class="container-fluid py-5">
-    <div class="border rounded mx-5">
-      <div class="row p-3" v-if="product">
-        <!-- LEFT -->
-        <div class="col-lg-8">
-          <Swiper
-            :modules="[Thumbs, Navigation]"
-            :thumbs="{ swiper: thumbsSwiper }"
-            navigation
-            class="rounded-4 shadow product-swiper"
-          >
-            <SwiperSlide v-for="image in product.images" :key="image">
-              <img
-                :src="url + '/' + image.imageUrl"
-                class="img-fluid border-radius-xl"
-                style="height: 800px; width: 100%; object-fit: scale-down"
-              />
-            </SwiperSlide>
-          </Swiper>
-          <Swiper
-            class="thumb-swiper mt-3 product-swiper"
-            :modules="[FreeMode, Thumbs, Navigation]"
-            navigation
-            :slides-per-view="4"
-            :space-between="15"
-            :free-mode="true"
-            :watch-slides-progress="true"
-            @swiper="setThumbsSwiper"
-          >
-            <SwiperSlide v-for="image in product?.images" :key="image">
-              <img
-                :src="url + '/' + image.imageUrl"
-                class="img-fluid rounded shadow-sm"
-                style="height: 100px; width: 100%; object-fit: cover; cursor: pointer"
-              />
-            </SwiperSlide>
-          </Swiper>
-        </div>
-
-        <!-- RIGHT -->
-        <div class="col-lg-4">
-          <div class="ps-lg-5">
-            <h2 class="font-weight-bold">
-              {{ product.name }}
-            </h2>
-
-            ⭐⭐⭐⭐⭐ (32 đánh giá)
-
-            <div v-if="displayPrice" class="my-3">
-              <!-- giá gốc gạch ngang nếu có giảm -->
-              <span
-                v-if="displayPrice.discounted < displayPrice.original"
-                class="text-muted text-decoration-line-through me-2"
-              >
-                {{ ulti.formatVND(displayPrice.original) }}
-                <span v-if="displayPrice.isRange">
-                  - {{ ulti.formatVND(displayPrice.maxPrice) }}</span
-                >
-              </span>
-
-              <!-- giá hiển thị -->
-              <h3 class="text-gradient text-danger mb-0">
-                {{ ulti.formatVND(displayPrice.discounted) }}
-                <span v-if="displayPrice.isRange" class="fs-6">
-                  - {{ ulti.formatVND(displayPrice.maxPrice) }}
-                </span>
-              </h3>
-
-              <!-- badge promotion -->
-              <span v-if="product.promotion" class="badge bg-danger mt-1">
-                {{
-                  product.promotion.discountType === 'percent'
-                    ? `-${product.promotion.discountValue}%`
-                    : `-${ulti.formatVND(product.promotion.discountValue)}`
-                }}
-              </span>
-            </div>
-
-            <span class="badge bg-gradient-success"> Còn hàng </span>
-
-            <div class="mt-4 text-sm">
-              {{ product.description }}
-            </div>
-
-            <div class="mt-4">
-              <h6>Thương hiệu</h6>
-
-              <div class="d-flex align-items-center">
-                <!-- <img :src="url + '/brands/' + product.brandLogo" width="40" class="me-3" /> -->
-
-                {{ product.brandName }}
-              </div>
-            </div>
-
-            <div class="row mt-5">
-              <!-- Size -->
-              <div class="col-md-4">
-                <label>Size</label>
-                <Select
-                  :data="availableSizes"
-                  v-model:selectedByName="selectedSize"
-                  :selectedName="selectedSize"
-                  title="size"
-                ></Select>
-              </div>
-
-              <!-- Color -->
-              <div class="col-md-4">
-                <label>Color</label>
-
-                <div class="dropdown">
-                  <button
-                    class="btn btn-transparent w-100 text-start border-bottom rounded-0"
-                    data-bs-toggle="dropdown"
-                  >
-                    {{ selectedColor }}
-                  </button>
-
-                  <ul class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
-                    <li v-for="color in colors" :key="color">
-                      <a
-                        class="dropdown-item rounded-3 py-2"
-                        href="#"
-                        @click.prevent="selectedColor = color"
-                      >
-                        {{ color }}
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <!-- Quantity -->
-              <div class="col-md-4">
-                <label>Quantity</label>
-
-                <div class="dropdown">
-                  <button
-                    class="btn btn-transparent w-100 text-start border-bottom rounded-0"
-                    data-bs-toggle="dropdown"
-                  >
-                    {{ quantity }}
-                  </button>
-
-                  <ul class="dropdown-menu shadow-lg border-0 rounded-4 w-100">
-                    <li v-for="i in currentVariant?.stock" :key="i">
-                      <a
-                        class="dropdown-item rounded-3 py-2"
-                        href="#"
-                        @click.prevent="quantity = i"
-                      >
-                        {{ i }}
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-3" v-if="currentVariant">
-              <h6>
-                Còn lại:
-
-                <span class="text-success">
-                  {{ currentVariant.stock }}
-                </span>
-
-                sản phẩm
-              </h6>
-            </div>
-
-            <div class="mt-4 text-danger" v-if="quantityMessage !== ''">
-              {{ quantityMessage }}
-            </div>
-
-            <div class="mt-4">
-              <button class="btn bg-gradient-danger w-100" @click.prevent="handleAddToCart">
-                <i class="fa-solid fa-cart-shopping me-2"></i>
-
-                Thêm vào giỏ hàng
-              </button>
-
-              <button class="btn btn-outline-dark w-100">Mua ngay</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- <div class="card mt-5">
-    <div class="card-header">
-      <h5>Đánh giá khách hàng</h5>
-    </div>
-
-    <div class="card-body">
-      <div v-for="comment in comments" class="d-flex mb-4">
-        <img src="/images/avatar-default.svg" class="avatar avatar-lg me-3" />
-
-        <div>
-          <h6>{{ comment.user }}</h6>
-
-          ⭐⭐⭐⭐⭐
-
-          <p>
-            {{ comment.content }}
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="row mt-5">
-    <div class="col-lg-3" v-for="item in relatedProducts">
-      <div class="card h-100" data-animation="true">
-        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-          <img :src="url + '/' + item.img" class="img-fluid shadow border-radius-lg" />
-        </div>
-
-        <div class="card-body text-center">
-          <h6>
-            {{ item.name }}
-          </h6>
-
-          <p class="text-sm text-secondary">
-            {{ item.brand }}
-          </p>
-
-          <h5 class="text-danger">{{ item.basePrice.toLocaleString('vi-VN') }}đ</h5>
-        </div>
-      </div>
-    </div>
-  </div> -->
-</template>
-
 <script setup>
 import { useRoute } from 'vue-router'
-import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Navigation, Thumbs, FreeMode } from 'swiper/modules'
 
-import 'swiper/css'
-import 'swiper/css/navigation'
-import 'swiper/css/free-mode'
-import 'swiper/css/thumbs'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useProductStore } from '@/stores/useProductStore'
 import { storeToRefs } from 'pinia'
 import ulti from '@/ulti/ulti'
-import Select from '@/components/Select.vue'
-import { useCartStore } from '@/stores/useCartStore'
 import { useCart } from '@/composables/useCart'
 import { useNotificationStore } from '@/stores/useNotificationStore'
+import ProductCard from '@/components/site/ProductCard.vue'
+import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-next'
 
-const thumbsSwiper = ref(null)
-const setThumbsSwiper = (swiper) => {
-  thumbsSwiper.value = swiper
-}
-// url
-
-const url = 'http://localhost:8080/uploads/images'
-
-// lấy id product bằng param
 const route = useRoute()
-
-// fetch product theo id
 const productStore = useProductStore()
-
-const { product } = storeToRefs(productStore)
-
-const loadProduct = async (id) => {
-  await productStore.fetchProductByID(id)
-}
+const { product, productOnSale } = storeToRefs(productStore)
 
 watch(
   () => route.params.productId,
   (newId) => {
-    if (newId) loadProduct(newId)
+    if (newId) productStore.fetchProductByID(newId)
   },
   { immediate: true },
 )
 
-// handle selected product
-const quantity = ref(0)
+// tabs
+const activeTab = ref('desc')
 
+// colors
 const colors = computed(() => {
-  if (!product.value?.variants) return []
+  if (!product.value) return []
   return [...new Set(product.value.variants.map((v) => v.color))]
 })
 
 const selectedColor = ref(null)
+const selectedSize = ref(null)
 
-const availableSizes = computed(() => {
-  if (!product.value?.variants || !selectedColor.value) return []
+watch(product, (val) => {
+  if (val?.variants?.length) {
+    selectedColor.value = val.variants[0].color
+    selectedSize.value = val.variants[0].sizeName
+  }
+})
+
+const selectColor = (color) => {
+  selectedColor.value = color
+  selectedSize.value = sizes.value[0]?.sizeName ?? null
+}
+
+// sizes theo color đang chọn
+const sizes = computed(() => {
+  if (!product.value) return []
   return product.value.variants.filter((v) => v.color === selectedColor.value)
 })
 
-const selectedSize = ref(null)
-
-const currentVariant = computed(() => {
-  if (!product.value?.variants) return null
+// variant đang chọn
+const selectedVariant = computed(() => {
+  if (!product.value) return null
   return product.value.variants.find(
     (v) => v.color === selectedColor.value && v.sizeName === selectedSize.value,
   )
 })
 
-watch(product, (newProduct) => {
-  if (newProduct?.variants?.length) {
-    selectedColor.value = colors.value[0]
-    selectedSize.value = availableSizes.value[0]?.sizeName
-  }
-})
-
-watch(selectedColor, () => {
-  selectedSize.value = availableSizes.value[0]?.sizeName
-})
-
-// hanle price
+// giá hiển thị
 const displayPrice = computed(() => {
-  if (!product.value) return null
-
-  if (!currentVariant.value) {
-    return {
-      original: product.value.minPrice,
-      discounted: product.value.discountedMinPrice,
-      isRange: product.value.minPrice !== product.value.maxPrice,
-      maxPrice: product.value.maxPrice,
-    }
-  }
-
-  return {
-    original: currentVariant.value.price,
-    discounted: currentVariant.value.discountedPrice,
-    isRange: false,
-    maxPrice: null,
-  }
+  return (
+    selectedVariant.value?.discountedPrice ??
+    selectedVariant.value?.price ??
+    product.value?.basePrice
+  )
 })
+
+// discount %
+const discountPercent = computed(() => product.value?.promotion?.discountValue ?? 0)
+
+// gallery
+const activeImg = ref(0)
+const gallery = computed(() => product.value?.images ?? [])
+
+// reset activeImg khi đổi product
+watch(product, () => {
+  activeImg.value = 0
+})
+
+//
+onMounted(async () => {
+  await productStore.fetchProductOnSale()
+})
+//
+const url = 'http://localhost:8080/uploads/images'
+
+// quantity
+const qty = ref(1)
 
 // hanlde add to cart
 const quantityMessage = ref('')
@@ -341,18 +98,18 @@ const { addItem } = useCart()
 
 const notification = useNotificationStore()
 
-watch(quantity, (newQuantity) => {
+watch(qty, (newQuantity) => {
   if (newQuantity) quantityMessage.value = ''
 })
 
 const handleAddToCart = async () => {
-  if (!currentVariant.value) {
-    quantityMessage.value = 'Vui lòng chọn màu và size'
+  if (qty.value <= 0) {
+    quantityMessage.value = 'Vui lòng chọn số lượng'
     return
   }
 
-  if (quantity.value <= 0) {
-    quantityMessage.value = 'Vui lòng chọn số lượng'
+  if (!selectedVariant.value) {
+    quantityMessage.value = 'Vui lòng chọn phân loại'
     return
   }
 
@@ -360,14 +117,17 @@ const handleAddToCart = async () => {
 
   const data = {
     name: product.value.name,
-    productVariantId: currentVariant.value.id,
-    sku: currentVariant.value.sku,
+    productVariantId: selectedVariant.value.id,
+    sku: selectedVariant.value.sku,
     image: image?.imageUrl,
-    size: currentVariant.value.sizeName,
-    color: currentVariant.value.color,
-    quantity: quantity.value,
-    price: currentVariant.value.discountedPrice ?? currentVariant.value.price, // giá sau giảm
+    size: selectedVariant.value.sizeName,
+    color: selectedVariant.value.color,
+    quantity: qty.value,
+    price: selectedVariant.value.discountedPrice
+      ? selectedVariant.value.discountedPrice
+      : selectedVariant.value.price,
   }
+
 
   await addItem(data)
   notification.notify(
@@ -377,61 +137,190 @@ const handleAddToCart = async () => {
 }
 </script>
 
-<style scoped>
-.swiper-button-prev,
-.swiper-button-next {
-  width: 50px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(8px);
-  border-radius: 50%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
+<template>
+  <div className="container-x py-8">
+    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+      <RouterLink to="/">Trang chủ</RouterLink> / <RouterLink to="/products">Sản phẩm</RouterLink> /
+      {{ product?.categoryName }}
+    </p>
+  </div>
+  <div v-if="product">
+    <div className="container-x grid gap-12 pb-16 md:grid-cols-2">
+      <!-- Gallery thumbnails -->
+      <div class="flex gap-4">
+        <div class="hidden flex-col gap-3 md:flex">
+          <button
+            v-for="(g, i) in gallery"
+            :key="g.id"
+            @click="activeImg = i"
+            class="h-20 w-16 overflow-hidden border"
+            :class="activeImg === i ? 'border-foreground' : 'border-transparent'"
+          >
+            <img :src="url + '/' + g.imageUrl" class="h-full w-full object-contain" />
+          </button>
+        </div>
 
-.swiper-button-prev::after,
-.swiper-button-next::after {
-  font-size: 18px;
-  color: #212529;
-}
+        <!-- Main image -->
+        <div class="flex-1 overflow-hidden bg-secondary">
+          <img
+            :src="url + '/' + gallery[activeImg]?.imageUrl"
+            :alt="product.name"
+            class="aspect-[4/5] w-full object-contain"
+          />
+        </div>
+      </div>
+      <div className="space-y-6">
+        <!-- INFO -->
+        <div>
+          <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            {{ product.brandName }} · {{ product.categoryName }}
+          </p>
+          <h1 class="mt-2 font-display text-4xl">{{ product.name }}</h1>
+          <div class="mt-3 flex items-center gap-2 text-sm">
+            <!-- <span class="text-muted-foreground">{product.rating} · {REVIEWS.length} đánh giá</span> -->
+          </div>
+        </div>
 
-.thumb-swiper .swiper-slide {
-  width: auto !important;
-  flex-shrink: 0;
-}
-.swiper-slide {
-  height: auto !important;
-}
+        <!-- PRICE -->
+        <div class="flex items-center gap-3">
+          <span class="font-display text-3xl">
+            {{ ulti.formatVND(displayPrice) }}
+          </span>
 
-.swiper-slide img {
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-}
+          <span v-if="selectedVariant?.discountedPrice" class="line-through text-muted-foreground">
+            {{ ulti.formatVND(selectedVariant.price) }}
+          </span>
 
-.product-swiper .swiper-button-prev,
-.product-swiper .swiper-button-next {
-  width: 36px;
-  height: 36px;
-  background: black;
-  border-radius: 50%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+          <span v-if="discountPercent" class="bg-red-500 px-2 py-1 text-xs text-white">
+            -{{ discountPercent }}%
+          </span>
+        </div>
 
-  transition: 0.3s;
-}
+        <!-- Colors -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="color in colors"
+            :key="color"
+            @click="selectColor(color)"
+            class="min-w-12 border px-3 py-2.5 text-sm transition-colors"
+            :class="
+              selectedColor === color
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border hover:border-foreground'
+            "
+          >
+            {{ color }}
+          </button>
+        </div>
 
-.product-swiper .swiper-button-prev::after,
-.product-swiper .swiper-button-next::after {
-  font-size: 12px;
-  font-weight: bold;
-  color: #000000;
-}
-.product-swiper .swiper-button-prev,
-.product-swiper .swiper-button-next {
-  opacity: 0;
-}
+        <!-- Sizes -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="v in sizes"
+            :key="v.id"
+            @click="selectedSize = v.sizeName"
+            class="min-w-12 border px-3 py-2.5 text-sm transition-colors"
+            :class="
+              selectedSize === v.sizeName
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border hover:border-foreground'
+            "
+          >
+            {{ v.sizeName }}
+          </button>
+        </div>
 
-.product-swiper:hover .swiper-button-prev,
-.product-swiper:hover .swiper-button-next {
-  opacity: 1;
-}
-</style>
+        <!-- STOCK -->
+        <p v-if="selectedVariant" class="text-sm">
+          Còn lại:
+          <span class="font-semibold">
+            {{ selectedVariant.stock }}
+          </span>
+          sản phẩm
+        </p>
+
+        <!-- Quantity -->
+        <div className="flex gap-3 pt-2">
+          <div class="flex items-center border border-border">
+            <button @click="qty = Math.max(1, qty - 1)" class="p-3 cursor-pointer">
+              <Minus class="h-3.5 w-3.5" />
+            </button>
+            <span class="w-10 text-center text-sm">{{ qty }}</span>
+            <button @click="qty++" class="p-3 cursor-pointer">
+              <Plus class="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <!-- Add to cart -->
+          <button
+            @click.prevent="handleAddToCart"
+            class="flex-1 bg-ink py-3 text-sm font-medium uppercase tracking-widest text-ivory transition-colors hover:bg-ink/85 cursor-pointer"
+            :disabled="!selectedVariant || selectedVariant.stock === 0"
+          >
+            Thêm vào giỏ
+          </button>
+          <button
+            class="border border-border p-3 transition-colors hover:border-foreground"
+            aria-label="Yêu thích"
+          >
+            <Heart class="h-5 w-5" strokeWidth="{1.5}" />
+          </button>
+        </div>
+
+        <!-- USPs  -->
+        <div class="space-y-3 border-t border-border pt-6 text-sm text-muted-foreground">
+          <div class="flex items-center gap-3">
+            <Truck class="h-4 w-4 text-gold" strokeWidth="{1.5}" /> Giao hàng nhanh trong 24h tại HN
+            & HCM
+          </div>
+          <div class="flex items-center gap-3">
+            <RotateCcw class="h-4 w-4 text-gold" strokeWidth="{1.5}" /> Đổi trả miễn phí trong 30
+            ngày
+          </div>
+          <div class="flex items-center gap-3">
+            <ShieldCheck class="h-4 w-4 text-gold" strokeWidth="{1.5}" /> Bảo hành chính hãng toàn
+            quốc
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <section className="container-x pb-20">
+      <div class="border-b border-border">
+        <button
+          @click="activeTab = 'desc'"
+          class="mr-8 pb-3 text-sm uppercase tracking-widest"
+          :class="activeTab === 'desc' ? 'border-b-2 border-foreground' : ''"
+        >
+          Mô tả
+        </button>
+
+        <button
+          @click="activeTab = 'reviews'"
+          class="pb-3 text-sm uppercase tracking-widest"
+          :class="activeTab === 'reviews' ? 'border-b-2 border-foreground' : ''"
+        >
+          Đánh giá
+        </button>
+      </div>
+      <div v-if="activeTab === 'desc'" class="mt-8 max-w-3xl">
+        <p>{{ product.description }}</p>
+      </div>
+
+      <div v-if="activeTab === 'reviews'" class="mt-8 space-y-8">
+        <article class="border-b border-border pb-6">Chưa có đánh giá</article>
+      </div>
+    </section>
+
+    <section class="container-x pb-24">
+      <h2 class="font-display text-3xl">Có thể bạn cũng thích</h2>
+
+      <!-- Relate -->
+      <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+        <ProductCard v-for="p in productOnSale" :key="p.id" :product="p" />
+      </div>
+    </section>
+  </div>
+
+  <div v-else class="py-24 text-center text-muted-foreground">Đang tải...</div>
+</template>

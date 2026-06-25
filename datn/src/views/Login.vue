@@ -1,108 +1,51 @@
-<template>
-  <div
-    ref="screenRef"
-    class="d-flex justify-content-center align-items-center"
-    :style="{ minHeight: screenHeight - 50 + 'px' }"
-  >
-    <div class="w-50 rounded-4 shadow">
-      <div class="row m-4">
-        <div class="col-lg-6 d-flex justify-content-center align-items-center">
-          <i class="fa-solid fa-fire-flame-curved fs-1"></i>
-        </div>
-        <div class="col-lg-6 mb-4">
-          <div class="m-4">
-            <div class="text-center fs-2 fw-bold my-5">Welcome Back!</div>
-            <Form
-              :initialValues="initialValues"
-              :interactive="true"
-              :validate="validate"
-              btn="Login"
-              :handleSubmitForm="handleLogin"
-              :errorMessage="error"
-              :successMessage="message"
-              :loading="loadding"
-            ></Form>
-            <div class="mb-3" v-if="resend">
-              <button
-                class="btn btn-outline-success w-100 rounded-3"
-                @click.prevent="handleResend"
-                :disabled="loadding"
-              >
-                {{ loadding ? 'Resending' : 'Resend active' }}
-              </button>
-            </div>
-            <div class="mb-3">
-              <button
-                class="btn btn-outline-dark w-100 rounded-3"
-                @click.prevent="handleGoogleLogin"
-              >
-                <img src="/images/google.svg" alt="google" width="20" height="20" />
-                Log in with Google
-              </button>
-            </div>
-            <div class="mt-5">
-              <div class="text-dark fs-6 text-center">
-                Don't have an account?
-                <RouterLink to="/register" class="fw-semibold hover-underline text-primary"
-                  >Sign up</RouterLink
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import authAPI from '@/api/authAPI'
-import Form from '@/components/Form.vue'
+import Field from '@/components/site/Field.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { useForm } from 'vee-validate'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 
 const router = useRouter()
 
-const screenHeight = ref(window.innerHeight)
+const authStore = useAuthStore()
 
-const screenRef = ref(null)
+const { loadding, error, message, resend } = storeToRefs(authStore)
 
-onMounted(() => {
-  window.addEventListener('resize', () => {
-    screenHeight.value = window.innerHeight
-  })
+const schema = yup.object({
+  email: yup.string().required('Email không được để trống').email('Email không hợp lệ'),
+
+  password: yup.string().required('Mật khẩu không được để trống'),
+})
+
+const { handleSubmit, errors, defineField } = useForm({
+  validationSchema: schema,
+})
+
+const [email] = defineField('email')
+const [password] = defineField('password')
+const mailSend = ref('')
+
+const onSubmit = handleSubmit(async (values) => {
+  try {
+    const data = {
+      email: values.email,
+      password: values.password,
+    }
+    mailSend.value = values.email
+    await authStore.login(data)
+    console.log('login xong') // có in không?
+    await router.push('/profile')
+    console.log('push xong') // có in không?
+  } catch (e) {
+    console.error(e)
+  }
 })
 
 // Hàm dùng để handle event login bằng google
 const handleGoogleLogin = () => {
   window.location.href = 'http://localhost:8080/oauth2/authorization/google'
-}
-
-// Khai báo props để truyền xuống Form component hao
-const initialValues = { email: '', password: '' }
-
-// Validate bằng yup cho login
-const validate = yup.object({
-  email: yup.string().required('Email required').email('Invalid email'),
-  password: yup.string().required('Password required'),
-})
-
-// Handle event login
-const mailSend = ref('')
-const authStore = useAuthStore()
-onMounted(() => authStore.clearMessages())
-const { loadding, error, resend, message } = storeToRefs(authStore)
-
-const handleLogin = async (values) => {
-  try {
-    message.value = ''
-    mailSend.value = values.email
-    await authStore.login(values)
-    router.push('/')
-  } catch (err) {}
 }
 
 // Handle resend email
@@ -112,3 +55,111 @@ const handleResend = async () => {
   error.value = ''
 }
 </script>
+
+<template>
+  <div class="container-x grid gap-12 py-16 md:grid-cols-2">
+    <div class="hidden aspect-[4/5] overflow-hidden bg-secondary md:block">
+      <img
+        src="https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=900&q=80"
+        class="h-full w-full object-cover"
+        alt=""
+      />
+    </div>
+
+    <div class="mx-auto w-full max-w-md md:mt-12">
+      <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Chào mừng trở lại</p>
+
+      <h1 class="mt-2 font-display text-4xl">Đăng nhập</h1>
+
+      <p class="mt-3 text-sm text-muted-foreground">
+        Truy cập đơn hàng, danh sách yêu thích và ưu đãi thành viên.
+      </p>
+
+      <form class="mt-8 space-y-5" @submit.prevent="onSubmit">
+        <div>
+          <Field label="Email" type="email" v-model="email" @focus="authStore.clearMessages" />
+
+          <p v-if="errors.email" class="mt-1 text-sm text-red-500">
+            {{ errors.email }}
+          </p>
+        </div>
+
+        <div>
+          <Field
+            label="Mật khẩu"
+            type="password"
+            v-model="password"
+            @focus="authStore.clearMessages"
+          />
+
+          <p v-if="errors.password" class="mt-1 text-sm text-red-500">
+            {{ errors.password }}
+          </p>
+        </div>
+
+        <p v-if="error" class="mt-1 text-sm text-red-500">
+          {{ error }}
+        </p>
+        <p v-if="message" class="mt-1 text-sm text-green-500">
+          {{ message }}
+        </p>
+        <div v-if="resend" class="mt-6">
+          <button
+            @click.prevent="handleResend"
+            :disabled="loadding"
+            class="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500 px-4 py-3 text-sm font-medium text-emerald-600 transition-all duration-200 hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg
+              v-if="loadding"
+              class="h-4 w-4 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              />
+            </svg>
+
+            {{ loadding ? 'Đang gửi mã...' : 'Gửi lại mã kích hoạt' }}
+          </button>
+        </div>
+        <button
+          type="submit"
+          class="w-full bg-ink py-3 text-ivory cursor-pointer"
+          :class="loadding ? 'disabled' : ''"
+        >
+          {{ loadding ? 'Đăng nhập ... ' : 'Đăng nhập' }}
+        </button>
+      </form>
+      <div class="mt-6">
+        <button
+          class="flex items-center justify-center gap-3 w-full border border-border bg-white py-3 text-black rounded-md shadow-sm hover:bg-gray-50 transition cursor-pointer"
+          @click.prevent="handleGoogleLogin"
+        >
+          <img src="/images/google.svg" alt="Google" class="w-5 h-5" />
+
+          <span class="font-medium"> Sign in with Google </span>
+        </button>
+      </div>
+
+      <p class="mt-8 text-center text-sm text-muted-foreground">
+        Chưa có tài khoản?
+
+        <RouterLink to="/register" class="border-b border-foreground pb-px text-foreground">
+          Đăng ký ngay
+        </RouterLink>
+      </p>
+    </div>
+  </div>
+</template>

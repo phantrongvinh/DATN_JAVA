@@ -1,6 +1,8 @@
 package com.datn.project.service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import com.datn.project.entity.CartItem;
 import com.datn.project.entity.Product;
 import com.datn.project.entity.ProductImage;
 import com.datn.project.entity.ProductVariant;
+import com.datn.project.entity.Promotion;
 import com.datn.project.entity.User;
 import com.datn.project.repository.ICartItemRepository;
 import com.datn.project.repository.ICartRepository;
@@ -36,6 +39,9 @@ public class CartService implements ICartService {
 
     @Autowired
     private IUserRepository userRepository;
+
+    @Autowired
+    private IPromotionService promotionService;
 
     // Thêm item vào cart
     @Override
@@ -67,6 +73,12 @@ public class CartService implements ICartService {
                 .map(item -> {
                     ProductVariant v = item.getProductVariant();
                     Product p = v.getProduct();
+
+                    // check promotion
+                    Optional<Promotion> promo = promotionService.getActivePromotion(p.getId());
+                    BigDecimal discountedPrice = promo
+                            .map(pr -> promotionService.calcDiscountedPrice(v.getPrice(), pr))
+                            .orElse(v.getPrice());
                     return new CartItemResponse(
                             v.getId(),
                             p.getName(),
@@ -82,6 +94,8 @@ public class CartService implements ICartService {
                             v.getColor(),
                             v.getSize().getName(),
                             item.getQuantity(),
+                            discountedPrice,
+
                             v.getPrice());
                 })
                 .toList();

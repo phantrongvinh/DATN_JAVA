@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -194,18 +195,58 @@ public class ProductService implements IProductService {
                 };
 
                 Pageable pageable = PageRequest.of(page, size, sort);
-                Slice<Product> products = productRepository.findAll(ProductSpecification.filter(filterDTO), pageable);
+                Page<Product> products = productRepository.findAll(ProductSpecification.filter(filterDTO), pageable);
 
                 if (products.isEmpty()) {
                         return ResponseEntity.ok(
                                         Map.of("message", "Không tìm thấy sản phẩm"));
                 }
 
+                List<ProductHomeView> responseList = products.stream()
+                                .map(product -> {
+                                        ProductHomeView res = new ProductHomeView();
+                                        res.setCategoryName(product.getCategory().getName());
+                                        res.setId(product.getId());
+                                        res.setName(product.getName());
+                                        res.setBrandName(product.getBrand().getName());
+
+                                        ProductImage productImage = product.getProductImages().stream()
+                                                        .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
+                                                        .findFirst()
+                                                        .orElse(null);
+                                        res.setImage(productImage != null ? productImage.getImageUrl() : null);
+                                        // Min và Max price
+                                        BigDecimal minPrice = product.getProductVariants()
+                                                        .stream()
+                                                        .map(ProductVariant::getPrice)
+                                                        .min(BigDecimal::compareTo)
+                                                        .orElse(product.getBasePrice());
+
+                                        // Promotion tốt nhất
+                                        Optional<Promotion> promo = getBestPromotion(product, minPrice);
+                                        PromotionResponse promoResponse = promo
+                                                        .map(this::toPromotionResponse)
+                                                        .orElse(null);
+
+                                        BigDecimal discountedMinPrice = promo
+                                                        .map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
+                                                        .orElse(minPrice);
+
+                                        res.setPrice(minPrice);
+                                        res.setDiscountPrice(discountedMinPrice);
+                                        res.setPromotion(promoResponse);
+                                        return res;
+                                })
+                                .toList();
+                Slice<ProductHomeView> response = new SliceImpl<>(responseList, pageable, products.hasNext());
+
                 return ResponseEntity.ok(Map.of(
-                                "content", products.stream().map(this::toResponse).toList(),
+                                "content", responseList,
                                 "hasNext", products.hasNext(),
                                 "page", page,
-                                "size", size));
+                                "size", size,
+                                "totalElements", products.getTotalElements(),
+                                "totalPages", products.getTotalPages()));
         }
 
         // lấy 5 product mới nhất để thống kê
@@ -399,7 +440,7 @@ public class ProductService implements IProductService {
                                                         .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
                                                         .findFirst()
                                                         .orElse(null);
-                                        res.setImage(productImage.getImageUrl());
+                                        res.setImage(productImage != null ? productImage.getImageUrl() : null);
                                         // Min và Max price
                                         BigDecimal minPrice = product.getProductVariants()
                                                         .stream()
@@ -444,7 +485,7 @@ public class ProductService implements IProductService {
                                                         .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
                                                         .findFirst()
                                                         .orElse(null);
-                                        res.setImage(productImage.getImageUrl());
+                                        res.setImage(productImage != null ? productImage.getImageUrl() : null);
 
                                         // Min và Max price
                                         BigDecimal minPrice = product.getProductVariants()

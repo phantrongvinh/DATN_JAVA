@@ -1,103 +1,146 @@
-<template>
-  <div
-    ref="screenRef"
-    class="d-flex justify-content-center align-items-center"
-    :style="{ minHeight: screenHeight - 50 + 'px' }"
-  >
-    <div class="w-50 rounded-4 shadow">
-      <div class="row m-4">
-        <div class="col-lg-6 d-flex justify-content-center align-items-center">
-          <i class="fa-solid fa-fire-flame-curved fs-1"></i>
-        </div>
-        <div class="col-lg-6 mb-4">
-          <div class="m-4">
-            <div class="text-center fs-2 fw-bold my-5">Create your account</div>
-            <Form
-              :initialValues="initialValues"
-              btn="Sign up"
-              :loading="loadding"
-              :errorMessage="error"
-              :validate="validate"
-              :handleSubmitForm="handleRegister"
-              :successMessage="message"
-            ></Form>
-            <div class="mt-5">
-              <div class="text-dark fs-6 text-center">
-                Already have an account?
-                <RouterLink to="/login" class="fw-semibold hover-underline text-primary"
-                  >Log in</RouterLink
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import authAPI from '@/api/authAPI'
-import Form from '@/components/Form.vue'
+import { useRouter } from 'vue-router'
+import { useForm } from 'vee-validate'
+import * as yup from 'yup'
+import Field from '@/components/site/Field.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import * as yup from 'yup'
 
 const router = useRouter()
 
-const screenHeight = ref(window.innerHeight)
+const authStore = useAuthStore()
 
-const screenRef = ref(null)
+const { loadding, message, error } = storeToRefs(authStore)
 
-// Khai báo các props truyền xuống Form component
-const initialValues = {
-  fullName: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  birthDay: '',
-  phone: '',
-}
+const schema = yup.object({
+  fullName: yup.string().required('Họ và tên không được để trống'),
 
-// Validate bằng yup cho register
-const validate = yup.object({
-  fullName: yup.string().required('Name required'),
-  email: yup.string().required('Email required').email('Invalid email'),
-  password: yup.string().required('Password required'),
-  confirmPassword: yup
+  email: yup.string().required('Email không được để trống').email('Email không hợp lệ'),
+
+  password: yup.string().required('Mật khẩu không được để trống'),
+
+  confirm: yup
     .string()
-    .required('Confirm pass required')
-    .oneOf([yup.ref('password')], 'Passwords must match'),
-  birthDay: yup
-    .date()
-    .transform((value, originalValue) => {
-      if (!originalValue) return null
-
-      return new Date(originalValue)
-    })
-    .max(new Date(), 'Birth day cannot be in the future')
-    .required('Birth day required'),
-  phone: yup
-    .string()
-    .required('Phone required')
-    .matches(/^(03|05|07|08|09)+([0-9]{8})$/, 'Invalid phone number'),
+    .required('Vui lòng xác nhận mật khẩu')
+    .oneOf([yup.ref('password')], 'Mật khẩu xác nhận không khớp'),
 })
 
-// handle register
+const { handleSubmit, defineField, errors } = useForm({
+  validationSchema: schema,
+})
 
-const authStore = useAuthStore()
-onMounted(() => authStore.clearMessages())
+const [fullName] = defineField('fullName')
+const [email] = defineField('email')
+const [password] = defineField('password')
+const [confirm] = defineField('confirm')
 
-const { loadding, error, message } = storeToRefs(authStore)
-
-const handleRegister = async (values) => {
+const onSubmit = handleSubmit(async (values) => {
   try {
-    await authStore.register(values)
-    values = ''
+    const data = {
+      fullName: values.fullName,
+      email: values.email,
+      password: values.password,
+      confirmPassword: values.confirm,
+    }
+    await authStore.register(data)
+
+    // toast.success('Tạo tài khoản thành công')
+
+    router.push('/login')
   } catch (error) {
-  } finally {
+    // toast.error('Đăng ký thất bại')
   }
-}
+})
 </script>
+
+<template>
+  <div class="container-x grid gap-12 py-16 md:grid-cols-2">
+    <!-- Image -->
+    <div class="hidden aspect-[4/5] overflow-hidden bg-secondary md:block">
+      <img
+        src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=900&q=80"
+        class="h-full w-full object-cover"
+        alt=""
+      />
+    </div>
+
+    <!-- Form -->
+    <div class="mx-auto w-full max-w-md md:mt-12">
+      <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Bắt đầu hành trình</p>
+
+      <h1 class="mt-2 font-display text-4xl">Đăng ký</h1>
+
+      <p class="mt-3 text-sm text-muted-foreground">
+        Tạo tài khoản để nhận quà chào mừng và ưu đãi sinh nhật.
+      </p>
+
+      <form class="mt-8 space-y-5">
+        <div>
+          <Field
+            label="Họ và tên"
+            type="text"
+            v-model="fullName"
+            @focus="authStore.clearMessages"
+          />
+          <p class="mt-1 text-sm text-red-500">
+            {{ errors.fullName }}
+          </p>
+        </div>
+
+        <div>
+          <Field label="Email" type="email" v-model="email" @focus="authStore.clearMessages" />
+          <p class="mt-1 text-sm text-red-500">
+            {{ errors.email }}
+          </p>
+        </div>
+
+        <div>
+          <Field
+            label="Mật khẩu"
+            type="password"
+            v-model="password"
+            @focus="authStore.clearMessages"
+          />
+          <p class="mt-1 text-sm text-red-500">
+            {{ errors.password }}
+          </p>
+        </div>
+
+        <div>
+          <Field
+            label="Xác nhận mật khẩu"
+            type="password"
+            v-model="confirm"
+            @focus="authStore.clearMessages"
+          />
+          <p class="mt-1 text-sm text-red-500">
+            {{ errors.confirm }}
+          </p>
+        </div>
+
+        <p v-if="error" class="mt-1 text-sm text-red-500">
+          {{ error }}
+        </p>
+        <p v-if="message" class="mt-1 text-sm text-green-500">
+          {{ message }}
+        </p>
+
+        <button
+          @click.prevent="onSubmit"
+          type="submit"
+          class="w-full bg-ink py-3 text-sm font-medium uppercase tracking-widest text-ivory transition-colors hover:bg-ink/85 cursor-pointer"
+        >
+          Tạo tài khoản
+        </button>
+      </form>
+
+      <p class="mt-8 text-center text-sm text-muted-foreground">
+        Đã có tài khoản?
+
+        <RouterLink to="/login" class="border-b border-foreground pb-px text-foreground">
+          Đăng nhập
+        </RouterLink>
+      </p>
+    </div>
+  </div>
+</template>

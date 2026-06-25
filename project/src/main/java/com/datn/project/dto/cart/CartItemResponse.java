@@ -18,4 +18,5 @@ public class CartItemResponse {
     private String color;
     private int quantity;
     private BigDecimal price;
+    private BigDecimal orginalPrice;
 }

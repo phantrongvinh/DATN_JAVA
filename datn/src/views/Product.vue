@@ -1,200 +1,23 @@
-<template>
-  <div class="container-fluid">
-    <!-- Header của trang product -->
-    <div class="d-flex justify-content-between align-items-center px-4 mt-4 mb-5 z-100">
-      <!-- Label hiện thỉ theo filter -->
-      <div class="fs-2 fw-bold">
-        {{ label }}
-      </div>
-
-      <!-- Nút bấm để handle ẩn hiện filter -->
-      <button class="btn bg-gradient-danger mb-0 shadow" @click="showFilter = !showFilter">
-        <i class="fa-solid fa-sliders me-2"></i>
-
-        {{ showFilter ? 'Ẩn bộ lọc' : 'Hiện bộ lọc' }}
-
-        <i class="fa-solid ms-2" :class="showFilter ? 'fa-chevron-left' : 'fa-chevron-right'"></i>
-      </button>
-    </div>
-
-    <!-- Content trang product -->
-    <div class="px-4 mt-5">
-      <!-- Chia grid cho content -->
-      <div class="row">
-        <!-- Filter được handle ẩn hiện theo nút bấm ở trên -->
-        <div class="col-lg-3" v-show="showFilter">
-          <div class="card position-sticky top-1 border-0">
-            <div class="card-header pb-0">
-              <h5>Filter</h5>
-            </div>
-            <div class="card-body">
-              <!-- Filter checkbox theo audiences -->
-              <div class="mt-3">
-                <div class="fs-5 fw-semibold">Audience</div>
-                <div class="mt-2 fs-5">
-                  <div class="d-flex flex-wrap">
-                    <div class="mb-3 form-check w-50" v-for="a in audiences">
-                      <input
-                        type="checkbox"
-                        name="audience"
-                        :id="a.name.toLowerCase()"
-                        class="form-check-input"
-                        :value="a.id"
-                        v-model="selectedAudience"
-                      />
-                      <label :for="a.name.toLowerCase()" class="form-check-label">{{
-                        a.name
-                      }}</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Filter checkbox theo brand -->
-              <hr class="horizontal dark my-3" />
-              <div class="mt-3">
-                <div class="fs-5 fw-semibold">Brand</div>
-                <div class="mt-2 fs-5">
-                  <div class="d-flex flex-wrap">
-                    <div class="mb-3 form-check w-50" v-for="b in brands">
-                      <input
-                        type="checkbox"
-                        name="brand"
-                        :id="b.name.toLowerCase()"
-                        class="form-check-input"
-                        :value="b.id"
-                        v-model="selectedBrand"
-                      />
-                      <label :for="b.name.toLowerCase()" class="form-check-label">{{
-                        b.name
-                      }}</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Phần products list sẽ được filter theo điều kiện của side filter -->
-        <div class="ps-3 border-start pb-5" :class="showFilter ? 'col-lg-9' : 'col-lg-12'">
-          <!-- Phần filter thêm của product list: danh mục, khoảng giá, tăng dần giảm dần -->
-          <div class="d-flex justify-content-start gap-3" v-if="showFilter">
-            <Select
-              :data="categories"
-              v-model:selected="selectedCategory"
-              :selectedName="selectedCategoryName"
-              descript="Chọn danh mục"
-            ></Select>
-          </div>
-          <hr class="my-5" />
-          <!-- Phần data product list -->
-          <div class="row g-4">
-            <template v-if="filterProducts && filterProducts.length > 0">
-              <div class="col-xl-4 col-md-6 mb-5 d-flex" v-for="f in filterProducts" :key="f.id">
-                <div class="card h-100 w-100 d-flex flex-column" data-animation="true">
-                  <!-- Image -->
-                  <div class="card-header p-0 position-relative mt-n2 mx-3 z-index-2">
-                    <a class="d-block blur-shadow-image">
-                      <img
-                        :src="url + '/' + f.img"
-                        class="img-fluid shadow border-radius-lg"
-                        style="height: 300px; width: 100%; object-fit: cover"
-                      />
-                    </a>
-                    <div
-                      class="colored-shadow"
-                      :style="{ backgroundImage: `url(${url}/${f.img})` }"
-                    ></div>
-                  </div>
-
-                  <!-- Body -->
-                  <div class="card-body text-center d-flex flex-column flex-grow-1">
-                    <div class="d-flex mt-n4 mx-auto">
-                      <button
-                        class="btn btn-link text-danger ms-auto border-0"
-                        data-bs-toggle="tooltip"
-                        title="Favorite"
-                      >
-                        <i class="fa-regular fa-heart"></i>
-                      </button>
-                      <button
-                        class="btn btn-link text-dark me-auto border-0"
-                        data-bs-toggle="tooltip"
-                        title="Quick View"
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </button>
-                    </div>
-
-                    <!-- Chuyển hướng product detail -->
-                    <RouterLink
-                      :to="{
-                        name: 'productDetail',
-                        params: { productId: f.id },
-                      }"
-                    >
-                      <h5 class="font-weight-normal mt-3 text-dark product-title">
-                        {{ f.name }}
-                      </h5>
-                    </RouterLink>
-
-                    <p class="text-sm text-secondary mb-0 product-meta">
-                      {{ f.category }} · {{ f.brand }}
-                    </p>
-
-                    <!-- spacer đẩy footer xuống đáy -->
-                    <div class="mt-auto"></div>
-                  </div>
-
-                  <hr class="dark horizontal my-0" />
-
-                  <!-- Footer -->
-                  <div class="card-footer d-flex align-items-center justify-content-end">
-                    <div class="d-flex gap-2 align-items-center">
-                      <span
-                        v-if="f.discountedPrice < f.minPrice"
-                        class="text-muted text-decoration-line-through"
-                      >
-                        {{ ulti.formatVND(f.minPrice) }}
-                      </span>
-                      <h6 class="text-danger mb-0">
-                        {{ ulti.formatVND(f.discountedPrice ?? f.minPrice) }}
-                      </h6>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <div v-else class="col-12 text-center py-5">
-              <p class="text-muted fs-14">Không tìm thấy sản phẩm nào</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import Select from '@/components/Select.vue'
+import { computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { X } from 'lucide-vue-next'
+
+import ProductCard from '@/components/site/ProductCard.vue'
+import FilterGroup from '@/components/site/FilterGroup.vue'
+import FilterCheck from '@/components/site/FilterCheck.vue'
+import { useProductStore } from '@/stores/useProductStore'
+import { storeToRefs } from 'pinia'
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
-import { useProductStore } from '@/stores/useProductStore'
-import ulti from '@/ulti/ulti'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
-// lấy param từ route
 const route = useRoute()
 const router = useRouter()
 
-// fetch data
-
 const productStore = useProductStore()
-const brandStore = useBrandStore()
 const audienceStore = useAudienceStore()
+const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
 
 const { brands } = storeToRefs(brandStore)
@@ -205,32 +28,24 @@ onMounted(async () => {
   await categoryStore.fetchCategory()
 })
 
+const { filterProducts } = storeToRefs(productStore)
+
+const toNumberArray = (val) => {
+  if (!val) return []
+  return Array.isArray(val) ? val.map(Number) : [Number(val)]
+}
+
 watch(
   () => route.query,
   async (query) => {
     const params = {
-      brandIds: query.brandIds
-        ? Array.isArray(query.brandIds)
-          ? query.brandIds.map(Number)
-          : [Number(query.brandIds)]
-        : [],
-
-      categoryIds: query.categoryIds
-        ? Array.isArray(query.categoryIds)
-          ? query.categoryIds.map(Number)
-          : [Number(query.categoryIds)]
-        : [],
-
-      audienceIds: query.audienceIds
-        ? Array.isArray(query.audienceIds)
-          ? query.audienceIds.map(Number)
-          : [Number(query.audienceIds)]
-        : [],
-
+      brandIds: toNumberArray(query.brandIds),
+      categoryIds: toNumberArray(query.categoryIds),
+      audienceIds: toNumberArray(query.audienceIds),
       search: query.search || null,
-      onSale: null,
-      minPrice: null,
-      maxPrice: null,
+      onSale: route.query.onSale === 'true' ? true : null,
+      minPrice: route.query.minPrice ? Number(route.query.minPrice) : null,
+      maxPrice: route.query.maxPrice ? Number(route.query.maxPrice) : null,
       sortBy: null,
     }
     await productStore.fetchFilterProducts(params)
@@ -238,72 +53,13 @@ watch(
   { immediate: true },
 )
 
-const label = computed(() => {
-  const audienceIds = route.query.audienceIds
-  const brandIds = route.query.brandIds
-
-  if (!audienceIds && !brandIds) {
-    return 'Clothing'
-  }
-
-  // Ưu tiên audience
-  if (audienceIds) {
-    const ids = Array.isArray(audienceIds) ? audienceIds.map(Number) : [Number(audienceIds)]
-
-    if (ids.length === 1) {
-      const audience = audiences.value.find((a) => a.id === ids[0])
-
-      if (audience) {
-        return `${ulti.formatLabel(audience.name)}'s Clothing`
-      }
-    }
-
-    return 'Clothing'
-  }
-
-  // Xét brand
-  const ids = Array.isArray(brandIds) ? brandIds.map(Number) : [Number(brandIds)]
-
-  if (ids.length === 1) {
-    const brand = brands.value.find((b) => b.id === ids[0])
-
-    if (brand) {
-      return `${ulti.formatLabel(brand.name)}'s Clothing`
-    }
-  }
-
-  return 'Clothing'
-})
-const { filterProducts } = storeToRefs(productStore)
-
-const selectedAudience = computed({
-  get() {
-    const audienceIds = route.query.audienceIds
-
-    if (!audienceIds) return []
-
-    return Array.isArray(audienceIds) ? audienceIds : [audienceIds]
-  },
-
-  set(value) {
-    router.push({
-      query: {
-        ...route.query,
-        audienceIds: value.length ? value : undefined,
-      },
-    })
-  },
-})
-
+// handle check brand
 const selectedBrand = computed({
   get() {
     const brandIds = route.query.brandIds
-
     if (!brandIds) return []
-
-    return Array.isArray(brandIds) ? brandIds : [brandIds]
+    return (Array.isArray(brandIds) ? brandIds : [brandIds]).map(Number)
   },
-
   set(value) {
     router.push({
       query: {
@@ -314,39 +70,311 @@ const selectedBrand = computed({
   },
 })
 
-// category
+const toggleBrand = (id) => {
+  const current = new Set(selectedBrand.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedBrand.value = [...current]
+}
+
+// handle check category
 const selectedCategory = computed({
   get() {
-    return route.query.categoryIds ?? undefined
+    const categoryIds = route.query.categoryIds
+    if (!categoryIds) return []
+    return (Array.isArray(categoryIds) ? categoryIds : [categoryIds]).map(Number)
   },
-
   set(value) {
     router.push({
       query: {
         ...route.query,
-        categoryIds: value || undefined,
+        categoryIds: value.length ? value : undefined,
       },
     })
   },
 })
 
-const selectedCategoryName = computed(() => {
-  const ids = Array.isArray(selectedCategory.value)
-    ? selectedCategory.value
-    : [selectedCategory.value]
+const toggleCategory = (id) => {
+  const current = new Set(selectedCategory.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedCategory.value = [...current]
+}
 
-  return (
-    categories.value
-      .filter((c) => ids.includes(String(c.id)))
-      .map((c) => c.name)
-      .join(', ') || 'Chọn danh mục'
-  )
+// handle check audience
+const selectedAudience = computed({
+  get() {
+    const audienceIds = route.query.audienceIds
+    if (!audienceIds) return []
+    return (Array.isArray(audienceIds) ? audienceIds : [audienceIds]).map(Number)
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        audienceIds: value.length ? value : undefined,
+      },
+    })
+  },
 })
 
-// url
+const toggleAudience = (id) => {
+  const current = new Set(selectedAudience.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedAudience.value = [...current]
+}
+const audienceLabel = (name) => {
+  const map = {
+    Men: 'Nam',
+    Women: 'Nữ',
+    Kids: 'Trẻ em',
+  }
+  return map[name] ?? 'Phi giới tính'
+}
 
-const url = 'http://localhost:8080/uploads/images'
+// handle price
+const PRICE_RANGES = [
+  { label: 'Dưới 500K', min: 0, max: 500000 },
+  { label: '500K – 1.5tr', min: 500000, max: 1500000 },
+  { label: '1.5tr – 3tr', min: 1500000, max: 3000000 },
+  { label: '3tr – 5tr', min: 3000000, max: 5000000 },
+  { label: 'Trên 5tr', min: 5000000, max: null },
+]
 
-// ẩn hiện filter
-const showFilter = ref(true)
+const selectedPrice = computed({
+  get() {
+    return {
+      min: route.query.minPrice ? Number(route.query.minPrice) : null,
+      max: route.query.maxPrice ? Number(route.query.maxPrice) : null,
+    }
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        minPrice: value.min ?? undefined,
+        maxPrice: value.max ?? undefined,
+      },
+    })
+  },
+})
+
+// handle sale
+const selectedOnSale = computed({
+  get() {
+    return route.query.onSale === 'true'
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        onSale: value ? 'true' : undefined,
+      },
+    })
+  },
+})
+
+const togglePrice = (price) => {
+  // Click lại range đang chọn thì bỏ chọn
+  if (selectedPrice.value.min === price.min && selectedPrice.value.max === price.max) {
+    selectedPrice.value = { min: null, max: null }
+  } else {
+    selectedPrice.value = { min: price.min, max: price.max }
+  }
+}
+
+// handle active filter
+const activeFilters = computed(() => {
+  const filters = []
+
+  // Brand
+  const brandIds = toNumberArray(route.query.brandIds)
+  brandIds.forEach((id) => {
+    const brand = brands.value.find((b) => b.id === id)
+    if (brand) {
+      filters.push({
+        label: brand.name,
+        clear: () => {
+          selectedBrand.value = selectedBrand.value.filter((b) => b !== id)
+        },
+      })
+    }
+  })
+  // Category
+  const categoryIds = toNumberArray(route.query.categoryIds)
+  categoryIds.forEach((id) => {
+    const category = categories.value.find((c) => c.id === id)
+    if (category) {
+      filters.push({
+        label: category.name,
+        clear: () => {
+          selectedCategory.value = selectedCategory.value.filter((c) => c !== id)
+        },
+      })
+    }
+  })
+
+  // Audience
+  const audienceIds = toNumberArray(route.query.audienceIds)
+  audienceIds.forEach((id) => {
+    const audience = audiences.value.find((a) => a.id === id)
+    if (audience) {
+      filters.push({
+        label: audienceLabel(audience.name),
+        clear: () => {
+          selectedAudience.value = selectedAudience.value.filter((a) => a !== id)
+        },
+      })
+    }
+  })
+
+  // Search
+  //   if (route.query.search) {
+  //     filters.push({
+  //       label: `"${route.query.search}"`,
+  //       clear: () => router.push({ query: { ...route.query, search: undefined } }),
+  //     })
+  //   }
+
+  return filters
+})
 </script>
+
+<template>
+  <!-- Header -->
+  <div class="border-b border-border">
+    <div class="container-x py-12">
+      <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <RouterLink to="/">Trang chủ</RouterLink> / Sản phẩm
+      </p>
+
+      <h1 class="mt-3 font-display text-4xl md:text-5xl">
+        Toàn bộ <span class="italic text-gold">bộ sưu tập</span>
+      </h1>
+    </div>
+  </div>
+
+  <div class="container-x grid gap-10 py-12 md:grid-cols-[260px_1fr]">
+    <!-- Sidebar -->
+    <aside class="self-start space-y-8 rounded-xl border border-border p-6">
+      <FilterGroup title="Thương hiệu">
+        <FilterCheck
+          v-for="brand in brands"
+          :key="brand.id"
+          :label="brand.name"
+          :value="brand.id"
+          :checked="selectedBrand.includes(brand.id)"
+          @change="toggleBrand(brand.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Danh mục">
+        <FilterCheck
+          v-for="category in categories"
+          :key="category.id"
+          :label="category.name"
+          :value="category.id"
+          :checked="selectedCategory.includes(category.id)"
+          @change="toggleCategory(category.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Đối tượng">
+        <FilterCheck
+          v-for="audience in audiences"
+          :key="audience.id"
+          :label="audienceLabel(audience.name)"
+          :value="audience.id"
+          :checked="selectedAudience.includes(audience.id)"
+          @change="toggleAudience(audience.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Khoảng giá">
+        <FilterCheck
+          label="Đang giảm giá"
+          :checked="selectedOnSale"
+          @change="selectedOnSale = !selectedOnSale"
+        />
+        <FilterCheck
+          v-for="price in PRICE_RANGES"
+          :key="price.label"
+          :label="price.label"
+          :checked="selectedPrice.min === price.min && selectedPrice.max === price.max"
+          @change="togglePrice(price)"
+        />
+      </FilterGroup>
+
+      <!-- <FilterGroup title="Khuyến mãi">
+        <FilterCheck
+          label="Chỉ hiện sản phẩm giảm giá"
+          :checked="search.onSale === 'true'"
+          @change="
+            setSearch({
+              onSale: search.onSale === 'true' ? undefined : 'true',
+            })
+          "
+        />
+      </FilterGroup> -->
+    </aside>
+
+    <!-- Product -->
+    <div>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <p class="text-sm text-muted-foreground">
+          {{ filterProducts && filterProducts.length > 0 ? filterProducts.length : '0' }}
+          sản phẩm
+        </p>
+
+        <select
+          class="border-b border-foreground bg-transparent py-1 outline-none"
+          @change="
+            setSearch({
+              sort: $event.target.value,
+            })
+          "
+        >
+          <option value="newest">Mới nhất</option>
+          <option value="oldest">Cũ nhất</option>
+          <option value="price-asc">Giá tăng dần</option>
+          <option value="price-desc">Giá giảm dần</option>
+        </select>
+      </div>
+
+      <!-- Active filter -->
+      <div v-if="activeFilters.length" class="mt-4 flex flex-wrap gap-2">
+        <button
+          v-for="(f, i) in activeFilters"
+          :key="i"
+          @click="f.clear()"
+          class="flex items-center gap-1 border px-3 py-1 text-xs"
+        >
+          {{ f.label }}
+          <X class="h-3 w-3" />
+        </button>
+      </div>
+
+      <!-- Grid -->
+      <div
+        v-if="filterProducts && filterProducts.length > 0"
+        class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3"
+      >
+        <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
+      </div>
+
+      <div v-else class="py-24 text-center text-muted-foreground">
+        Không có sản phẩm phù hợp với bộ lọc.
+      </div>
+    </div>
+  </div>
+</template>

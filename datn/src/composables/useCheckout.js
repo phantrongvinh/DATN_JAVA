@@ -1,4 +1,5 @@
 import orderAPI from '@/api/orderAPI'
+import paymentAPI from '@/api/paymentAPI'
 import timePromotionAPI from '@/api/timePromotion'
 import voucherAPI from '@/api/voucherAPI'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -37,7 +38,7 @@ export function useCheckout() {
   const afterVoucher = computed(() => subtotal.value - voucherDiscount.value)
   const timeDiscount = computed(() => {
     if (!timePromotion.value) return 0
-    if (timePromotion.value.discountType === 'percent') {
+    if (timePromotion.value.discountType === 'PERCENT') {
       return Math.round((afterVoucher.value * timePromotion.value.discountValue) / 100)
     }
     return Math.min(timePromotion.value.discountValue, afterVoucher.value)
@@ -99,6 +100,7 @@ export function useCheckout() {
   const checkout = async (form) => {
     loading.value = true
     error.value = null
+
     try {
       const payload = {
         items: cartStore.items.map((i) => ({
@@ -112,27 +114,23 @@ export function useCheckout() {
         paymentMethodId: form.paymentMethodId,
       }
 
-      const orderId = await orderAPI.placeOrder(payload)
+      const res = await orderAPI.placeOrder(payload)
+      const orderId = res
 
-      console.log(orderId)
-
-      if (authStore.isAuthenticated) {
-        await cartStore.fetchCart()
-      } else {
-        cartStore.clearLocal()
-      }
-
-      // COD
       if (form.paymentMethodId === 1) {
-        await handlePostOrder()
+        if (authStore.isAuthenticated) {
+          await cartStore.fetchCart()
+        } else {
+          cartStore.clearLocal()
+        }
         router.push(`/orders/${orderId}`)
         return
       }
 
       // VNPAY
       if (form.paymentMethodId === 2) {
-        const res = await axiosClient.get(`/api/v1/payment/vnpay/${orderId.data}`)
-        window.location.href = res.data.paymentUrl
+        const vnpayRes = await paymentAPI.vnpay(orderId)
+        window.location.href = vnpayRes.paymentUrl
         return
       }
 
@@ -142,14 +140,6 @@ export function useCheckout() {
       throw err
     } finally {
       loading.value = false
-    }
-  }
-
-  const handlePostOrder = async () => {
-    if (authStore.isAuthenticated) {
-      await cartStore.fetchCart()
-    } else {
-      cartStore.clearLocal()
     }
   }
 
