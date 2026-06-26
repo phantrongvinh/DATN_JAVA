@@ -30,4 +30,5 @@ public class ProductResponse {
     private BigDecimal maxPrice;
     private BigDecimal discountedPrice;
     private PromotionResponse promotion;
+    private LocalDateTime deletedAt;
 }

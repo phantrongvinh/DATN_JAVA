@@ -12,21 +12,27 @@ const fetchAllProducts = async (param) => {
   return res.data
 }
 
-const deleteProductById = async (id) => {
-  const res = await axiosClient.patch(`${url}/products/delete/${id}`)
+const deactivateProduct = async (id) => {
+  const res = await axiosClient.delete(`${url}/products/${id}`)
   return res.data
 }
 
-const updateProductById = async (data) => {
-  const res = await axiosClient.put(`${url}/products/update`, data)
+const updateProduct = async (id, data) => {
+  const res = await axiosClient.put(`${url}/products/${id}`, data)
+  return res.data
+}
+
+const createProduct = async (data) => {
+  const res = await axiosClient.post(`${url}/products`, data)
   return res.data
 }
 
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
-  deleteProductById,
-  updateProductById,
+  deactivateProduct,
+  updateProduct,
+  createProduct,
 }
 
 export default adminAPI

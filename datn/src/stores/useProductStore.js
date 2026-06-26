@@ -21,6 +21,7 @@ export const useProductStore = defineStore('product', () => {
   const size = ref(5)
   const totalPages = ref(0)
   const totalElements = ref(0)
+  const currentPage = ref(1)
 
   // actions
   // fetch top 10 product mới nhất hiện ở home
@@ -122,7 +123,8 @@ export const useProductStore = defineStore('product', () => {
       totalElements.value = res.page.totalElements
       page.value = res.page.number + 1
       size.value = res.page.size
-    } catch (error) {
+      currentPage.value = newPage
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
@@ -131,12 +133,12 @@ export const useProductStore = defineStore('product', () => {
   }
 
   // vô hiện hóa hoặc khôi phục product theo id
-  async function deleteProductById(id) {
+  async function deactivateProduct(id) {
     loadding.value = true
     error.value = null
 
     try {
-      const res = await adminAPI.deleteProductById(id)
+      const res = await adminAPI.deactivateProduct(id)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
     } catch (error) {
@@ -153,7 +155,7 @@ export const useProductStore = defineStore('product', () => {
     error.value = null
 
     try {
-      const res = await adminAPI.updateProductById(data)
+      const res = await adminAPI.updateProduct(data)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
     } catch (error) {
@@ -194,11 +196,12 @@ export const useProductStore = defineStore('product', () => {
     message,
     totalPages,
     totalElements,
+    currentPage,
     fetchSpotlightProducts,
     fetchFilterProducts,
     fetchProductOVerview,
     fetchAllProducts,
-    deleteProductById,
+    deactivateProduct,
     updateProductById,
     fetchProductByID,
     fetchProductOnSale,
