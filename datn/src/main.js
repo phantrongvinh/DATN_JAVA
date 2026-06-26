@@ -10,16 +10,6 @@ import VueVirtualScroller from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useAuthStore } from './stores/useAuthStore'
 
-// Dashboard JS
-
-import Scrollbar from 'smooth-scrollbar'
-
-window.scrollbars = Scrollbar
-
-import Chart from 'chart.js/auto'
-
-window.Chart = Chart
-
 const app = createApp(App)
 
 app.use(VueVirtualScroller)

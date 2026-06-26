@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.project.dto.PromotionRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
-import com.datn.project.dto.product.ProductUpdateRequest;
+import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
@@ -58,14 +58,20 @@ public class AdminController {
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
-    @PatchMapping("/products/delete/{id}")
-    public ResponseEntity<?> deleteProductById(@PathVariable int id) {
-        return ResponseEntity.ok(productService.deleteProductById(id)).getBody();
+    @PostMapping("/products")
+    public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.createProduct(request));
     }
 
-    @PutMapping("/products/update")
-    public ResponseEntity<?> updateProductById(@RequestBody ProductUpdateRequest request) {
-        return ResponseEntity.ok(productService.updateProduct(request)).getBody();
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<?> deactivateProduct(@PathVariable int id) {
+        return ResponseEntity.ok(productService.deactivateProduct(id)).getBody();
+    }
+
+    @PutMapping("/products/{id}")
+    public ResponseEntity<?> updateProductById(@PathVariable Integer id,
+            @RequestBody ProductRequest request) {
+        return ResponseEntity.ok(productService.updateProduct(id, request)).getBody();
     }
 
     // phần khuyến mãi

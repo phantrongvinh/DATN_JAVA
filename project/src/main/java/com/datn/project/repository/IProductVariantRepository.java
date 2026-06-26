@@ -25,4 +25,14 @@ public interface IProductVariantRepository extends JpaRepository<ProductVariant,
     @Modifying(clearAutomatically = true)
     @Query("UPDATE ProductVariant pv SET pv.stock = pv.stock - :qty WHERE pv.id = :id AND pv.stock >= :qty")
     int decreaseStock(@Param("id") Integer id, @Param("qty") Integer qty);
+
+    List<ProductVariant> findByProductId(Integer productId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ProductVariant pv WHERE pv.product.id = :productId AND pv.id NOT IN :keepIds")
+    void deleteByProductIdAndIdNotIn(
+        @Param("productId") Integer productId,
+        @Param("keepIds") List<Integer> keepIds
+    );
 }

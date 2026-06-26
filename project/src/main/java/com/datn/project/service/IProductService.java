@@ -3,11 +3,11 @@ package com.datn.project.service;
 import org.springframework.http.ResponseEntity;
 
 import com.datn.project.dto.product.ProductFilterDTO;
-import com.datn.project.dto.product.ProductUpdateRequest;
+import com.datn.project.dto.product.ProductRequest;
 
 public interface IProductService {
 
-    ResponseEntity<?> getFilterProducts(ProductFilterDTO filterDTO,int page, int size);
+    ResponseEntity<?> getFilterProducts(ProductFilterDTO filterDTO, int page, int size);
 
     ResponseEntity<?> getSpotlightProducts();
 
@@ -15,12 +15,14 @@ public interface IProductService {
 
     ResponseEntity<?> getAllProducts(int page, int size, ProductFilterDTO filterDTO);
 
-    ResponseEntity<?> deleteProductById(int id);
+    ResponseEntity<?> deactivateProduct(Integer id);
 
-    ResponseEntity<?> updateProduct(ProductUpdateRequest request);
+    ResponseEntity<?> updateProduct(Integer id, ProductRequest request);
 
     ResponseEntity<?> getProductDetail(int id);
 
     ResponseEntity<?> getProductOnSale();
+
+    ResponseEntity<?> createProduct(ProductRequest request);
 
 }

@@ -152,7 +152,7 @@ const { items } = useCart()
             <template v-if="isAdmin">
               <RouterLink to="/admin">
                 <DropdownMenuItem>
-                  <LayoutDashboard class="h-4 w-4" />
+                  <LayoutDashboard class="mr-2 h-4 w-4" />
                   Quản trị
                 </DropdownMenuItem>
               </RouterLink>
