@@ -384,7 +384,7 @@
   <ProductModal
     v-model:showProductModal="showProductModal"
     :product="editingProduct"
-    @saved="reloadProducts"
+    @save="handleSave"
   ></ProductModal>
 </template>
 
@@ -545,5 +545,13 @@ const openCreateModal = () => {
 const openEditModal = (product) => {
   editingProduct.value = product
   showProductModal.value = true
+}
+
+const handleSave = (values) => {
+  if (selectedProduct.value) {
+    console.log('Update', values)
+  } else {
+    console.log('Create', values)
+  }
 }
 </script>

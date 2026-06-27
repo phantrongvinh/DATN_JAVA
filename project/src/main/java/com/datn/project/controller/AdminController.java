@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
@@ -58,20 +61,24 @@ public class AdminController {
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
-    @PostMapping("/products")
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.createProduct(request));
+    @PostMapping(value = "/products",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createProduct(
+            @RequestPart("data") ProductRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        return productService.createProduct(request, images);
+    }
+
+    @PutMapping(value = "/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateProduct(
+            @PathVariable Integer id,
+            @RequestPart("data") ProductRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        return productService.updateProduct(id, request, images);
     }
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deactivateProduct(@PathVariable int id) {
         return ResponseEntity.ok(productService.deactivateProduct(id)).getBody();
-    }
-
-    @PutMapping("/products/{id}")
-    public ResponseEntity<?> updateProductById(@PathVariable Integer id,
-            @RequestBody ProductRequest request) {
-        return ResponseEntity.ok(productService.updateProduct(id, request)).getBody();
     }
 
     // phần khuyến mãi

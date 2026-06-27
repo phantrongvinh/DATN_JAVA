@@ -238,7 +238,7 @@ public class OrderService implements IOrderService {
                 response.setItems(order.getOrderDetails().stream().map(i -> {
                         OrderDetailResponse item = new OrderDetailResponse(i.getId(), i.getProductName(), i.getColor(),
                                         i.getSizeName(), i.getQuantity(), null, i.getPrice(),
-                                        i.getPromotion() != null ? order.getTimePromotion().getName() : null);
+                                        i.getPromotion() != null ? i.getPromotion().getName() : null);
 
                         return item;
 
