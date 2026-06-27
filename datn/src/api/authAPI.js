@@ -29,6 +29,7 @@ const me = async () => {
 
 const forgotPassword = async (email) => {
   const res = await axiosClient.post(`${url}/forgot-password`, { email: email })
+
   return res.data
 }
 const resetPassword = async (token, password) => {

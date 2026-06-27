@@ -35,11 +35,9 @@ const onSubmit = handleSubmit(async (values) => {
     }
     mailSend.value = values.email
     await authStore.login(data)
-    console.log('login xong') // có in không?
     await router.push('/profile')
-    console.log('push xong') // có in không?
   } catch (e) {
-    console.error(e)
+    console.log(e)
   }
 })
 

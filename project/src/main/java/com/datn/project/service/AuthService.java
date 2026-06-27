@@ -113,7 +113,7 @@ public class AuthService implements IAuthService {
 
         sendVerificationEmail(user, token);
 
-        return ResponseEntity.ok("Đăng ký thành công, kiểm tra email để kích hoạt tài khoản");
+        return ResponseEntity.ok(Map.of("message","Đăng ký thành công, kiểm tra email để kích hoạt tài khoản"));
     }
 
     @Override

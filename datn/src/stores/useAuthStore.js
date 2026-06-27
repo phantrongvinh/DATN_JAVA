@@ -118,8 +118,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const res = await authAPI.resetPassword(token, password)
+      console.log(res)
 
       message.value = res
+
       resend.value = false
     } catch (err) {
       error.value = err.response?.data?.message
