@@ -103,6 +103,19 @@ const handleResend = async () => {
         <p v-if="message" class="mt-1 text-sm text-green-500">
           {{ message }}
         </p>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-2 text-muted-foreground">
+            <input type="checkbox" class="accent-foreground" /> Ghi nhớ tôi
+          </label>
+          <RouterLink
+            to="/forgot-password"
+            class="border-b border-foreground/40 pb-px hover:border-foreground"
+          >
+            Quên mật khẩu?
+          </RouterLink>
+        </div>
+
         <div v-if="resend" class="mt-6">
           <button
             @click.prevent="handleResend"
