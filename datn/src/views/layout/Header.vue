@@ -184,7 +184,7 @@ const { items } = useCart()
             <span
               class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[10px] font-medium text-ivory"
             >
-              {{ items?.length }}
+              {{ items?.reduce((sum, i) => sum + i.quantity, 0) }}
             </span>
           </button>
         </RouterLink>

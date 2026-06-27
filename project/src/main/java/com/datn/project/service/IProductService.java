@@ -1,6 +1,9 @@
 package com.datn.project.service;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
@@ -17,12 +20,12 @@ public interface IProductService {
 
     ResponseEntity<?> deactivateProduct(Integer id);
 
-    ResponseEntity<?> updateProduct(Integer id, ProductRequest request);
+    ResponseEntity<?> updateProduct(Integer id, ProductRequest request, List<MultipartFile> imageFiles);
 
     ResponseEntity<?> getProductDetail(int id);
 
     ResponseEntity<?> getProductOnSale();
 
-    ResponseEntity<?> createProduct(ProductRequest request);
+    ResponseEntity<?> createProduct(ProductRequest request, List<MultipartFile> imageFiles);
 
 }

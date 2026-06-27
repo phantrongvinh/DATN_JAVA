@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionResponse;
 import com.datn.project.dto.product.ProductDetailDTO;
@@ -74,6 +77,9 @@ public class ProductService implements IProductService {
 
         @Autowired
         private ISizeRepository sizeRepository;
+
+        @Autowired
+        private CloudinaryService cloudinaryService;
 
         // config để lấy product và giảm giá tốt nhất
         private Optional<Promotion> getBestPromotion(Product product, BigDecimal price) {
@@ -214,58 +220,83 @@ public class ProductService implements IProductService {
                 };
 
                 Pageable pageable = PageRequest.of(page, size, sort);
-                Page<Product> products = productRepository.findAll(ProductSpecification.filter(filterDTO), pageable);
 
-                if (products.isEmpty()) {
-                        return ResponseEntity.ok(
-                                        Map.of("message", "Không tìm thấy sản phẩm"));
+                // ─── 1. Query ids ─────────────────────────────────────────
+                Page<Integer> productIds = productRepository
+                                .findAll(ProductSpecification.filter(filterDTO), pageable)
+                                .map(Product::getId);
+
+                if (productIds.isEmpty()) {
+                        return ResponseEntity.ok(Map.of("message", "Không tìm thấy sản phẩm"));
                 }
 
+                List<Integer> ids = productIds.getContent();
+
+                // ─── 2. Fetch batch images và variants ───────────────────
+                List<Product> withImages = productRepository.findAllWithImagesByIds(ids);
+                List<Product> withVariants = productRepository.findAllWithVariantsByIds(ids);
+
+                // ─── 3. Merge variants vào product có images ─────────────
+                Map<Integer, List<ProductVariant>> variantMap = withVariants.stream()
+                                .collect(Collectors.toMap(
+                                                Product::getId,
+                                                p -> new ArrayList<>(p.getProductVariants())));
+
+                withImages.forEach(p -> p.setProductVariants(variantMap.getOrDefault(p.getId(), new ArrayList<>())));
+
+                // ─── 4. Giữ đúng thứ tự theo ids ────────────────────────
+                Map<Integer, Product> productMap = withImages.stream()
+                                .collect(Collectors.toMap(Product::getId, p -> p));
+
+                List<Product> products = ids.stream()
+                                .map(productMap::get)
+                                .filter(Objects::nonNull)
+                                .toList();
+
+                // ─── 5. Map sang response ─────────────────────────────────
                 List<ProductHomeView> responseList = products.stream()
                                 .map(product -> {
                                         ProductHomeView res = new ProductHomeView();
-                                        res.setCategoryName(product.getCategory().getName());
+
                                         res.setId(product.getId());
                                         res.setName(product.getName());
+                                        res.setCategoryName(product.getCategory().getName());
                                         res.setBrandName(product.getBrand().getName());
 
-                                        ProductImage productImage = product.getProductImages().stream()
+                                        res.setImage(product.getProductImages().stream()
                                                         .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
                                                         .findFirst()
-                                                        .orElse(null);
-                                        res.setImage(productImage != null ? productImage.getImageUrl() : null);
-                                        // Min và Max price
-                                        BigDecimal minPrice = product.getProductVariants()
-                                                        .stream()
+                                                        .map(ProductImage::getImageUrl)
+                                                        .orElse(product.getProductImages().stream()
+                                                                        .findFirst()
+                                                                        .map(ProductImage::getImageUrl)
+                                                                        .orElse(null)));
+
+                                        BigDecimal minPrice = product.getProductVariants().stream()
                                                         .map(ProductVariant::getPrice)
                                                         .min(BigDecimal::compareTo)
                                                         .orElse(product.getBasePrice());
 
-                                        // Promotion tốt nhất
                                         Optional<Promotion> promo = getBestPromotion(product, minPrice);
-                                        PromotionResponse promoResponse = promo
-                                                        .map(this::toPromotionResponse)
-                                                        .orElse(null);
-
                                         BigDecimal discountedMinPrice = promo
                                                         .map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
                                                         .orElse(minPrice);
 
                                         res.setPrice(minPrice);
                                         res.setDiscountPrice(discountedMinPrice);
-                                        res.setPromotion(promoResponse);
+                                        res.setPromotion(promo.map(this::toPromotionResponse).orElse(null));
+
                                         return res;
                                 })
                                 .toList();
-                Slice<ProductHomeView> response = new SliceImpl<>(responseList, pageable, products.hasNext());
 
                 return ResponseEntity.ok(Map.of(
                                 "content", responseList,
-                                "hasNext", products.hasNext(),
+                                "hasNext", productIds.hasNext(),
                                 "page", page,
                                 "size", size,
-                                "totalElements", products.getTotalElements(),
-                                "totalPages", products.getTotalPages()));
+                                "totalElements", productIds.getTotalElements(),
+                                "totalPages", productIds.getTotalPages()));
         }
 
         // lấy 5 product mới nhất để thống kê
@@ -376,13 +407,13 @@ public class ProductService implements IProductService {
 
         // Tạo mới product ───────────────────────────────
         @Override
-        public ResponseEntity<?> createProduct(ProductRequest request) {
+        public ResponseEntity<?> createProduct(ProductRequest request, List<MultipartFile> imageFiles) {
                 Product product = new Product();
                 setProductFields(product, request);
                 Product saved = productRepository.save(product);
 
                 saveVariants(saved, request.getVariants());
-                saveImages(saved, request.getImages());
+                saveImages(saved, request.getImages(), imageFiles); // truyền thêm files
 
                 return getProductDetail(saved.getId());
         }
@@ -448,42 +479,71 @@ public class ProductService implements IProductService {
         }
 
         // ─── Helper: save images (tạo mới) ───────────────────
-        private void saveImages(Product product, List<ProductImageRequest> requests) {
-                if (requests == null)
+        private void saveImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
+                if (files == null || files.isEmpty())
                         return;
-                // đảm bảo chỉ 1 ảnh primary
-                boolean hasPrimary = requests.stream().anyMatch(r -> Boolean.TRUE.equals(r.getIsPrimary()));
-                requests.forEach(req -> {
+
+                // Upload từng file lên Cloudinary
+                List<String> uploadedUrls = files.stream()
+                                .map(cloudinaryService::uploadImage)
+                                .toList();
+
+                // Merge URL vào requests nếu có, hoặc tạo mới
+                for (int i = 0; i < uploadedUrls.size(); i++) {
                         ProductImage image = new ProductImage();
                         image.setProduct(product);
-                        image.setImageUrl(req.getImageUrl());
-                        image.setIsPrimary(!hasPrimary
-                                        ? requests.indexOf(req) == 0 // ảnh đầu tiên làm primary nếu không set
-                                        : Boolean.TRUE.equals(req.getIsPrimary()));
+                        image.setImageUrl(uploadedUrls.get(i));
+                        image.setIsPrimary(i == 0); // ảnh đầu tiên làm primary
+
+                        // Nếu có requests đi kèm (để lấy isPrimary)
+                        if (requests != null && i < requests.size()) {
+                                image.setIsPrimary(Boolean.TRUE.equals(requests.get(i).getIsPrimary()));
+                        }
+
                         productImageRepository.save(image);
-                });
+                }
         }
 
         // ─── Helper: update images ────────────────────────────
-        private void updateImages(Product product, List<ProductImageRequest> requests) {
+        private void updateImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
                 if (requests == null)
                         return;
 
                 List<Integer> keepIds = new ArrayList<>();
 
-                requests.forEach(req -> {
-                        ProductImage image = req.getId() != null
-                                        ? productImageRepository.findById(req.getId())
-                                                        .orElseThrow(() -> new RuntimeException("Image không tồn tại"))
-                                        : new ProductImage();
+                // Upload ảnh mới lên Cloudinary
+                // requests có file index = -1 nghĩa là ảnh cũ, >= 0 là ảnh mới
+                List<String> uploadedUrls = new ArrayList<>();
+                if (files != null && !files.isEmpty()) {
+                        uploadedUrls = files.stream()
+                                        .map(cloudinaryService::uploadImage)
+                                        .toList();
+                }
 
-                        image.setProduct(product);
-                        image.setImageUrl(req.getImageUrl());
+                int newFileIndex = 0;
+
+                for (ProductImageRequest req : requests) {
+                        ProductImage image;
+
+                        if (req.getId() != null) {
+                                // Ảnh cũ → giữ lại
+                                image = productImageRepository.findById(req.getId())
+                                                .orElseThrow(() -> new RuntimeException("Image không tồn tại"));
+                        } else {
+                                // Ảnh mới → lấy URL vừa upload
+                                image = new ProductImage();
+                                image.setProduct(product);
+                                if (newFileIndex < uploadedUrls.size()) {
+                                        image.setImageUrl(uploadedUrls.get(newFileIndex++));
+                                }
+                        }
+
                         image.setIsPrimary(Boolean.TRUE.equals(req.getIsPrimary()));
                         ProductImage saved = productImageRepository.save(image);
                         keepIds.add(saved.getId());
-                });
+                }
 
+                // Xóa ảnh không còn trong danh sách
                 if (!keepIds.isEmpty()) {
                         productImageRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
                 }
@@ -508,7 +568,7 @@ public class ProductService implements IProductService {
         // Cập nhật product theo id
         @Override
         @Transactional
-        public ResponseEntity<?> updateProduct(Integer id, ProductRequest request) {
+        public ResponseEntity<?> updateProduct(Integer id, ProductRequest request, List<MultipartFile> imageFiles) {
                 Product product = productRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Product không tồn tại"));
 
@@ -516,7 +576,7 @@ public class ProductService implements IProductService {
                 productRepository.save(product);
 
                 updateVariants(product, request.getVariants());
-                updateImages(product, request.getImages());
+                updateImages(product, request.getImages(), imageFiles); // thêm imageFiles
 
                 return getProductDetail(id);
         }
@@ -605,13 +665,15 @@ public class ProductService implements IProductService {
 
         @Override
         public ResponseEntity<?> getProductDetail(int id) {
-                Product product = productRepository.findDetailById(id)
-                                .orElseThrow(
-                                                () -> new EntityNotFoundException(
-                                                                "Product not found : " + id));
+                // Query 1: lấy product + images + category + brand
+                Product product = productRepository.findDetailByIdWithImages(id)
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + id));
 
-                return ResponseEntity.ok(
-                                toDetailResponse(product));
+                // Query 2: lấy variants + size rồi set vào product
+                productRepository.findDetailByIdWithVariants(id)
+                                .ifPresent(p -> product.setProductVariants(p.getProductVariants()));
+
+                return ResponseEntity.ok(toDetailResponse(product));
         }
 
         @Override

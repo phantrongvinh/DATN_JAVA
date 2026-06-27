@@ -71,7 +71,7 @@ export const useProductStore = defineStore('product', () => {
       filterProducts.value = res.content
 
       return { success: true }
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
@@ -174,9 +174,9 @@ export const useProductStore = defineStore('product', () => {
     try {
       const res = await productAPI.fetchProductById(id)
       product.value = res
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
-      throw error
+      throw err
     } finally {
       loadding.value = false
     }

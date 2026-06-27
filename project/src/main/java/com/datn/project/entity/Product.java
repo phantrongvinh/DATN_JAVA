@@ -66,13 +66,13 @@ public class Product implements Serializable {
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductImage> productImages;
+    private List<ProductImage> productImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductReview> productReviews;
+    private List<ProductReview> productReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductVariant> productVariants;
+    private List<ProductVariant> productVariants= new ArrayList<>();
 
     @ManyToMany(mappedBy = "products")
     private List<Promotion> promotions = new ArrayList<>();
