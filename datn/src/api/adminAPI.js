@@ -1,3 +1,4 @@
+import axios from 'axios'
 import axiosClient from './axiosClient'
 
 const url = '/admin'
@@ -18,12 +19,22 @@ const deactivateProduct = async (id) => {
 }
 
 const updateProduct = async (id, data) => {
-  const res = await axiosClient.put(`${url}/products/${id}`, data)
+  const res = await axiosClient.put(`${url}/products/${id}`, data, {
+    transformRequest: (data, headers) => {
+      delete headers['Content-Type']
+      return data
+    },
+  })
   return res.data
 }
 
 const createProduct = async (data) => {
-  const res = await axiosClient.post(`${url}/products`, data)
+  const res = await axiosClient.post(`${url}/products`, data, {
+    transformRequest: (data, headers) => {
+      delete headers['Content-Type']
+      return data
+    },
+  })
   return res.data
 }
 

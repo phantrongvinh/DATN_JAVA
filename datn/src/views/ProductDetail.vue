@@ -22,6 +22,10 @@ watch(
   { immediate: true },
 )
 
+onMounted(() => {
+  console.log(product.value)
+})
+
 // tabs
 const activeTab = ref('desc')
 
@@ -128,7 +132,6 @@ const handleAddToCart = async () => {
       : selectedVariant.value.price,
   }
 
-
   await addItem(data)
   notification.notify(
     `Thêm ${data.name} size ${data.sizeName} số lượng ${data.quantity} thành công`,
@@ -144,7 +147,11 @@ const handleAddToCart = async () => {
       {{ product?.categoryName }}
     </p>
   </div>
-  <div v-if="product">
+
+  <div class="py-24 text-center text-muted-foreground" v-if="product?.variants?.length === 0">
+    Chưa cập nhật sản phẩm
+  </div>
+  <div v-else-if="product">
     <div className="container-x grid gap-12 pb-16 md:grid-cols-2">
       <!-- Gallery thumbnails -->
       <div class="flex gap-4">
@@ -156,14 +163,14 @@ const handleAddToCart = async () => {
             class="h-20 w-16 overflow-hidden border"
             :class="activeImg === i ? 'border-foreground' : 'border-transparent'"
           >
-            <img :src="url + '/' + g.imageUrl" class="h-full w-full object-contain" />
+            <img :src="g.imageUrl" class="h-full w-full object-contain" />
           </button>
         </div>
 
         <!-- Main image -->
         <div class="flex-1 overflow-hidden bg-secondary">
           <img
-            :src="url + '/' + gallery[activeImg]?.imageUrl"
+            :src="gallery[activeImg]?.imageUrl"
             :alt="product.name"
             class="aspect-[4/5] w-full object-contain"
           />
@@ -187,12 +194,16 @@ const handleAddToCart = async () => {
             {{ ulti.formatVND(displayPrice) }}
           </span>
 
-          <span v-if="selectedVariant?.discountedPrice" class="line-through text-muted-foreground">
+          <span v-if="product.promotion" class="line-through text-muted-foreground">
             {{ ulti.formatVND(selectedVariant.price) }}
           </span>
 
-          <span v-if="discountPercent" class="bg-red-500 px-2 py-1 text-xs text-white">
-            -{{ discountPercent }}%
+          <span v-if="product.promotion" class="bg-red-500 px-2 py-1 text-xs text-white">
+            -{{
+              product.promotion?.discountType === 'percent'
+                ? `${product.promotion?.discountValue}%`
+                : `${product.promotion?.discountValue}đ`
+            }}
           </span>
         </div>
 

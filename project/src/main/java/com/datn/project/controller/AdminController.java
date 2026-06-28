@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,8 @@ import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
 import com.datn.project.service.IUserService;
 
+import tools.jackson.databind.ObjectMapper;
+
 @RestController
 @RequestMapping(value = "/api/v1/admin")
 public class AdminController {
@@ -40,6 +43,9 @@ public class AdminController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // phần products
     @GetMapping("/products/top5")
@@ -61,19 +67,29 @@ public class AdminController {
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
-    @PostMapping(value = "/products",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createProduct(
-            @RequestPart("data") ProductRequest request,
+            @RequestParam("data") String data,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return productService.createProduct(request, images);
+        try {
+            ProductRequest request = objectMapper.readValue(data, ProductRequest.class);
+            return productService.createProduct(request, images);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
+        }
     }
 
     @PutMapping(value = "/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProduct(
             @PathVariable Integer id,
-            @RequestPart("data") ProductRequest request,
+            @RequestParam("data") String data,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return productService.updateProduct(id, request, images);
+        try {
+            ProductRequest request = objectMapper.readValue(data, ProductRequest.class);
+            return productService.updateProduct(id, request, images);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/products/{id}")

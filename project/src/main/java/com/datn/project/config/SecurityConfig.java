@@ -91,11 +91,6 @@ public class SecurityConfig {
 
                             // ─── Admin ───────────────────────────────────────
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/api/v1/promotions/**").hasRole("ADMIN")
-
                             // ─── User (đã login) ─────────────────────────────
                             .requestMatchers("/api/v1/cart/**").authenticated()
                             .requestMatchers("/api/v1/orders/**").authenticated()

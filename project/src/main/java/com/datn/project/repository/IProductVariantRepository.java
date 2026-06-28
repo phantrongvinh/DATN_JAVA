@@ -32,7 +32,11 @@ public interface IProductVariantRepository extends JpaRepository<ProductVariant,
     @Transactional
     @Query("DELETE FROM ProductVariant pv WHERE pv.product.id = :productId AND pv.id NOT IN :keepIds")
     void deleteByProductIdAndIdNotIn(
-        @Param("productId") Integer productId,
-        @Param("keepIds") List<Integer> keepIds
-    );
+            @Param("productId") Integer productId,
+            @Param("keepIds") List<Integer> keepIds);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ProductVariant v WHERE v.product.id = :productId")
+    void deleteByProductId(@Param("productId") Integer productId);
 }

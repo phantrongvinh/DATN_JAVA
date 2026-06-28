@@ -150,19 +150,35 @@ export const useProductStore = defineStore('product', () => {
   }
 
   // cập nhật product theo id
-  async function updateProductById(data) {
+  async function updateProductById(id, data) {
     loadding.value = true
     error.value = null
 
     try {
-      const res = await adminAPI.updateProduct(data)
+      const res = await adminAPI.updateProduct(id, data)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
-      throw error
+      throw err
     } finally {
       loadding.value = false
+    }
+  }
+
+  // Thêm product + variant + image
+  async function createProduct(data) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await adminAPI.createProduct(data)
+      await fetchAllProducts({ newPage: page.value, newSize: size.value })
+      return res
+    } catch (err) {
+      error.value = err.response?.data?.message
+      throw err
+    } finally {
+      loadding.value
     }
   }
 
@@ -203,6 +219,7 @@ export const useProductStore = defineStore('product', () => {
     fetchAllProducts,
     deactivateProduct,
     updateProductById,
+    createProduct,
     fetchProductByID,
     fetchProductOnSale,
   }
