@@ -7,6 +7,10 @@ const fetchActiveTimePromotion = async () =>{
     return res.data
 }
 
+const fetchAllTimePromotion = async() =>{
+    const res = await axiosClient.get(`${url}/`)
+}
+
 const timePromotionAPI = {
     fetchActiveTimePromotion
 }

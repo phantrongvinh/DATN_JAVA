@@ -15,6 +15,7 @@ public class ProductVariantResponse {
     private int id;
     private String color;
     private String size;
+    private int sizeId;
     private int stock;
     private BigDecimal price;
     private BigDecimal discountedPrice;

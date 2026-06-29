@@ -21,10 +21,13 @@ public class ProductResponse {
     private BigDecimal basePrice;
     private LocalDateTime createdAt;
     private String category;
+    private int categoryId;
     private String brand;
+    private int brandId;
     private String targetAudience;
+    private int targetAudienceId;
     private boolean isAccessory;
-    private String img;
+    private List<ProductImagesResponse> imgs;
     private List<ProductVariantResponse> productVariant;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;

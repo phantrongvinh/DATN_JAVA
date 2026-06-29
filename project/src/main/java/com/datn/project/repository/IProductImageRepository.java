@@ -14,13 +14,17 @@ import jakarta.transaction.Transactional;
 public interface IProductImageRepository extends JpaRepository<ProductImage, Integer> {
     List<ProductImage> findByProductIdOrderByIsPrimaryDesc(Integer productId);
 
-     List<ProductImage> findByProductId(Integer productId);
+    List<ProductImage> findByProductId(Integer productId);
 
     @Modifying
     @Transactional
     @Query("DELETE FROM ProductImage pi WHERE pi.product.id = :productId AND pi.id NOT IN :keepIds")
     void deleteByProductIdAndIdNotIn(
-        @Param("productId") Integer productId,
-        @Param("keepIds") List<Integer> keepIds
-    );
+            @Param("productId") Integer productId,
+            @Param("keepIds") List<Integer> keepIds);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ProductImage i WHERE i.product.id = :productId")
+    void deleteByProductId(@Param("productId") Integer productId);
 }

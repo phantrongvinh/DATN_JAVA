@@ -69,6 +69,8 @@ export const useProductStore = defineStore('product', () => {
       const res = await productAPI.fetchFilterProducts(data)
 
       filterProducts.value = res.content
+      totalPages.value = res.totalPages
+      totalElements.value = res.totalElements
 
       return { success: true }
     } catch (err) {
@@ -100,6 +102,7 @@ export const useProductStore = defineStore('product', () => {
   async function fetchAllProducts({
     newPage = page.value,
     newSize = size.value,
+    search,
     audienceIds,
     brandIds,
     categoryIds,
@@ -110,6 +113,7 @@ export const useProductStore = defineStore('product', () => {
       const res = await adminAPI.fetchAllProducts({
         page: newPage,
         size: newSize,
+        search,
         audienceIds,
         brandIds,
         categoryIds,
@@ -150,19 +154,35 @@ export const useProductStore = defineStore('product', () => {
   }
 
   // cập nhật product theo id
-  async function updateProductById(data) {
+  async function updateProductById(id, data) {
     loadding.value = true
     error.value = null
 
     try {
-      const res = await adminAPI.updateProduct(data)
+      const res = await adminAPI.updateProduct(id, data)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
-      throw error
+      throw err
     } finally {
       loadding.value = false
+    }
+  }
+
+  // Thêm product + variant + image
+  async function createProduct(data) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await adminAPI.createProduct(data)
+      await fetchAllProducts({ newPage: page.value, newSize: size.value })
+      return res
+    } catch (err) {
+      error.value = err.response?.data?.message
+      throw err
+    } finally {
+      loadding.value
     }
   }
 
@@ -203,6 +223,7 @@ export const useProductStore = defineStore('product', () => {
     fetchAllProducts,
     deactivateProduct,
     updateProductById,
+    createProduct,
     fetchProductByID,
     fetchProductOnSale,
   }

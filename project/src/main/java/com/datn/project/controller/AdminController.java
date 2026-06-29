@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,12 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionRequest;
+import com.datn.project.dto.TimePromotionRequest;
+import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
+import com.datn.project.repository.ITimePromotionRepository;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
+import com.datn.project.service.ITimePromotionService;
 import com.datn.project.service.IUserService;
+
+import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping(value = "/api/v1/admin")
@@ -40,6 +47,15 @@ public class AdminController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ITimePromotionService timePromotionService;
+
+    @Autowired
+    private ITimePromotionRepository timePromotionRepository;
 
     // phần products
     @GetMapping("/products/top5")
@@ -58,33 +74,39 @@ public class AdminController {
             @RequestParam(required = false) String sortBy) {
         ProductFilterDTO filter = new ProductFilterDTO(audienceIds, brandIds, categoryIds, search, onSale, minPrice,
                 maxPrice, sortBy);
+
+                System.out.println(filter);
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
-    @PostMapping(value = "/products",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createProduct(
-            @RequestPart("data") ProductRequest request,
+            @RequestParam("data") String data,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return productService.createProduct(request, images);
+        try {
+            ProductRequest request = objectMapper.readValue(data, ProductRequest.class);
+            return productService.createProduct(request, images);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
+        }
     }
 
     @PutMapping(value = "/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProduct(
             @PathVariable Integer id,
-            @RequestPart("data") ProductRequest request,
+            @RequestParam("data") String data,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return productService.updateProduct(id, request, images);
+        try {
+            ProductRequest request = objectMapper.readValue(data, ProductRequest.class);
+            return productService.updateProduct(id, request, images);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deactivateProduct(@PathVariable int id) {
         return ResponseEntity.ok(productService.deactivateProduct(id)).getBody();
-    }
-
-    // phần khuyến mãi
-    @PostMapping("/promotions")
-    public ResponseEntity<?> createPromotion(@RequestBody PromotionRequest req) {
-        return ResponseEntity.ok(promotionService.createPromotion(req));
     }
 
     // phần khách hàng
@@ -107,5 +129,59 @@ public class AdminController {
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable(value = "id") int id) {
         return ResponseEntity.ok(userService.getUserById(id)).getBody();
+    }
+
+    // phần khuyến mãi
+    @PostMapping("/promotions")
+    public ResponseEntity<?> createPromotion(@RequestBody PromotionRequest req) {
+        return ResponseEntity.ok(promotionService.createPromotion(req));
+    }
+
+    @GetMapping("/promotions")
+    public ResponseEntity<?> getAllActivePromotion() {
+        return ResponseEntity.ok(promotionService.getAllActivePromotioEntity()).getBody();
+    }
+
+    @PostMapping("/promotions/assign")
+    public ResponseEntity<?> addPromotionToProducts(
+            @RequestBody AddPromotionToProductsRequest request) {
+        productService.addPromotionToProducts(request);
+        return ResponseEntity.ok("Áp dụng khuyến mãi thành công");
+    }
+
+    @GetMapping("/promotions/all")
+    public ResponseEntity<?> getAllPromotion(@RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(promotionService.getAllPromotion(page, size)).getBody();
+    }
+
+    // time promotion
+    @GetMapping("/time-promotions/all")
+    public ResponseEntity<?> getAllTimePromotion(@RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(timePromotionService.getAllTimePromotion(page, size)).getBody();
+    }
+
+    @PutMapping("/time-promotions/{id}")
+    public ResponseEntity<?> update(
+            @PathVariable Integer id,
+            @RequestBody TimePromotionRequest request) {
+        return ResponseEntity.ok(timePromotionService.updateTimePromotion(id, request)).getBody();
+    }
+
+    @PostMapping("/time-promotions")
+    public ResponseEntity<?> createTimePromotion(@RequestBody TimePromotionRequest request) {
+        return ResponseEntity.ok(timePromotionService.createTimePromotion(request)).getBody();
+    }
+
+    @PatchMapping("/time-promotions/{id}")
+    public ResponseEntity<?> toggle(@PathVariable int id) {
+        return ResponseEntity.ok(timePromotionService.toggleActive(id)).getBody();
+    }
+
+    @DeleteMapping("/time-promotions/{id}")
+    public ResponseEntity<?> delete(@PathVariable int id) {
+        timePromotionRepository.deleteById(id);
+        return ResponseEntity.ok("Xóa thành công");
     }
 }

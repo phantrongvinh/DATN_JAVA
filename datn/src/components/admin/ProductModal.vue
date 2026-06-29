@@ -7,14 +7,18 @@
     >
       <div class="flex max-h-[90vh] w-[1100px] flex-col overflow-hidden rounded bg-white shadow-xl">
         <!-- Header -->
-        <div class="flex items-center justify-between border-b px-6 py-4">
+        <div class="flex items-center justify-between border-b px-6 py-4 shrink-0">
           <h2 class="text-xl font-semibold">
             {{ product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm' }}
           </h2>
 
           <button @click="closeModal" class="text-2xl text-gray-500 hover:text-black">×</button>
         </div>
-        <form :validation-schema="validate" @submit.prevent="onSubmit">
+        <form
+          :validation-schema="validate"
+          @submit.prevent="onSubmit"
+          class="flex flex-col flex-1 overflow-hidden"
+        >
           <!-- Body -->
           <div class="flex-1 overflow-y-auto p-6">
             <div id="productForm" class="space-y-8">
@@ -79,7 +83,7 @@
                   <Field
                     as="select"
                     name="targetAudienceId"
-                    v-model="audienceId"
+                    v-model="targetAudienceId"
                     class="w-full rounded border border-border px-3 py-2"
                   >
                     <option value="">Chọn đối tượng</option>
@@ -121,196 +125,271 @@
                   <ErrorMessage name="description" class="mt-1 block text-sm text-red-500" />
                 </div>
                 <!-- Images -->
-                <!-- <div class="col-span-2">
-                <div class="mb-3 flex items-center justify-between">
-                  <h3
-                    class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
-                  >
-                    Hình ảnh sản phẩm
-                  </h3>
-
-                  <label
-                    class="flex cursor-pointer items-center gap-2 border border-border px-3 py-2 text-xs transition hover:bg-secondary"
-                  >
-                    <Plus class="h-3.5 w-3.5" />
-                    Thêm ảnh
-
-                    <input
-                      hidden
-                      multiple
-                      type="file"
-                      accept="image/*"
-                      @change="handleImageUpload"
-                    />
-                  </label>
-                </div> -->
-
-                <!-- Empty -->
-                <!-- <div
-                  v-if="previewImages.length === 0"
-                  class="rounded border border-dashed border-border py-12 text-center text-sm text-muted-foreground"
-                >
-                  Chưa có hình ảnh nào
-                </div> -->
-
-                <!-- List -->
-                <!-- <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                  <div
-                    v-for="(img, index) in previewImages"
-                    :key="index"
-                    class="group relative overflow-hidden rounded border border-border bg-gray-100"
-                  >
-                    <img
-                      :src="img"
-                      class="h-48 w-full object-cover transition duration-300 group-hover:scale-105"
-                    /> -->
-
-                <!-- overlay -->
-                <!-- <div
-                      class="absolute inset-0 bg-black/20 opacity-0 transition group-hover:opacity-100"
-                    /> -->
-
-                <!-- Primary -->
-                <!-- <button
-                      type="button"
-                      @click="setPrimary(index)"
-                      class="absolute left-2 top-2 rounded-full bg-white p-2 shadow"
+                <div class="col-span-2">
+                  <div class="mb-3 flex items-center justify-between">
+                    <h3
+                      class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
                     >
-                      <Star
-                        v-if="primaryImageIndex === index"
-                        class="h-4 w-4 fill-yellow-400 text-yellow-400"
+                      Hình ảnh sản phẩm
+                    </h3>
+
+                    <label
+                      class="flex cursor-pointer items-center gap-2 border border-border px-3 py-2 text-xs transition hover:bg-secondary"
+                    >
+                      <Plus class="h-3.5 w-3.5" />
+                      Thêm ảnh
+
+                      <input
+                        hidden
+                        multiple
+                        type="file"
+                        accept="image/*"
+                        @change="handleImageUpload"
+                      />
+                    </label>
+                  </div>
+
+                  <!-- Empty -->
+                  <div
+                    v-if="previewImages.length === 0"
+                    class="rounded border border-dashed border-border py-12 text-center text-sm text-muted-foreground"
+                  >
+                    Chưa có hình ảnh nào
+                  </div>
+
+                  <!-- List -->
+                  <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                    <div
+                      v-for="(img, index) in previewImages"
+                      :key="index"
+                      class="group relative overflow-hidden rounded border border-border bg-gray-100"
+                    >
+                      <img
+                        :src="img"
+                        class="h-48 w-full object-cover transition duration-300 group-hover:scale-105"
                       />
 
-                      <StarOff v-else class="h-4 w-4" />
-                    </button> -->
+                      <!-- overlay -->
+                      <div
+                        class="absolute inset-0 bg-black/20 opacity-0 transition group-hover:opacity-100"
+                      />
 
-                <!-- Delete -->
-                <!-- <button
-                      type="button"
-                      @click="removeImage(index)"
-                      class="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white transition hover:bg-red-600"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button> -->
+                      <!-- Primary -->
+                      <button
+                        type="button"
+                        @click="setPrimary(index)"
+                        class="absolute left-2 top-2 rounded-full bg-white p-2 shadow"
+                      >
+                        <Star
+                          v-if="primaryImageIndex === index"
+                          class="h-4 w-4 fill-yellow-400 text-yellow-400"
+                        />
 
-                <!-- Badge -->
-                <!-- <div
-                      v-if="primaryImageIndex === index"
-                      class="absolute bottom-2 left-2 rounded bg-yellow-400 px-2 py-1 text-[10px] font-semibold uppercase text-black"
-                    >
-                      Ảnh chính
+                        <StarOff v-else class="h-4 w-4" />
+                      </button>
+
+                      <!-- Delete -->
+                      <button
+                        type="button"
+                        @click="removeImage(index)"
+                        class="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white transition hover:bg-red-600"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </button>
+
+                      <!-- Badge -->
+                      <div
+                        v-if="primaryImageIndex === index"
+                        class="absolute bottom-2 left-2 rounded bg-yellow-400 px-2 py-1 text-[10px] font-semibold uppercase text-black"
+                      >
+                        Ảnh chính
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div> -->
                 <!-- Variant -->
-                <!-- <div class="col-span-2 mt-8">
-                <div class="mb-3 flex items-center justify-between">
-                  <h3
-                    class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
-                  >
-                    Biến thể sản phẩm
-                  </h3>
+                <div class="col-span-2 mt-8">
+                  <div class="mb-3 flex items-center justify-between">
+                    <h3
+                      class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                    >
+                      Biến thể sản phẩm
+                    </h3>
 
-                  <button
-                    type="button"
-                    @click="addVariant"
-                    class="flex items-center gap-2 border border-border px-3 py-2 text-xs hover:bg-secondary"
-                  >
-                    <Plus class="h-3.5 w-3.5" />
-                    Thêm biến thể
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      @click="addVariant"
+                      class="flex items-center gap-2 border border-border px-3 py-2 text-xs hover:bg-secondary"
+                    >
+                      <Plus class="h-3.5 w-3.5" />
+                      Thêm biến thể
+                    </button>
+                  </div>
 
-                <div
-                  v-if="variants.length === 0"
-                  class="border border-dashed border-border py-8 text-center text-sm text-muted-foreground"
-                >
-                  Chưa có biến thể
-                </div>
-
-                <div class="space-y-4">
                   <div
-                    v-for="(variant, index) in variants"
-                    :key="index"
-                    class="rounded border border-border p-4"
+                    v-if="variants.length === 0"
+                    class="border border-dashed border-border py-8 text-center text-sm text-muted-foreground"
                   >
-                    <div class="grid grid-cols-12 gap-3"> -->
-                <!-- Color -->
+                    Chưa có biến thể
+                  </div>
 
-                <!-- <div class="col-span-3">
-                        <label class="mb-1 block text-xs"> Màu </label>
+                  <div class="space-y-4">
+                    <div
+                      v-for="(variant, index) in variants"
+                      :key="index"
+                      class="rounded border border-border p-4"
+                    >
+                      <div class="grid grid-cols-12 gap-3">
+                        <!-- Color -->
 
-                        <input
-                          v-model="variant.color"
-                          class="w-full border border-border p-2 outline-none focus:border-foreground"
-                        />
-                      </div> -->
+                        <div class="col-span-3">
+                          <label class="mb-1 block text-xs"> Màu </label>
 
-                <!-- Size -->
+                          <input
+                            v-model="variant.color"
+                            class="w-full border border-border p-2 outline-none focus:border-foreground"
+                          />
+                        </div>
 
-                <!-- <div class="col-span-2">
-                        <label class="mb-1 block text-xs"> Size </label>
+                        <!-- Size -->
 
-                        <select
-                          v-model="variant.sizeId"
-                          class="w-full border border-border p-2 outline-none focus:border-foreground"
-                        >
-                          <option value="">Chọn</option>
+                        <div class="col-span-2">
+                          <label class="mb-1 block text-xs"> Size </label>
 
-                          <option v-for="size in sizes" :key="size.id" :value="size.id">
-                            {{ size.name }}
-                          </option>
-                        </select>
-                      </div> -->
+                          <select
+                            v-model="variant.sizeId"
+                            class="w-full border border-border p-2 outline-none focus:border-foreground"
+                          >
+                            <option value="">Chọn</option>
 
-                <!-- Stock -->
+                            <option v-for="size in sizes" :key="size.id" :value="size.id">
+                              {{ size.name }}
+                            </option>
+                          </select>
+                        </div>
 
-                <!-- <div class="col-span-2">
-                        <label class="mb-1 block text-xs"> Tồn kho </label>
+                        <!-- Stock -->
 
-                        <input
-                          type="number"
-                          v-model.number="variant.stock"
-                          class="w-full border border-border p-2"
-                        />
-                      </div> -->
+                        <div class="col-span-2">
+                          <label class="mb-1 block text-xs"> Tồn kho </label>
 
-                <!-- SKU -->
+                          <input
+                            type="number"
+                            v-model.number="variant.stock"
+                            class="w-full border border-border p-2"
+                          />
+                        </div>
 
-                <!-- <div class="col-span-4">
-                        <label class="mb-1 block text-xs"> SKU </label>
+                        <!-- Price -->
+                        <div class="col-span-2">
+                          <label class="mb-1 block text-xs"> Giá </label>
+                          <input
+                            type="number"
+                            v-model.number="variant.price"
+                            class="w-full border border-border p-2"
+                          />
+                        </div>
 
-                        <input v-model="variant.sku" class="w-full border border-border p-2" />
-                      </div> -->
+                        <!-- SKU -->
+                        <div class="col-span-4">
+                          <label class="mb-1 block text-xs"> SKU </label>
 
-                <!-- Delete -->
+                          <input v-model="variant.sku" class="w-full border border-border p-2" />
+                        </div>
 
-                <!-- <div class="col-span-1 flex items-end">
-                        <button
-                          type="button"
-                          @click="removeVariant(index)"
-                          class="flex h-10 w-10 items-center justify-center border border-red-300 text-red-500 hover:bg-red-50"
-                        >
-                          <Trash2 class="h-4 w-4" />
-                        </button>
-                      </div> -->
-                <!-- </div>
+                        <!-- Delete -->
+                        <div class="col-span-1 flex items-end">
+                          <button
+                            type="button"
+                            @click="removeVariant(index)"
+                            class="flex h-10 w-10 items-center justify-center border border-red-300 text-red-500 hover:bg-red-50"
+                          >
+                            <Trash2 class="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div> -->
+
+                <!-- Promotion -->
+                <div class="col-span-2 mt-8">
+                  <div class="mb-3 flex items-center justify-between">
+                    <h3
+                      class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                    >
+                      Khuyến mãi hiện có
+                    </h3>
+                  </div>
+                  <div
+                    v-if="promotion === null"
+                    class="border border-dashed border-border py-8 text-center text-sm text-muted-foreground"
+                  >
+                    Chưa có khuyến mãi
+                  </div>
+
+                  <div v-else class="rounded border border-border bg-secondary/20 p-5">
+                    <div class="flex items-start justify-between">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <h4 class="font-semibold">
+                            {{ promotion.name }}
+                          </h4>
+
+                          <span
+                            class="rounded bg-gold-soft px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-ink"
+                          >
+                            {{ promotion.discountType === 'percent' ? 'Percent' : 'Fixed' }}
+                          </span>
+                        </div>
+
+                        <p class="mt-2 text-sm text-muted-foreground">
+                          Giá trị:
+                          <span class="font-semibold text-foreground">
+                            {{
+                              promotion.discountType === 'percent'
+                                ? promotion.discountValue + '%'
+                                : ulti.formatVND(promotion.discountValue)
+                            }}
+                          </span>
+                        </p>
+
+                        <div class="mt-3 space-y-1 text-xs text-muted-foreground">
+                          <p>
+                            <span class="font-medium">Bắt đầu:</span>
+                            {{ ulti.formatDate(promotion.startAt) }}
+                          </p>
+
+                          <p>
+                            <span class="font-medium">Kết thúc:</span>
+                            {{ ulti.formatDate(promotion.endAt) }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        @click.prevent="removePromotion"
+                        class="rounded border border-red-300 p-2 text-red-500 transition hover:bg-red-50"
+                        title="Xóa khuyến mãi"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="flex justify-end gap-3 border-t px-6 py-4">
-            <button type="button" :disabled="loading" class="border px-6 py-2" @click="closeModal">
+          <div class="flex justify-end gap-3 border-t px-6 py-4 shrink-0">
+            <button type="button" :disabled="loadding" class="border px-6 py-2" @click="closeModal">
               Huỷ
             </button>
 
             <button type="submit" class="bg-ink px-6 py-2 text-white disabled:opacity-50">
-              {{ loading ? 'Đang lưu...' : product ? 'Cập nhật' : 'Thêm sản phẩm' }}
+              {{ loadding ? 'Đang lưu...' : product ? 'Cập nhật' : 'Thêm sản phẩm' }}
             </button>
           </div>
         </form>
@@ -328,6 +407,8 @@ import { useBrandStore } from '@/stores/useBrandStore'
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
 import { storeToRefs } from 'pinia'
+import { useSizeStore } from '@/stores/useSizeStore'
+import ulti from '@/ulti/ulti'
 
 const props = defineProps({
   showProductModal: {
@@ -365,16 +446,19 @@ const closeModal = () => {
 const brandStore = useBrandStore()
 const audienceStore = useAudienceStore()
 const categoryStore = useCategoryStore()
+const sizeStore = useSizeStore()
 
-const { brands } = storeToRefs(brandStore)
-const { audiences } = storeToRefs(audienceStore)
-const { categories } = storeToRefs(categoryStore)
+const brands = computed(() => brandStore.brands)
+const categories = computed(() => categoryStore.categories)
+const audiences = computed(() => audienceStore.audiences)
+const sizes = computed(() => sizeStore.sizes)
 
 onMounted(async () => {
   await Promise.all([
     brandStore.fetchBrand(),
     audienceStore.fetchAudiences(),
     categoryStore.fetchCategory(),
+    sizeStore.fetchSize(),
   ])
 })
 
@@ -402,140 +486,179 @@ const [name] = defineField('name')
 const [description] = defineField('description')
 const [basePrice] = defineField('basePrice')
 const [brandId] = defineField('brandId')
-const [audienceId] = defineField('audienceId')
+const [targetAudienceId] = defineField('targetAudienceId')
 const [categoryId] = defineField('categoryId')
 
 //handle variants
-// const variants = ref([])
-// const addVariant = () => {
-//   variants.value.push({
-//     id: null,
-//     color: '',
-//     sizeId: '',
-//     stock: 0,
-//     sku: '',
-//   })
-// }
-// const removeVariant = (index) => {
-//   variants.value.splice(index, 1)
-// }
+const variants = ref([])
+const addVariant = () => {
+  variants.value.push({
+    id: null,
+    color: '',
+    sizeId: '',
+    stock: 0,
+    price: 0,
+    sku: '',
+  })
+}
+const removeVariant = (index) => {
+  variants.value.splice(index, 1)
+}
 
-// const existingImageUrls = ref([])
+// handle promotion
+const promotion = ref(props.product?.promotion ?? null)
 
-// watch(
-//   () => props.showProductModal,
-//   (show) => {
-//     if (!show) return
+const removePromotion = () => {
+  promotion.value = null
+}
 
-//     if (props.product) {
-//       resetForm({
-//         values: {
-//           name: props.product.name ?? '',
-//           description: props.product.description ?? '',
-//           basePrice: props.product.basePrice ?? '',
-//           brandId: props.product.brandId ?? '',
-//           categoryId: props.product.categoryId ?? '',
-//           targetAudienceId: props.product.targetAudienceId ?? '',
-//         },
-//       })
+const existingImageUrls = ref([])
+const initialValues = {
+  name: '',
+  description: '',
+  basePrice: '',
+  brandId: '',
+  categoryId: '',
+  targetAudienceId: '',
+}
+watch(
+  () => props.showProductModal,
+  (show) => {
+    if (!show) return
 
-//       // load variants
-//       variants.value = props.product.productVariant
-//         ? props.product.productVariant.map((v) => ({
-//             id: v.id,
-//             size: v.size,
-//             color: v.color,
-//             stock: v.stock,
-//             sku: v.sku,
-//           }))
-//         : []
+    if (props.product) {
+      resetForm({
+        values: {
+          name: props.product.name ?? '',
+          description: props.product.description ?? '',
+          basePrice: props.product.basePrice ?? '',
+          brandId: props.product.brandId ?? '',
+          categoryId: props.product.categoryId ?? '',
+          targetAudienceId: props.product.targetAudienceId ?? '',
+        },
+      })
 
-//       // load ảnh
-//       previewImages.value = props.product.images
-//         ? props.product.images.map((img) => img.imageUrl)
-//         : []
-//       existingImageUrls.value = [...previewImages.value]
-//       images.value = []
-//     } else {
-//       resetForm({
-//         values: initialValues,
-//       })
+      // load variants
 
-//       variants.value = []
+      variants.value = props.product.productVariant
+        ? props.product.productVariant.map((v) => ({
+            id: v.id,
+            sizeId: v.sizeId,
+            color: v.color,
+            stock: v.stock,
+            sku: v.sku,
+            price: v.price,
+          }))
+        : []
 
-//       previewImages.value = []
+      // load promotion
+      promotion.value = props.product.promotion ?? null
 
-//       images.value = []
-//     }
-//   },
-//   {
-//     immediate: true,
-//   },
-// )
+      // load ảnh
+      previewImages.value = props.product.imgs ? props.product.imgs.map((img) => img.imageUrl) : []
+      existingImageUrls.value = [...previewImages.value]
+      images.value = []
+    } else {
+      resetForm({
+        values: initialValues,
+      })
+
+      promotion.value = null
+
+      variants.value = []
+
+      previewImages.value = []
+
+      images.value = []
+    }
+  },
+  {
+    immediate: true,
+  },
+)
 
 // =======================
 // Images
 // =======================
 
-// const images = ref([])
-// const previewImages = ref([])
-// const primaryImageIndex = ref(0)
+const images = ref([])
+const previewImages = ref([])
+const primaryImageIndex = ref(0)
 
-// const setPrimary = (index) => {
-//   primaryImageIndex.value = index
-// }
+const setPrimary = (index) => {
+  primaryImageIndex.value = index
+}
 
-// const handleImageUpload = (e) => {
-//   const files = [...e.target.files]
+const handleImageUpload = (e) => {
+  const files = [...e.target.files]
 
-//   files.forEach((file) => {
-//     images.value.push(file)
+  files.forEach((file) => {
+    images.value.push(file)
 
-//     previewImages.value.push(URL.createObjectURL(file))
-//   })
+    previewImages.value.push(URL.createObjectURL(file))
+  })
 
-//   e.target.value = ''
-// }
-// const removeImage = (index) => {
-//   previewImages.value.splice(index, 1)
+  e.target.value = ''
+}
+const removeImage = (index) => {
+  previewImages.value.splice(index, 1)
 
-//   if (index < existingImageUrls.value.length) {
-//     existingImageUrls.value.splice(index, 1)
-//   } else {
-//     images.value.splice(index - existingImageUrls.value.length, 1)
-//   }
+  if (index < existingImageUrls.value.length) {
+    existingImageUrls.value.splice(index, 1)
+  } else {
+    images.value.splice(index - existingImageUrls.value.length, 1)
+  }
 
-//   if (primaryImageIndex.value >= previewImages.value.length) {
-//     primaryImageIndex.value = 0
-//   }
-// }
+  if (primaryImageIndex.value >= previewImages.value.length) {
+    primaryImageIndex.value = 0
+  }
+}
 
 // handle save
 
-// const productStore = useProductStore()
+const productStore = useProductStore()
 
-const loading = ref(false)
+const { loadding } = storeToRefs(productStore)
 
 const onSubmit = handleSubmit(async (values) => {
-  loading.value = true
+  const payload = {
+    name: values.name,
+    description: values.description,
+    basePrice: values.basePrice,
+    brandId: values.brandId,
+    categoryId: values.categoryId,
+    targetAudienceId: values.targetAudienceId,
+    variants: variants.value,
+    images: [
+      // Ảnh cũ
+      ...existingImageUrls.value.map((url, i) => ({
+        id: props.product?.imgs[i]?.id ?? null,
+        imageUrl: url,
+        isPrimary: i === primaryImageIndex.value,
+      })),
+      // Ảnh mới
+      ...images.value.map((_, i) => ({
+        id: null,
+        imageUrl: null,
+        isPrimary: existingImageUrls.value.length + i === primaryImageIndex.value,
+      })),
+    ],
+    promotionId: promotion.value?.id ?? null,
+  }
 
-  // // Variant
-  // formData.append('primaryImageIndex', primaryImageIndex.value)
-
-  // // Upload ảnh mới
-  // images.value.forEach((file) => {
-  //   formData.append('images', file)
-  // })
+  const formData = new FormData()
+  formData.append('data', JSON.stringify(payload))
 
   // Edit
   if (props.product?.id) {
-    // await productStore.updateProduct(props.product.id, formData)
-    console.log(value)
+    // Ảnh cũ giữ lại không gửi file, chỉ gửi ảnh mới
+    images.value.forEach((file) => formData.append('images', file))
+    await productStore.updateProductById(props.product.id, formData)
   }
   // Add
   else {
-    // await productStore.createProduct(formData)
-    console.log(values)
+    images.value.forEach((file) => formData.append('images', file))
+    await productStore.createProduct(formData)
   }
 
   closeModal()
@@ -544,14 +667,11 @@ const onSubmit = handleSubmit(async (values) => {
 })
 
 const resetModal = () => {
-  resetForm({
-    values: '',
-  })
-
-  // variants.value = []
-
-  // images.value = []
-
-  // previewImages.value = []
+  resetForm({ values: initialValues })
+  variants.value = []
+  images.value = []
+  previewImages.value = []
+  existingImageUrls.value = []
+  primaryImageIndex.value = 0
 }
 </script>

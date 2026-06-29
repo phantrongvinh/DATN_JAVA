@@ -15,19 +15,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionResponse;
+import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductDetailDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductHomeView;
 import com.datn.project.dto.product.ProductImageDTO;
 import com.datn.project.dto.product.ProductImageRequest;
+import com.datn.project.dto.product.ProductImagesResponse;
 import com.datn.project.dto.product.ProductOverview;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.product.ProductResponse;
@@ -44,6 +44,7 @@ import com.datn.project.repository.ICategoryRepository;
 import com.datn.project.repository.IProductImageRepository;
 import com.datn.project.repository.IProductRepository;
 import com.datn.project.repository.IProductVariantRepository;
+import com.datn.project.repository.IPromotionRepository;
 import com.datn.project.repository.ISizeRepository;
 import com.datn.project.repository.ITargetAudienceRepository;
 import com.datn.project.specification.ProductSpecification;
@@ -81,6 +82,9 @@ public class ProductService implements IProductService {
         @Autowired
         private CloudinaryService cloudinaryService;
 
+        @Autowired
+        private IPromotionRepository promotionRepository;
+
         // config để lấy product và giảm giá tốt nhất
         private Optional<Promotion> getBestPromotion(Product product, BigDecimal price) {
 
@@ -108,85 +112,6 @@ public class ProductService implements IProductService {
 
                 return response;
         }
-
-        // private ProductVariantResponse toVariantResponse(
-        // ProductVariant variant,
-        // Optional<Promotion> promotion) {
-
-        // ProductVariantResponse response = new ProductVariantResponse();
-
-        // response.setId(variant.getId());
-        // response.setColor(variant.getColor());
-        // response.setSize(variant.getSize().getName());
-        // response.setStock(variant.getStock());
-        // response.setSku(variant.getSku());
-        // response.setPrice(variant.getPrice());
-
-        // response.setDiscountedPrice(
-        // promotion
-        // .map(pr -> promotionService.calcDiscountedPrice(
-        // variant.getPrice(), pr))
-        // .orElse(variant.getPrice()));
-
-        // response.setCreatedAt(variant.getCreatedAt());
-
-        // return response;
-        // }
-
-        // private ProductResponse toResponse(Product p) {
-
-        // ProductResponse response = new ProductResponse();
-
-        // response.setId(p.getId());
-        // response.setName(p.getName());
-        // response.setDescription(p.getDescription());
-        // response.setBasePrice(p.getBasePrice());
-        // response.setCreatedAt(p.getCreatedAt());
-
-        // response.setCategory(p.getCategory().getName());
-        // response.setBrand(p.getBrand().getName());
-        // response.setTargetAudience(p.getTargetAudience().getName());
-        // response.setAccessory(p.getCategory().isAccessory());
-
-        // response.setImg(
-        // p.getProductImages()
-        // .stream()
-        // .findFirst()
-        // .map(ProductImage::getImageUrl)
-        // .orElse(null));
-
-        // BigDecimal minPrice = p.getProductVariants()
-        // .stream()
-        // .map(ProductVariant::getPrice)
-        // .min(BigDecimal::compareTo)
-        // .orElse(p.getBasePrice());
-
-        // BigDecimal maxPrice = p.getProductVariants()
-        // .stream()
-        // .map(ProductVariant::getPrice)
-        // .max(BigDecimal::compareTo)
-        // .orElse(p.getBasePrice());
-
-        // Optional<Promotion> promo = getBestPromotion(p, minPrice);
-
-        // response.setMinPrice(minPrice);
-        // response.setMaxPrice(maxPrice);
-
-        // response.setDiscountedPrice(
-        // promo.map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
-        // .orElse(minPrice));
-
-        // promo.ifPresent(pr -> response.setPromotion(toPromotionResponse(pr)));
-
-        // List<ProductVariantResponse> variants = p.getProductVariants()
-        // .stream()
-        // .map(v -> toVariantResponse(v, promo))
-        // .toList();
-
-        // response.setProductVariant(variants);
-
-        // return response;
-        // }
 
         private ProductOverview toOverview(Product p) {
                 ProductOverview overview = new ProductOverview();
@@ -338,20 +263,24 @@ public class ProductService implements IProductService {
                         res.setBasePrice(p.getBasePrice());
                         res.setCreatedAt(p.getCreatedAt());
                         res.setCategory(p.getCategory().getName());
+                        res.setCategoryId(p.getCategory().getId());
                         res.setBrand(p.getBrand().getName());
+                        res.setBrandId(p.getBrand().getId());
                         res.setTargetAudience(p.getTargetAudience().getName());
+                        res.setTargetAudienceId(p.getTargetAudience().getId());
                         res.setAccessory(p.getCategory().isAccessory());
                         res.setDeletedAt(p.getDeletedAt());
 
                         // ─── Ảnh primary ─────────────────────────────────
-                        res.setImg(p.getProductImages().stream()
-                                        .filter(pi -> Boolean.TRUE.equals(pi.getIsPrimary()))
-                                        .findFirst()
-                                        .map(ProductImage::getImageUrl)
-                                        .orElse(p.getProductImages().stream()
-                                                        .findFirst()
-                                                        .map(ProductImage::getImageUrl)
-                                                        .orElse(null)));
+                        res.setImgs(p.getProductImages().stream().map(pi -> {
+                                ProductImagesResponse productImagesResponse = new ProductImagesResponse();
+
+                                productImagesResponse.setId(pi.getId());
+                                productImagesResponse.setImageUrl(pi.getImageUrl());
+                                productImagesResponse.setPrimary(pi.getIsPrimary());
+
+                                return productImagesResponse;
+                        }).toList());
 
                         // ─── Min / Max price từ variants ─────────────────
                         List<BigDecimal> prices = p.getProductVariants().stream()
@@ -384,6 +313,7 @@ public class ProductService implements IProductService {
                                                 vRes.setId(v.getId());
                                                 vRes.setColor(v.getColor());
                                                 vRes.setSize(v.getSize().getName());
+                                                vRes.setSizeId(v.getSize().getId());
                                                 vRes.setStock(v.getStock());
                                                 vRes.setSku(v.getSku());
                                                 vRes.setPrice(v.getPrice());
@@ -444,8 +374,11 @@ public class ProductService implements IProductService {
 
         // ─── Helper: update variants ──────────────────────────
         private void updateVariants(Product product, List<ProductVariantRequest> requests) {
-                if (requests == null)
+                if (requests == null || requests.isEmpty()) {
+                        // ✅ Xóa hết variants nếu list rỗng
+                        productVariantRepository.deleteByProductId(product.getId());
                         return;
+                }
 
                 List<Integer> keepIds = new ArrayList<>();
 
@@ -461,10 +394,8 @@ public class ProductService implements IProductService {
                         keepIds.add(saved.getId());
                 });
 
-                // xóa variant không còn trong danh sách
-                if (!keepIds.isEmpty()) {
-                        productVariantRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
-                }
+                productVariantRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
+                // ✅ Bỏ check !keepIds.isEmpty()
         }
 
         private void setVariantFields(ProductVariant variant, Product product, ProductVariantRequest req) {
@@ -480,39 +411,9 @@ public class ProductService implements IProductService {
 
         // ─── Helper: save images (tạo mới) ───────────────────
         private void saveImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
-                if (files == null || files.isEmpty())
+                if (requests == null || requests.isEmpty())
                         return;
 
-                // Upload từng file lên Cloudinary
-                List<String> uploadedUrls = files.stream()
-                                .map(cloudinaryService::uploadImage)
-                                .toList();
-
-                // Merge URL vào requests nếu có, hoặc tạo mới
-                for (int i = 0; i < uploadedUrls.size(); i++) {
-                        ProductImage image = new ProductImage();
-                        image.setProduct(product);
-                        image.setImageUrl(uploadedUrls.get(i));
-                        image.setIsPrimary(i == 0); // ảnh đầu tiên làm primary
-
-                        // Nếu có requests đi kèm (để lấy isPrimary)
-                        if (requests != null && i < requests.size()) {
-                                image.setIsPrimary(Boolean.TRUE.equals(requests.get(i).getIsPrimary()));
-                        }
-
-                        productImageRepository.save(image);
-                }
-        }
-
-        // ─── Helper: update images ────────────────────────────
-        private void updateImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
-                if (requests == null)
-                        return;
-
-                List<Integer> keepIds = new ArrayList<>();
-
-                // Upload ảnh mới lên Cloudinary
-                // requests có file index = -1 nghĩa là ảnh cũ, >= 0 là ảnh mới
                 List<String> uploadedUrls = new ArrayList<>();
                 if (files != null && !files.isEmpty()) {
                         uploadedUrls = files.stream()
@@ -520,7 +421,40 @@ public class ProductService implements IProductService {
                                         .toList();
                 }
 
+                for (int i = 0; i < requests.size(); i++) {
+                        ProductImageRequest req = requests.get(i);
+                        ProductImage image = new ProductImage();
+                        image.setProduct(product);
+
+                        // Ảnh cũ có sẵn imageUrl (trường hợp đặc biệt)
+                        if (req.getImageUrl() != null) {
+                                image.setImageUrl(req.getImageUrl());
+                        } else if (i < uploadedUrls.size()) {
+                                image.setImageUrl(uploadedUrls.get(i));
+                        }
+
+                        image.setIsPrimary(Boolean.TRUE.equals(req.getIsPrimary()));
+                        productImageRepository.save(image);
+                }
+        }
+
+        // ─── Helper: update images ────────────────────────────
+        private void updateImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
+                if (requests == null || requests.isEmpty()) {
+                        // ✅ Xóa hết images nếu list rỗng
+                        productImageRepository.deleteByProductId(product.getId());
+                        return;
+                }
+
+                List<Integer> keepIds = new ArrayList<>();
                 int newFileIndex = 0;
+
+                List<String> uploadedUrls = new ArrayList<>();
+                if (files != null && !files.isEmpty()) {
+                        uploadedUrls = files.stream()
+                                        .map(cloudinaryService::uploadImage)
+                                        .toList();
+                }
 
                 for (ProductImageRequest req : requests) {
                         ProductImage image;
@@ -530,7 +464,7 @@ public class ProductService implements IProductService {
                                 image = productImageRepository.findById(req.getId())
                                                 .orElseThrow(() -> new RuntimeException("Image không tồn tại"));
                         } else {
-                                // Ảnh mới → lấy URL vừa upload
+                                // Ảnh mới → upload Cloudinary
                                 image = new ProductImage();
                                 image.setProduct(product);
                                 if (newFileIndex < uploadedUrls.size()) {
@@ -543,9 +477,26 @@ public class ProductService implements IProductService {
                         keepIds.add(saved.getId());
                 }
 
-                // Xóa ảnh không còn trong danh sách
-                if (!keepIds.isEmpty()) {
-                        productImageRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
+                // ✅ Bỏ check isEmpty
+                productImageRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
+        }
+
+        // Helper update promotion
+        private void updatePromotion(Product product, Integer promotionId) {
+                // Xóa product khỏi tất cả promotion hiện tại
+                if (product.getPromotions() != null) {
+                        product.getPromotions().forEach(promo -> promo.getProducts().remove(product));
+                        product.getPromotions().clear();
+                        productRepository.save(product);
+                }
+
+                // Gán promotion mới nếu có
+                if (promotionId != null) {
+                        Promotion promotion = promotionRepository.findById(promotionId)
+                                        .orElseThrow(() -> new RuntimeException("Promotion không tồn tại"));
+                        promotion.getProducts().add(product);
+                        product.getPromotions().add(promotion);
+                        promotionRepository.save(promotion);
                 }
         }
 
@@ -576,7 +527,8 @@ public class ProductService implements IProductService {
                 productRepository.save(product);
 
                 updateVariants(product, request.getVariants());
-                updateImages(product, request.getImages(), imageFiles); // thêm imageFiles
+                updateImages(product, request.getImages(), imageFiles);
+                updatePromotion(product, request.getPromotionId());
 
                 return getProductDetail(id);
         }
@@ -762,6 +714,28 @@ public class ProductService implements IProductService {
                                 .toList();
 
                 return ResponseEntity.ok(responses);
+        }
+
+        // thêm khuyến mãi vào products
+        @Transactional
+        @Override
+        public void addPromotionToProducts(AddPromotionToProductsRequest request) {
+                // check promotion tồn tại
+                promotionRepository.findById(request.getPromotionId())
+                                .orElseThrow(() -> new RuntimeException("Promotion không tồn tại"));
+
+                // check products tồn tại
+                List<Product> products = productRepository.findAllById(request.getProductIds());
+                if (products.isEmpty()) {
+                        throw new RuntimeException("Không tìm thấy sản phẩm");
+                }
+
+                // 1. Xóa tất cả promotion cũ của các product này
+                promotionRepository.removePromotionsByProductIds(request.getProductIds());
+
+                // 2. Gán promotion mới
+                request.getProductIds().forEach(productId -> promotionRepository
+                                .assignPromotionToProduct(request.getPromotionId(), productId));
         }
 
 }

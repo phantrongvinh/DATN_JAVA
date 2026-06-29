@@ -17,6 +17,7 @@
 
             <input
               type="text"
+              v-model="search"
               placeholder="Tìm sản phẩm..."
               class="w-72 border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-foreground"
             />
@@ -171,6 +172,7 @@
           </table>
         </div>
 
+        <!-- Pagination -->
         <div
           v-if="totalPages > 1"
           class="flex items-center justify-between border-t border-border px-6 py-4"
@@ -236,7 +238,7 @@
         <div class="border-b border-border px-6 py-5">
           <h2 class="font-display text-2xl">Thêm khuyến mãi</h2>
           <p class="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-            Chọn khuyến mãi hiện có hoặc tạo khuyến mãi mới
+            Chọn khuyến mãi hiện có
           </p>
         </div>
 
@@ -247,7 +249,7 @@
 
           <div class="overflow-hidden rounded border border-border">
             <label
-              v-for="promotion in promotions"
+              v-for="promotion in activePromotions"
               :key="promotion.id"
               class="flex cursor-pointer items-center justify-between border-b border-border px-4 py-4 last:border-b-0 hover:bg-secondary/40"
             >
@@ -277,7 +279,7 @@
           </div>
 
           <!-- Divider -->
-          <div class="my-8 flex items-center">
+          <!-- <div class="my-8 flex items-center">
             <div class="h-px flex-1 bg-border"></div>
 
             <span class="mx-5 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -285,10 +287,10 @@
             </span>
 
             <div class="h-px flex-1 bg-border"></div>
-          </div>
+          </div> -->
 
           <!-- Create Promotion -->
-          <div class="grid grid-cols-2 gap-5">
+          <!-- <div class="grid grid-cols-2 gap-5">
             <div class="col-span-2">
               <label class="text-sm font-medium"> Tên khuyến mãi </label>
 
@@ -361,7 +363,7 @@
                 {{ errors.endDate }}
               </p>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- Footer -->
@@ -373,7 +375,7 @@
             Huỷ
           </button>
 
-          <button class="bg-ink px-6 py-2 text-ivory hover:bg-ink/90" @click="savePromotion">
+          <button class="bg-ink px-6 py-2 text-ivory hover:bg-ink/90" @click="handleAddPromotion">
             Lưu & Áp dụng
           </button>
         </div>
@@ -389,24 +391,40 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Search, Pencil, Trash2, Plus } from 'lucide-vue-next'
 
 import ulti from '@/ulti/ulti'
 import { useProductStore } from '@/stores/useProductStore'
 import { storeToRefs } from 'pinia'
-import * as yup from 'yup'
-import { useForm } from 'vee-validate'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import ProductModal from '@/components/admin/ProductModal.vue'
+import { usePromotionStore } from '@/stores/usePromotionStore'
+import { useDebounce } from '@/composables/useDebounce'
 
 const productStore = useProductStore()
+const promotionStore = usePromotionStore()
 
 const { products, currentPage, totalPages, totalElements, size } = storeToRefs(productStore)
+const { loading, error, activePromotions } = storeToRefs(promotionStore)
 
 onMounted(async () => {
-  await productStore.fetchAllProducts({ newPage: 1, newSize: 6 })
+  await Promise.all([
+    productStore.fetchAllProducts({ newPage: 1, newSize: 6 }),
+    promotionStore.fetchActivePromotion(),
+  ])
+})
+
+// handle search
+const search = ref('')
+const searchQuery = useDebounce(search, 500)
+
+watch(searchQuery, async (newVal) => {
+  await productStore.fetchAllProducts({
+    search: newVal,
+    page: 1,
+    size: size.value,
+  })
 })
 
 // handle pagination
@@ -414,6 +432,7 @@ const changePage = async (page) => {
   if (page < 1 || page > totalPages.value) return
 
   await productStore.fetchAllProducts({
+    search: search.value,
     newPage: page,
     newSize: size.value,
   })
@@ -459,75 +478,22 @@ const showPromotionModal = ref(false)
 
 const selectedPromotionId = ref(null)
 
-const promotions = ref([])
+const handleAddPromotion = async () => {
+  if (!selectedPromotionId.value || selectedProducts.value.length === 0) {
+    showPromotionModal.value = false
+    console.log('Chưa chọn khuyến mãi')
+    return
+  } else {
+    showPromotionModal.value = false
 
-const today = new Date()
-today.setHours(0, 0, 0, 0)
+    await promotionStore.addPromotionToProduct(selectedPromotionId.value, selectedProducts.value)
 
-const promotionSchema = yup.object({
-  name: yup.string().required('Tên khuyến mãi không được để trống'),
+    selectedProducts.value = []
+    selectedPromotionId.value = null
+    await productStore.fetchAllProducts({ newPage: 1, newSize: size.value })
+  }
+}
 
-  discountType: yup
-    .string()
-    .required('Vui lòng nhập giá trị')
-    .oneOf(['PERCENT', 'FIXED'])
-    .required(),
-
-  discountValue: yup
-    .number()
-    .typeError('Giá trị phải là số')
-    .required('Vui lòng nhập giá trị')
-    .positive('Phải lớn hơn 0')
-    .when('discountType', {
-      is: 'PERCENT',
-      then: (schema) => schema.min(1, 'Tối thiểu 1%').max(100, 'Tối đa 100%'),
-      otherwise: (schema) =>
-        schema.min(100000, 'Ít nhất 500.000đ').max(5000000, 'Không quá 5 triệu'),
-    }),
-
-  startDate: yup
-    .date()
-    .min(new Date(today), 'Ngày bắt đầu phải từ hiện tại')
-    .nullable()
-    .transform((value, originalValue) => {
-      return originalValue === '' ? null : value
-    }),
-
-  endDate: yup
-    .date()
-    .required('Chọn ngày kết thúc')
-    .nullable()
-    .transform((value, originalValue) => {
-      return originalValue === '' ? null : value
-    })
-    .min(yup.ref('startDate'), 'Ngày kết thúc phải sau ngày bắt đầu'),
-})
-
-const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: promotionSchema,
-  initialValues: {
-    name: '',
-    discountType: 'PERCENT',
-    discountValue: null,
-    startDate: '',
-    endDate: '',
-  },
-})
-
-const [name] = defineField('name')
-const [discountType] = defineField('discountType')
-const [discountValue] = defineField('discountValue')
-const [startDate] = defineField('startDate')
-const [endDate] = defineField('endDate')
-
-const savePromotion = handleSubmit(async (values) => {
-  console.log(values)
-
-  // gọi API
-  await promotionStore.createPromotion(values)
-
-  showPromotionModal.value = false
-})
 // handle deative product
 const handleDelete = async (id) => {
   await productStore.deactivateProduct(id)
@@ -548,7 +514,7 @@ const openEditModal = (product) => {
 }
 
 const handleSave = (values) => {
-  if (selectedProduct.value) {
+  if (selectedProducts.value) {
     console.log('Update', values)
   } else {
     console.log('Create', values)

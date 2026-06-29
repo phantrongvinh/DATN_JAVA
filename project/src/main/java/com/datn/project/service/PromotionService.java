@@ -7,10 +7,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.datn.project.dto.PromotionRequest;
+import com.datn.project.dto.PromotionResponse;
 import com.datn.project.entity.DiscountType;
 import com.datn.project.entity.Product;
 import com.datn.project.entity.Promotion;
@@ -39,12 +43,50 @@ public class PromotionService implements IPromotionService {
         promotion.setProducts(products);
         promotionRepository.save(promotion);
         return ResponseEntity.ok("Tạo khuyến mãi thành công");
-
     }
 
     @Override
     public Optional<Promotion> getActivePromotion(Integer productId) {
         return promotionRepository.findActiveByProductId(productId, LocalDateTime.now());
+    }
+
+    @Override
+    public ResponseEntity<?> getAllActivePromotioEntity() {
+
+        List<PromotionResponse> responses = promotionRepository.findActivePromotion(LocalDateTime.now()).stream()
+                .map(p -> {
+                    PromotionResponse res = new PromotionResponse();
+
+                    res.setId(p.getId());
+                    res.setName(p.getName());
+                    res.setDiscountType(p.getDiscountType().name());
+                    res.setDiscountValue(p.getDiscountValue());
+                    res.setStartAt(p.getStartAt());
+                    res.setEndAt(p.getEndAt());
+
+                    return res;
+                }).toList();
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @Override
+    public ResponseEntity<?> getAllPromotion(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        Page<PromotionResponse> resPage = promotionRepository.findAll(pageable).map(p -> {
+            PromotionResponse res = new PromotionResponse();
+
+            res.setId(p.getId());
+            res.setName(p.getName());
+            res.setDiscountType(p.getDiscountType().name());
+            res.setDiscountValue(p.getDiscountValue());
+            res.setStartAt(p.getStartAt());
+            res.setEndAt(p.getEndAt());
+
+            return res;
+        });
+        return ResponseEntity.ok(resPage);
     }
 
     @Override

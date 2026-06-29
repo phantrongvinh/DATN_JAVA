@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 
@@ -27,5 +28,7 @@ public interface IProductService {
     ResponseEntity<?> getProductOnSale();
 
     ResponseEntity<?> createProduct(ProductRequest request, List<MultipartFile> imageFiles);
+
+   void addPromotionToProducts(AddPromotionToProductsRequest request);
 
 }

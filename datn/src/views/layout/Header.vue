@@ -109,11 +109,6 @@ const { items } = useCart()
 
       <!-- Actions -->
       <div class="flex items-center gap-1">
-        <!-- Search -->
-        <button aria-label="Tìm kiếm" class="rounded-full p-2 hover:bg-accent">
-          <Search size="20" />
-        </button>
-
         <!-- User -->
         <DropdownMenu v-if="isAuthenticated">
           <DropdownMenuTrigger as-child>
