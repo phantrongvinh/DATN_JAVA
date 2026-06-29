@@ -18,4 +18,7 @@ public interface IPromotionService {
 
     BigDecimal getDiscountAmount(BigDecimal price, Promotion promotion);
 
+    ResponseEntity<?> getAllActivePromotioEntity();
+
+    ResponseEntity<?> getAllPromotion(int page, int size);
 } 

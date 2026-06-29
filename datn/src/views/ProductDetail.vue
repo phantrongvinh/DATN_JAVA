@@ -12,18 +12,46 @@ import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-ne
 
 const route = useRoute()
 const productStore = useProductStore()
-const { product, productOnSale } = storeToRefs(productStore)
+const { product, filterProducts } = storeToRefs(productStore)
+const productRelate = ref([])
 
 watch(
   () => route.params.productId,
-  (newId) => {
-    if (newId) productStore.fetchProductByID(newId)
+  async (newId) => {
+    if (newId) {
+      const param = {
+        bradnIds: null,
+        categoryIds: null,
+        audienceIds: null,
+        search: null,
+        onSale: null,
+        minPrice: null,
+        maxPrice: null,
+        sortBy: null,
+      }
+      await Promise.all([
+        productStore.fetchProductByID(newId),
+        productStore.fetchFilterProducts(param),
+      ])
+      productRelate.value = filterProducts.value
+        .filter(
+          (p) =>
+            p.id !== product.value.id &&
+            (p.brandName === product.value.brandName ||
+              p.categoryName === product.value.categoryName),
+        )
+        .slice(0, 4)
+    }
   },
   { immediate: true },
 )
 
 onMounted(() => {
   console.log(product.value)
+
+  console.log(filterProducts.value)
+
+  console.log(productRelate.value)
 })
 
 // tabs
@@ -195,7 +223,7 @@ const handleAddToCart = async () => {
           </span>
 
           <span v-if="product.promotion" class="line-through text-muted-foreground">
-            {{ ulti.formatVND(selectedVariant.price) }}
+            {{ ulti.formatVND(selectedVariant?.price) }}
           </span>
 
           <span v-if="product.promotion" class="bg-red-500 px-2 py-1 text-xs text-white">
@@ -328,7 +356,7 @@ const handleAddToCart = async () => {
 
       <!-- Relate -->
       <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-        <ProductCard v-for="p in productOnSale" :key="p.id" :product="p" />
+        <ProductCard v-for="p in productRelate" :key="p.id" :product="p" />
       </div>
     </section>
   </div>

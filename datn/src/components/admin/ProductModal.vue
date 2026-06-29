@@ -311,6 +311,73 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Promotion -->
+                <div class="col-span-2 mt-8">
+                  <div class="mb-3 flex items-center justify-between">
+                    <h3
+                      class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground"
+                    >
+                      Khuyến mãi hiện có
+                    </h3>
+                  </div>
+                  <div
+                    v-if="promotion === null"
+                    class="border border-dashed border-border py-8 text-center text-sm text-muted-foreground"
+                  >
+                    Chưa có khuyến mãi
+                  </div>
+
+                  <div v-else class="rounded border border-border bg-secondary/20 p-5">
+                    <div class="flex items-start justify-between">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <h4 class="font-semibold">
+                            {{ promotion.name }}
+                          </h4>
+
+                          <span
+                            class="rounded bg-gold-soft px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-ink"
+                          >
+                            {{ promotion.discountType === 'percent' ? 'Percent' : 'Fixed' }}
+                          </span>
+                        </div>
+
+                        <p class="mt-2 text-sm text-muted-foreground">
+                          Giá trị:
+                          <span class="font-semibold text-foreground">
+                            {{
+                              promotion.discountType === 'percent'
+                                ? promotion.discountValue + '%'
+                                : ulti.formatVND(promotion.discountValue)
+                            }}
+                          </span>
+                        </p>
+
+                        <div class="mt-3 space-y-1 text-xs text-muted-foreground">
+                          <p>
+                            <span class="font-medium">Bắt đầu:</span>
+                            {{ ulti.formatDate(promotion.startAt) }}
+                          </p>
+
+                          <p>
+                            <span class="font-medium">Kết thúc:</span>
+                            {{ ulti.formatDate(promotion.endAt) }}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        @click.prevent="removePromotion"
+                        class="rounded border border-red-300 p-2 text-red-500 transition hover:bg-red-50"
+                        title="Xóa khuyến mãi"
+                      >
+                        <Trash2 class="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -341,6 +408,7 @@ import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
 import { storeToRefs } from 'pinia'
 import { useSizeStore } from '@/stores/useSizeStore'
+import ulti from '@/ulti/ulti'
 
 const props = defineProps({
   showProductModal: {
@@ -437,6 +505,13 @@ const removeVariant = (index) => {
   variants.value.splice(index, 1)
 }
 
+// handle promotion
+const promotion = ref(props.product?.promotion ?? null)
+
+const removePromotion = () => {
+  promotion.value = null
+}
+
 const existingImageUrls = ref([])
 const initialValues = {
   name: '',
@@ -476,6 +551,9 @@ watch(
           }))
         : []
 
+      // load promotion
+      promotion.value = props.product.promotion ?? null
+
       // load ảnh
       previewImages.value = props.product.imgs ? props.product.imgs.map((img) => img.imageUrl) : []
       existingImageUrls.value = [...previewImages.value]
@@ -484,6 +562,8 @@ watch(
       resetForm({
         values: initialValues,
       })
+
+      promotion.value = null
 
       variants.value = []
 
@@ -563,6 +643,7 @@ const onSubmit = handleSubmit(async (values) => {
         isPrimary: existingImageUrls.value.length + i === primaryImageIndex.value,
       })),
     ],
+    promotionId: promotion.value?.id ?? null,
   }
 
   const formData = new FormData()

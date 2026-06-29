@@ -74,6 +74,6 @@ public class Product implements Serializable {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductVariant> productVariants= new ArrayList<>();
 
-    @ManyToMany(mappedBy = "products")
+    @ManyToMany(mappedBy = "products", fetch = FetchType.LAZY)
     private List<Promotion> promotions = new ArrayList<>();
 }

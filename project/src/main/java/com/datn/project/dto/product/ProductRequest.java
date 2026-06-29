@@ -15,4 +15,5 @@ public class ProductRequest {
     private Integer targetAudienceId;
     private List<ProductVariantRequest> variants;
     private List<ProductImageRequest> images;
+    private Integer promotionId;
 }

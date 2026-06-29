@@ -69,6 +69,8 @@ export const useProductStore = defineStore('product', () => {
       const res = await productAPI.fetchFilterProducts(data)
 
       filterProducts.value = res.content
+      totalPages.value = res.totalPages
+      totalElements.value = res.totalElements
 
       return { success: true }
     } catch (err) {
@@ -100,6 +102,7 @@ export const useProductStore = defineStore('product', () => {
   async function fetchAllProducts({
     newPage = page.value,
     newSize = size.value,
+    search,
     audienceIds,
     brandIds,
     categoryIds,
@@ -110,6 +113,7 @@ export const useProductStore = defineStore('product', () => {
       const res = await adminAPI.fetchAllProducts({
         page: newPage,
         size: newSize,
+        search,
         audienceIds,
         brandIds,
         categoryIds,

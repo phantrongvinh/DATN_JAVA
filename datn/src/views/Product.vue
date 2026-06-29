@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { X } from 'lucide-vue-next'
 
@@ -11,6 +11,7 @@ import { storeToRefs } from 'pinia'
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useDebounce } from '@/composables/useDebounce'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,12 +29,38 @@ onMounted(async () => {
   await categoryStore.fetchCategory()
 })
 
-const { filterProducts } = storeToRefs(productStore)
+const { filterProducts, totalPages, totalElements } = storeToRefs(productStore)
 
 const toNumberArray = (val) => {
   if (!val) return []
   return Array.isArray(val) ? val.map(Number) : [Number(val)]
 }
+
+// ─── Debounce search ─────────────────────────────────
+const searchInput = ref(route.query.search ?? '')
+const searchDebounced = useDebounce(searchInput, 500)
+
+watch(searchDebounced, (newVal) => {
+  router.push({
+    query: {
+      ...route.query,
+      search: newVal || undefined,
+      page: 1, // reset về trang 1 khi search
+    },
+  })
+})
+
+// ─── Pagination ──────────────────────────────────────
+const currentPage = computed({
+  get() {
+    return Number(route.query.page ?? 1)
+  },
+  set(value) {
+    router.push({
+      query: { ...route.query, page: value },
+    })
+  },
+})
 
 watch(
   () => route.query,
@@ -43,10 +70,12 @@ watch(
       categoryIds: toNumberArray(query.categoryIds),
       audienceIds: toNumberArray(query.audienceIds),
       search: query.search || null,
-      onSale: route.query.onSale === 'true' ? true : null,
-      minPrice: route.query.minPrice ? Number(route.query.minPrice) : null,
-      maxPrice: route.query.maxPrice ? Number(route.query.maxPrice) : null,
-      sortBy: null,
+      onSale: query.onSale === 'true' ? true : null,
+      minPrice: query.minPrice ? Number(query.minPrice) : null,
+      maxPrice: query.maxPrice ? Number(query.maxPrice) : null,
+      sortBy: query.sortBy ?? 'newest',
+      page: Number(query.page ?? 1) - 1,
+      size: 12,
     }
     await productStore.fetchFilterProducts(params)
   },
@@ -331,6 +360,12 @@ const activeFilters = computed(() => {
     <!-- Product -->
     <div>
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <input
+          v-model="searchInput"
+          type="text"
+          placeholder="Tìm kiếm sản phẩm..."
+          class="rounded border border-border px-3 py-1.5 text-sm outline-none focus:border-black"
+        />
         <p class="text-sm text-muted-foreground">
           {{ filterProducts && filterProducts.length > 0 ? filterProducts.length : '0' }}
           sản phẩm
@@ -365,11 +400,44 @@ const activeFilters = computed(() => {
       </div>
 
       <!-- Grid -->
-      <div
-        v-if="filterProducts && filterProducts.length > 0"
-        class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3"
-      >
-        <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
+      <div v-if="filterProducts && filterProducts.length > 0">
+        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+          <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
+        </div>
+        <div v-if="totalPages > 1" class="mt-20 flex items-center justify-end gap-2">
+          <button
+            class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            ← Trước
+          </button>
+
+          <template v-for="p in totalPages" :key="p">
+            <!-- Hiển thị trang đầu, cuối, và xung quanh trang hiện tại -->
+            <button
+              v-if="p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1"
+              class="rounded border px-3 py-1.5 text-sm"
+              :class="p === currentPage ? 'bg-black text-white border-black' : 'hover:bg-gray-100'"
+              @click="currentPage = p"
+            >
+              {{ p }}
+            </button>
+
+            <!-- Dấu ... -->
+            <span v-else-if="Math.abs(p - currentPage) === 2" class="px-1 text-muted-foreground">
+              ...
+            </span>
+          </template>
+
+          <button
+            class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            Sau →
+          </button>
+        </div>
       </div>
 
       <div v-else class="py-24 text-center text-muted-foreground">

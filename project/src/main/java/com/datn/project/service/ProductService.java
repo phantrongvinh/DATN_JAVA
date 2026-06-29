@@ -15,14 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionResponse;
+import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductDetailDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductHomeView;
@@ -45,6 +44,7 @@ import com.datn.project.repository.ICategoryRepository;
 import com.datn.project.repository.IProductImageRepository;
 import com.datn.project.repository.IProductRepository;
 import com.datn.project.repository.IProductVariantRepository;
+import com.datn.project.repository.IPromotionRepository;
 import com.datn.project.repository.ISizeRepository;
 import com.datn.project.repository.ITargetAudienceRepository;
 import com.datn.project.specification.ProductSpecification;
@@ -82,6 +82,9 @@ public class ProductService implements IProductService {
         @Autowired
         private CloudinaryService cloudinaryService;
 
+        @Autowired
+        private IPromotionRepository promotionRepository;
+
         // config để lấy product và giảm giá tốt nhất
         private Optional<Promotion> getBestPromotion(Product product, BigDecimal price) {
 
@@ -109,85 +112,6 @@ public class ProductService implements IProductService {
 
                 return response;
         }
-
-        // private ProductVariantResponse toVariantResponse(
-        // ProductVariant variant,
-        // Optional<Promotion> promotion) {
-
-        // ProductVariantResponse response = new ProductVariantResponse();
-
-        // response.setId(variant.getId());
-        // response.setColor(variant.getColor());
-        // response.setSize(variant.getSize().getName());
-        // response.setStock(variant.getStock());
-        // response.setSku(variant.getSku());
-        // response.setPrice(variant.getPrice());
-
-        // response.setDiscountedPrice(
-        // promotion
-        // .map(pr -> promotionService.calcDiscountedPrice(
-        // variant.getPrice(), pr))
-        // .orElse(variant.getPrice()));
-
-        // response.setCreatedAt(variant.getCreatedAt());
-
-        // return response;
-        // }
-
-        // private ProductResponse toResponse(Product p) {
-
-        // ProductResponse response = new ProductResponse();
-
-        // response.setId(p.getId());
-        // response.setName(p.getName());
-        // response.setDescription(p.getDescription());
-        // response.setBasePrice(p.getBasePrice());
-        // response.setCreatedAt(p.getCreatedAt());
-
-        // response.setCategory(p.getCategory().getName());
-        // response.setBrand(p.getBrand().getName());
-        // response.setTargetAudience(p.getTargetAudience().getName());
-        // response.setAccessory(p.getCategory().isAccessory());
-
-        // response.setImg(
-        // p.getProductImages()
-        // .stream()
-        // .findFirst()
-        // .map(ProductImage::getImageUrl)
-        // .orElse(null));
-
-        // BigDecimal minPrice = p.getProductVariants()
-        // .stream()
-        // .map(ProductVariant::getPrice)
-        // .min(BigDecimal::compareTo)
-        // .orElse(p.getBasePrice());
-
-        // BigDecimal maxPrice = p.getProductVariants()
-        // .stream()
-        // .map(ProductVariant::getPrice)
-        // .max(BigDecimal::compareTo)
-        // .orElse(p.getBasePrice());
-
-        // Optional<Promotion> promo = getBestPromotion(p, minPrice);
-
-        // response.setMinPrice(minPrice);
-        // response.setMaxPrice(maxPrice);
-
-        // response.setDiscountedPrice(
-        // promo.map(pr -> promotionService.calcDiscountedPrice(minPrice, pr))
-        // .orElse(minPrice));
-
-        // promo.ifPresent(pr -> response.setPromotion(toPromotionResponse(pr)));
-
-        // List<ProductVariantResponse> variants = p.getProductVariants()
-        // .stream()
-        // .map(v -> toVariantResponse(v, promo))
-        // .toList();
-
-        // response.setProductVariant(variants);
-
-        // return response;
-        // }
 
         private ProductOverview toOverview(Product p) {
                 ProductOverview overview = new ProductOverview();
@@ -557,6 +481,25 @@ public class ProductService implements IProductService {
                 productImageRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
         }
 
+        // Helper update promotion
+        private void updatePromotion(Product product, Integer promotionId) {
+                // Xóa product khỏi tất cả promotion hiện tại
+                if (product.getPromotions() != null) {
+                        product.getPromotions().forEach(promo -> promo.getProducts().remove(product));
+                        product.getPromotions().clear();
+                        productRepository.save(product);
+                }
+
+                // Gán promotion mới nếu có
+                if (promotionId != null) {
+                        Promotion promotion = promotionRepository.findById(promotionId)
+                                        .orElseThrow(() -> new RuntimeException("Promotion không tồn tại"));
+                        promotion.getProducts().add(product);
+                        product.getPromotions().add(promotion);
+                        promotionRepository.save(promotion);
+                }
+        }
+
         // Vô hiệu hóa và khôi phục product theo id
         @Override
         @Transactional
@@ -584,7 +527,8 @@ public class ProductService implements IProductService {
                 productRepository.save(product);
 
                 updateVariants(product, request.getVariants());
-                updateImages(product, request.getImages(), imageFiles); // thêm imageFiles
+                updateImages(product, request.getImages(), imageFiles);
+                updatePromotion(product, request.getPromotionId());
 
                 return getProductDetail(id);
         }
@@ -770,6 +714,28 @@ public class ProductService implements IProductService {
                                 .toList();
 
                 return ResponseEntity.ok(responses);
+        }
+
+        // thêm khuyến mãi vào products
+        @Transactional
+        @Override
+        public void addPromotionToProducts(AddPromotionToProductsRequest request) {
+                // check promotion tồn tại
+                promotionRepository.findById(request.getPromotionId())
+                                .orElseThrow(() -> new RuntimeException("Promotion không tồn tại"));
+
+                // check products tồn tại
+                List<Product> products = productRepository.findAllById(request.getProductIds());
+                if (products.isEmpty()) {
+                        throw new RuntimeException("Không tìm thấy sản phẩm");
+                }
+
+                // 1. Xóa tất cả promotion cũ của các product này
+                promotionRepository.removePromotionsByProductIds(request.getProductIds());
+
+                // 2. Gán promotion mới
+                request.getProductIds().forEach(productId -> promotionRepository
+                                .assignPromotionToProduct(request.getPromotionId(), productId));
         }
 
 }

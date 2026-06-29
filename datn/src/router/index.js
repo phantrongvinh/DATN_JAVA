@@ -134,6 +134,16 @@ const router = createRouter({
           name: 'product-dashboard',
           component: () => import('../views/ProductDashboard.vue'),
         },
+        {
+          path: 'promotion',
+          name: 'promotion',
+          component: () => import('../views/Promotion.vue'),
+        },
+        {
+          path: 'time-promotion',
+          name: 'time-promotion',
+          component: () => import('../views/TimePromotion.vue'),
+        },
         // Thêm các route admin khác ở đây
         // { path: 'orders', name: 'admin-orders', component: () => import('../views/admin/Orders.vue') },
         // { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue') },

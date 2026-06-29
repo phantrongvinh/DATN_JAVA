@@ -162,7 +162,7 @@ const url = 'http://localhost:8080/uploads/images'
 
               <span class="ml-2 rounded bg-green-100 px-2 py-1 text-xs text-green-600">
                 {{
-                  timePromotion.discountType === 'percent'
+                  timePromotion.discountType === 'PERCENT'
                     ? `-${timePromotion.discountValue}%`
                     : `-${ulti.formatVND(timePromotion.discountValue)}`
                 }}

@@ -10,6 +10,8 @@ import {
   ArrowLeft,
   FileText,
   Palette,
+  Tag,
+  Clock,
 } from 'lucide-vue-next'
 
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -34,22 +36,37 @@ const navs = [
     icon: Package,
   },
   {
-    to: '/admin/orders',
+    to: '/admin/promotion',
+    label: 'Khuyến mãi',
+    icon: Tag,
+  },
+  {
+    // to: '/admin/landing',
+    to: '/admin/time-promotion',
+    label: 'Khung giờ KM',
+    icon: Clock,
+  },
+  {
+    // to: '/admin/orders',
+    to: '/',
     label: 'Đơn hàng',
     icon: ShoppingCart,
   },
   {
-    to: '/admin/users',
+    // to: '/admin/users',
+    to: '/',
     label: 'Người dùng',
     icon: Users,
   },
   {
-    to: '/admin/blog',
+    // to: '/admin/blog',
+    to: '/',
     label: 'Bài viết',
     icon: FileText,
   },
   {
-    to: '/admin/landing',
+    // to: '/admin/landing',
+    to: '/',
     label: 'Trang chủ',
     icon: Palette,
   },
