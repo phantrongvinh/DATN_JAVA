@@ -157,11 +157,11 @@ export function useCheckout() {
     }
   }
 
-  const repay = async (orderId) => {
+  const repayVnpay = async (orderId) => {
     loading.value = true
     error.value = null
     try {
-      const res = await paymentAPI.repay(orderId)
+      const res = await paymentAPI.repayVnpay(orderId)
       window.location.href = res.paymentUrl
     } catch (err) {
       error.value = err.response?.data?.message ?? 'Không thể tạo lại thanh toán'
@@ -192,6 +192,6 @@ export function useCheckout() {
     handleApplyVoucher,
     removeVoucher,
     checkout,
-    repay,
+    repayVnpay,
   }
 }

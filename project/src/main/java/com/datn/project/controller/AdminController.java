@@ -23,11 +23,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionRequest;
 import com.datn.project.dto.TimePromotionRequest;
+import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.entity.OrderStatus;
+import com.datn.project.entity.PaymentStatus;
 import com.datn.project.repository.ITimePromotionRepository;
 import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductService;
@@ -191,11 +193,38 @@ public class AdminController {
     }
 
     // phần order
-    @PatchMapping("/{orderId}/status")
+    @PatchMapping("/orders/{orderId}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable Integer orderId,
-            @RequestParam OrderStatus status) {
-        orderService.updateOrderStatus(orderId, status);
+            @RequestParam String status) {
+        OrderStatus orderStatus = status !=null? OrderStatus.valueOf(status.toUpperCase()): null;
+
+        orderService.updateOrderStatus(orderId, orderStatus);
         return ResponseEntity.ok("Cập nhật trạng thái thành công");
     }
+
+    @GetMapping("/orders")
+    public ResponseEntity<?> getAllOrders(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(required = false) Integer paymentMethodId,
+            @RequestParam(required = false) LocalDateTime dateFrom,
+            @RequestParam(required = false) LocalDateTime dateTo, @RequestParam(required = false) String sortBy) {
+
+        PaymentStatus paymentStatusEnum = paymentStatus != null ||  paymentStatus == "" ? PaymentStatus.valueOf(paymentStatus.toUpperCase())
+                : null;
+
+        OrderFilterDTO filterDTO = new OrderFilterDTO(search, status,
+                paymentStatusEnum, paymentMethodId, dateFrom, dateTo, sortBy);
+
+        return ResponseEntity.ok(orderService.getAllOrders(page, size, filterDTO)).getBody();
+    }
+
+    // @GetMapping("/{id}")
+    // public ResponseEntity<?> getOrderDetail(@PathVariable Integer id) {
+    // return ResponseEntity.ok(orderService.getOrderDetail(id));
+    // }
 }

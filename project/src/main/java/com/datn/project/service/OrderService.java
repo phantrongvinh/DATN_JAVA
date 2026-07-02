@@ -1,23 +1,29 @@
 package com.datn.project.service;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.datn.project.dto.order.MyOrderResponse;
 import com.datn.project.dto.order.OrderDetailResponse;
+import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.order.OrderItemRequest;
 import com.datn.project.dto.order.OrderRequest;
 import com.datn.project.dto.order.OrderResponse;
@@ -35,6 +41,7 @@ import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IPaymentMethodRepository;
 import com.datn.project.repository.IProductVariantRepository;
 import com.datn.project.repository.IUserRepository;
+import com.datn.project.specification.OrderSpecification;
 
 import jakarta.transaction.Transactional;
 
@@ -183,7 +190,7 @@ public class OrderService implements IOrderService {
                 order.setFinalPrice(finalPrice);
                 order.setTimePromotion(timePromo.orElse(null));
                 order.setStatus(OrderStatus.PENDING);
-                order.setPaymentStatus(PaymentStatus.UNPAID);
+                order.setPaymentStatus(PaymentStatus.PENDING);
 
                 Order savedOrder = orderRepository.save(order);
 
@@ -230,14 +237,17 @@ public class OrderService implements IOrderService {
                                 .receiverName(order.getReceiverName())
                                 .receiverPhone(order.getReceiverPhone())
                                 .createdAt(order.getCreatedAt())
+                                .paymentStatus(order.getPaymentStatus().name())
+                                .paymentMethod(order.getPaymentMethod().getName())
+                                .trackingCode(order.getTrackingCode())
+                                .transactionId(order.getPaymentTransactionId())
                                 .build();
         }
 
         @Override
         public Order findById(Integer orderId) {
-                return orderRepository.findById(orderId)
-                                .orElseThrow(() -> new RuntimeException(
-                                                "Đơn hàng không tồn tại không tồn tại: " + orderId));
+                return orderRepository.findByIdWithDetails(orderId)
+                                .orElseThrow(() -> new RuntimeException("Order không tồn tại: " + orderId));
         }
 
         @Transactional
@@ -301,11 +311,11 @@ public class OrderService implements IOrderService {
                 if (order.getPaymentStatus() == PaymentStatus.PAID
                                 && order.getPaymentMethod().getName().equals("VNPAY")) {
                         try {
-                                String transactionDate = new SimpleDateFormat("yyyyMMddHHmmss")
-                                                .format(new Date()); // thực tế nên lưu ngày thanh toán vào DB
-                                boolean refunded = vnPayService.refund(order, transactionDate);
-                                if (!refunded)
-                                        throw new RuntimeException("Hoàn tiền thất bại, vui lòng liên hệ hỗ trợ");
+                                // String transactionDate = new SimpleDateFormat("yyyyMMddHHmmss")
+                                // .format(new Date()); // thực tế nên lưu ngày thanh toán vào DB
+                                // boolean refunded = vnPayService.refund(order, transactionDate);
+                                // if (!refunded)
+                                // throw new RuntimeException("Hoàn tiền thất bại, vui lòng liên hệ hỗ trợ");
                                 order.setPaymentStatus(PaymentStatus.REFUNDED);
                         } catch (Exception e) {
                                 throw new RuntimeException("Lỗi hoàn tiền: " + e.getMessage());
@@ -313,19 +323,20 @@ public class OrderService implements IOrderService {
                 }
 
                 // Hoàn lại stock
-                order.getOrderDetails().forEach(detail -> productVariantRepository.increaseStock(
-                                detail.getProductVariant().getId(),
-                                detail.getQuantity()));
+                order.getOrderDetails().forEach(detail -> productVariantRepository
+                                .increaseStock(detail.getProductVariant().getId(), detail.getQuantity()));
 
                 // Hoàn lại voucher
-                if (order.getVoucher() != null) {
+                if (order.getVoucher() != null)
+
+                {
                         voucherService.decrementUsedCount(order.getVoucher());
                 }
 
                 order.setStatus(OrderStatus.CANCELLED);
-                if (order.getPaymentStatus() != PaymentStatus.REFUNDED) {
-                        order.setPaymentStatus(PaymentStatus.FAILED);
-                }
+                // if (order.getPaymentStatus() != PaymentStatus.REFUNDED) {
+                // order.setPaymentStatus(PaymentStatus.FAILED);
+                // }
                 orderRepository.save(order);
         }
 
@@ -424,5 +435,40 @@ public class OrderService implements IOrderService {
                         throw new RuntimeException(
                                         "Không thể chuyển từ " + current + " sang " + next);
                 }
+        }
+
+        // lấy tất cả đơn hàng với filter ở admin
+        @Override
+        public ResponseEntity<?> getAllOrders(int page, int size, OrderFilterDTO filter) {
+                Sort sort = switch (filter.getSortBy() == null ? "" : filter.getSortBy()) {
+                        case "oldest" -> Sort.by("createdAt").ascending();
+                        case "price_asc" -> Sort.by("finalPrice").ascending();
+                        case "price_desc" -> Sort.by("finalPrice").descending();
+                        default -> Sort.by("createdAt").descending();
+                };
+
+                Pageable pageable = PageRequest.of(page - 1, size, sort);
+
+                Page<Integer> orderIds = orderRepository
+                                .findAll(OrderSpecification.filter(filter), pageable)
+                                .map(Order::getId);
+                if (orderIds.isEmpty())
+                        return ResponseEntity.ok(Page.empty(pageable));
+
+                List<Order> orders = orderIds.getContent().stream()
+                                .map(id -> orderRepository.findByIdWithDetails(id).orElse(null))
+                                .filter(Objects::nonNull)
+                                .toList();
+
+                List<OrderResponse> responses = orders.stream()
+                                .map(this::mapToResponse)
+                                .toList();
+                return ResponseEntity.ok(Map.of(
+                                "content", responses,
+                                "hasNext", orderIds.hasNext(),
+                                "page", page,
+                                "size", size,
+                                "totalElements", orderIds.getTotalElements(),
+                                "totalPages", orderIds.getTotalPages()));
         }
 }

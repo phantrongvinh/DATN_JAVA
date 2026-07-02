@@ -48,7 +48,7 @@ const navs = [
   },
   {
     // to: '/admin/orders',
-    to: '/',
+    to: '/admin/orders',
     label: 'Đơn hàng',
     icon: ShoppingCart,
   },

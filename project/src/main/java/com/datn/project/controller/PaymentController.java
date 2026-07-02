@@ -74,16 +74,19 @@ public class PaymentController {
         }
 
         if ("00".equals(responseCode)) {
-            // ─── Thanh toán thành công ────────────────────────
             Order order = orderService.findById(orderId);
+            System.out.println("=== order status: " + order.getStatus());
+            System.out.println("=== orderDetails size: " + order.getOrderDetails().size());
 
-            // Tránh xử lý 2 lần nếu callback gọi nhiều lần
             if (order.getPaymentStatus() == PaymentStatus.PAID) {
                 return ResponseEntity.ok(Map.of("message", "Thanh toán thành công"));
             }
 
             orderService.confirmPayment(orderId, params.get("vnp_TransactionNo"));
+
+            System.out.println("=== calling GHN createShipment...");
             ghnService.createShipment(orderId);
+            System.out.println("=== GHN done");
 
             Order confirmedOrder = orderService.findById(orderId);
             cartService.clearCart(confirmedOrder.getUser().getId());
@@ -91,19 +94,19 @@ public class PaymentController {
             return ResponseEntity.ok(Map.of("message", "Thanh toán thành công"));
 
         } else {
-            // // ─── Thanh toán thất bại / User thoát ────────────
-            // Order order = orderService.findById(orderId);
+            // ─── Thanh toán thất bại / User thoát ────────────
+            Order order = orderService.findById(orderId);
 
-            // // Chỉ cancel nếu chưa được xử lý
-            // if (order.getStatus() == OrderStatus.PENDING) {
-            // orderService.cancelOrder(orderId);
-            // }
+            // Chỉ cancel nếu chưa được xử lý
+            if (order.getStatus() == OrderStatus.PENDING) {
+                orderService.cancelOrder(orderId);
+            }
 
-            // return ResponseEntity.ok(Map.of("message", "Thanh toán thất bại"));
-            // // Trả 200 thay vì 400 để FE nhận được response
+            return ResponseEntity.ok(Map.of("message", "Thanh toán thất bại"));
+            // Trả 200 thay vì 400 để FE nhận được response
 
-            return ResponseEntity.ok(
-                    Map.of("message", "Thanh toán chưa hoàn tất"));
+            // return ResponseEntity.ok(
+            // Map.of("message", "Thanh toán chưa hoàn tất"));
         }
     }
 
@@ -123,10 +126,10 @@ public class PaymentController {
                     .body(Map.of("message", "Đơn hàng không ở trạng thái chờ thanh toán"));
         }
 
-        if (order.getPaymentStatus() != PaymentStatus.UNPAID) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Đơn hàng đã được thanh toán"));
-        }
+        // if (order.getPaymentStatus() != PaymentStatus.UNPAID) {
+        // return ResponseEntity.badRequest()
+        // .body(Map.of("message", "Đơn hàng đã được thanh toán"));
+        // }
 
         if (!order.getPaymentMethod().getName().equals("VNPAY"))
             return ResponseEntity.badRequest()

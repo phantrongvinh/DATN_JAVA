@@ -117,6 +117,14 @@ const currentStepIndex = computed(() =>
                   {{ order?.paymentMethod }}
                 </p>
               </div>
+
+              <div>
+                <p class="text-xs uppercase tracking-widest text-muted-foreground">Mã vận đơn</p>
+
+                <p class="mt-1">
+                  {{ order?.trackingCode }}
+                </p>
+              </div>
             </div>
           </div>
 

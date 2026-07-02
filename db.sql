@@ -193,6 +193,8 @@ CREATE TABLE orders(
     created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 						ON UPDATE CURRENT_TIMESTAMP,
+                        
+	payment_txn_ref		VARCHAR(500),
 	
     
     

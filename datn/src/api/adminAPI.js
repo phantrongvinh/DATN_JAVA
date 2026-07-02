@@ -3,6 +3,7 @@ import axiosClient from './axiosClient'
 
 const url = '/admin'
 
+// product
 const fetchProductOverview = async () => {
   const res = await axiosClient.get(`${url}/products/top5`)
   return res.data
@@ -38,6 +39,7 @@ const createProduct = async (data) => {
   return res.data
 }
 
+// promotion
 const fetchAllActivePromotion = async () => {
   const res = await axiosClient.get(`${url}/promotions`)
   return res.data
@@ -82,6 +84,19 @@ const deleteTimePromotion = async (id) => {
   return res.data
 }
 
+// order
+const fetchAllOrders = async (param) => {
+  console.log(param)
+
+  const res = await axiosClient.get(`${url}/orders`, { params: param })
+  return res.data
+}
+
+const updateStatusOrder = async (id, status) => {
+  const res = await axiosClient.patch(`${url}/orders/${id}/status`, null, { params: { status } })
+  return res.data
+}
+
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
@@ -96,6 +111,8 @@ const adminAPI = {
   toggleTimePromotion,
   updateTimePromotion,
   deleteTimePromotion,
+  fetchAllOrders,
+  updateStatusOrder,
 }
 
 export default adminAPI
