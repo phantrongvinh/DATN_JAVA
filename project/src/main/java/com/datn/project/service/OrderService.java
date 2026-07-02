@@ -1,8 +1,12 @@
 package com.datn.project.service;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,14 +68,17 @@ public class OrderService implements IOrderService {
         @Autowired
         private GHNService ghnService;
 
+        @Autowired
+        private VNPayService vnPayService;
+
         @Transactional
         @Override
         public ResponseEntity<?> placeOrder(Integer userId, OrderRequest request) throws BadRequestException {
+                // ─── Setup order ──────────────────────────────────────
                 Order order = new Order();
 
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new RuntimeException("Khách hàng không tồn tại"));
-
                 order.setUser(user);
                 order.setShippingAddress(request.getShippingAddress());
                 order.setReceiverName(request.getReceiverName());
@@ -82,7 +89,14 @@ public class OrderService implements IOrderService {
                                 .orElseThrow(() -> new RuntimeException("Phương thức thanh toán không tồn tại"));
                 order.setPaymentMethod(paymentMethod);
 
-                // ─── 1. Xử lý từng item, tính subtotal ──────────────
+                // ─── Validate voucher trước (chưa check minOrderValue) ───
+                Voucher voucher = null;
+                if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
+                        voucher = voucherService.validateVoucher(request.getVoucherCode(), BigDecimal.ZERO);
+                }
+                final Voucher finalVoucher = voucher;
+
+                // ─── 1. Xử lý từng item, tính subtotal ───────────────
                 List<OrderDetail> details = new ArrayList<>();
                 BigDecimal totalPrice = BigDecimal.ZERO;
 
@@ -92,17 +106,25 @@ public class OrderService implements IOrderService {
                                         .orElseThrow(() -> new RuntimeException(
                                                         "Variant không tồn tại: " + req.getVariantId()));
 
+                        // trừ stock atomic
                         int updated = productVariantRepository.decreaseStock(variant.getId(), req.getQuantity());
                         if (updated == 0)
                                 throw new RuntimeException(
                                                 "Sản phẩm " + variant.getProduct().getName() + " không đủ tồn kho");
 
+                        // apply product promotion
                         Optional<Promotion> productPromo = promotionService
                                         .getActivePromotion(variant.getProduct().getId());
 
-                        BigDecimal unitPrice = productPromo
-                                        .map(p -> promotionService.calcDiscountedPrice(variant.getPrice(), p))
-                                        .orElse(variant.getPrice());
+                        BigDecimal unitPrice;
+                        if (productPromo.isPresent() && finalVoucher != null && !finalVoucher.isStackable()) {
+                                // voucher không stackable → dùng giá gốc cho sản phẩm có promotion
+                                unitPrice = variant.getPrice();
+                        } else {
+                                unitPrice = productPromo
+                                                .map(p -> promotionService.calcDiscountedPrice(variant.getPrice(), p))
+                                                .orElse(variant.getPrice());
+                        }
 
                         totalPrice = totalPrice.add(unitPrice.multiply(BigDecimal.valueOf(req.getQuantity())));
 
@@ -114,23 +136,33 @@ public class OrderService implements IOrderService {
                         detail.setColor(variant.getColor());
                         detail.setSizeName(variant.getSize().getName());
                         detail.setPrice(unitPrice);
-                        detail.setPromotion(productPromo.orElse(null));
+                        detail.setPromotion(
+                                        (finalVoucher != null && !finalVoucher.isStackable())
+                                                        ? null
+                                                        : productPromo.orElse(null));
                         details.add(detail);
                 }
 
-                // biến effectively final để dùng trong lambda bên dưới
                 final BigDecimal finalTotalPrice = totalPrice;
 
-                // ─── 2. Apply voucher ────────────────────────────────
+                // ─── 2. Apply voucher (validate lại với totalPrice) ──
                 BigDecimal discountAmount = BigDecimal.ZERO;
-                if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
-                        Voucher voucher = voucherService.validateVoucher(request.getVoucherCode(), finalTotalPrice);
-                        discountAmount = voucherService.calcDiscount(finalTotalPrice, voucher);
-                        voucherService.incrementUsedCount(voucher);
-                        order.setVoucher(voucher);
+                if (finalVoucher != null) {
+                        // validate minOrderValue sau khi có totalPrice
+                        if (finalVoucher.getMinOrderValue() != null
+                                        && finalTotalPrice.compareTo(finalVoucher.getMinOrderValue()) < 0) {
+                                throw new BadRequestException(
+                                                "Đơn hàng tối thiểu "
+                                                                + NumberFormat.getCurrencyInstance(
+                                                                                new Locale("vi", "VN"))
+                                                                                .format(finalVoucher.getMinOrderValue())
+                                                                + " để sử dụng mã này");
+                        }
+                        discountAmount = voucherService.calcDiscount(finalTotalPrice, finalVoucher);
+                        voucherService.incrementUsedCount(finalVoucher);
+                        order.setVoucher(finalVoucher);
                 }
-
-                // ─── 3. Apply time promotion ─────────────────────────
+                // ─── 3. Apply time promotion ──────────────────────────
                 final BigDecimal afterVoucher = finalTotalPrice.subtract(discountAmount);
                 Optional<TimePromotion> timePromo = timePromotionService.getActiveTimePromotion();
                 BigDecimal timeDiscount = timePromo
@@ -143,15 +175,19 @@ public class OrderService implements IOrderService {
                                 .subtract(timeDiscount)
                                 .max(BigDecimal.ZERO);
 
+                // ─── 5. Save order ────────────────────────────────────
                 order.setOrderDetails(details);
                 order.setTotalPrice(finalTotalPrice);
                 order.setDiscountAmount(discountAmount);
                 order.setTimeDiscount(timeDiscount);
                 order.setFinalPrice(finalPrice);
                 order.setTimePromotion(timePromo.orElse(null));
+                order.setStatus(OrderStatus.PENDING);
+                order.setPaymentStatus(PaymentStatus.UNPAID);
+
                 Order savedOrder = orderRepository.save(order);
 
-                // ─── COD: confirm luôn + tạo shipment ────────────
+                // ─── 6. Xử lý theo payment method ────────────────────
                 if (request.getPaymentMethodId() == 1) {
                         savedOrder.setPaymentStatus(PaymentStatus.PAID);
                         savedOrder.setStatus(OrderStatus.CONFIRMED);
@@ -160,17 +196,7 @@ public class OrderService implements IOrderService {
                         cartService.clearCart(userId);
                 }
 
-                // ─── VNPAY: chỉ tạo order, chờ callback ─────────
-                if (request.getPaymentMethodId() == 2) {
-                        savedOrder.setPaymentStatus(PaymentStatus.PENDING);
-                        savedOrder.setStatus(OrderStatus.PENDING);
-                        orderRepository.save(savedOrder);
-                        // KHÔNG gọi GHN và KHÔNG clear cart ở đây
-                        // GHN + clear cart sẽ được gọi trong vnpayCallback sau khi thanh toán thành
-                        // công
-                }
-
-                return ResponseEntity.ok(order.getId());
+                return ResponseEntity.ok(savedOrder.getId());
         }
 
         @Override
@@ -217,9 +243,89 @@ public class OrderService implements IOrderService {
         @Transactional
         public void confirmPayment(Integer orderId, String transactionId) {
                 Order order = findById(orderId);
+
+                if (order.getPaymentStatus() == PaymentStatus.PAID)
+                        return;
+                if (order.getStatus() == OrderStatus.CANCELLED)
+                        throw new RuntimeException("Đơn hàng đã bị hủy");
+
                 order.setPaymentStatus(PaymentStatus.PAID);
-                order.setPaymentTransactionId(transactionId);
                 order.setStatus(OrderStatus.CONFIRMED);
+                order.setPaymentTransactionId(transactionId);
+                orderRepository.save(order);
+        }
+
+        @Override
+        public void cancelOrder(Integer orderId) {
+                Order order = findById(orderId);
+
+                // Chỉ cancel được khi PENDING hoặc CONFIRMED
+                if (order.getStatus() == OrderStatus.CANCELLED)
+                        return;
+                if (order.getStatus() == OrderStatus.SHIPPING ||
+                                order.getStatus() == OrderStatus.DELIVERED) {
+                        throw new RuntimeException("Không thể hủy đơn hàng đang giao hoặc đã giao");
+                }
+
+                // Hoàn lại stock
+                order.getOrderDetails().forEach(detail -> productVariantRepository.increaseStock(
+                                detail.getProductVariant().getId(),
+                                detail.getQuantity()));
+
+                // Hoàn lại lượt dùng voucher
+                if (order.getVoucher() != null) {
+                        voucherService.decrementUsedCount(order.getVoucher());
+                }
+
+                order.setStatus(OrderStatus.CANCELLED);
+                order.setPaymentStatus(PaymentStatus.FAILED);
+                orderRepository.save(order);
+        }
+
+        @Override
+        public void cancelOrderByUser(Integer orderId, Integer userId) {
+                Order order = findById(orderId);
+
+                if (order.getUser().getId() != userId)
+                        throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
+
+                // Chỉ cancel khi PENDING hoặc CONFIRMED
+                if (order.getStatus() == OrderStatus.SHIPPING ||
+                                order.getStatus() == OrderStatus.DELIVERED)
+                        throw new RuntimeException("Không thể hủy đơn hàng đang giao hoặc đã giao");
+
+                if (order.getStatus() == OrderStatus.CANCELLED)
+                        throw new RuntimeException("Đơn hàng đã bị hủy trước đó");
+
+                // Hoàn tiền nếu đã thanh toán VNPay
+                if (order.getPaymentStatus() == PaymentStatus.PAID
+                                && order.getPaymentMethod().getName().equals("VNPAY")) {
+                        try {
+                                String transactionDate = new SimpleDateFormat("yyyyMMddHHmmss")
+                                                .format(new Date()); // thực tế nên lưu ngày thanh toán vào DB
+                                boolean refunded = vnPayService.refund(order, transactionDate);
+                                if (!refunded)
+                                        throw new RuntimeException("Hoàn tiền thất bại, vui lòng liên hệ hỗ trợ");
+                                order.setPaymentStatus(PaymentStatus.REFUNDED);
+                        } catch (Exception e) {
+                                throw new RuntimeException("Lỗi hoàn tiền: " + e.getMessage());
+                        }
+                }
+
+                // Hoàn lại stock
+                order.getOrderDetails().forEach(detail -> productVariantRepository.increaseStock(
+                                detail.getProductVariant().getId(),
+                                detail.getQuantity()));
+
+                // Hoàn lại voucher
+                if (order.getVoucher() != null) {
+                        voucherService.decrementUsedCount(order.getVoucher());
+                }
+
+                order.setStatus(OrderStatus.CANCELLED);
+                if (order.getPaymentStatus() != PaymentStatus.REFUNDED) {
+                        order.setPaymentStatus(PaymentStatus.FAILED);
+                }
                 orderRepository.save(order);
         }
 
@@ -259,6 +365,7 @@ public class OrderService implements IOrderService {
                 response.setTrackingCode(order.getTrackingCode());
                 response.setVoucherCode(order.getVoucher() != null ? order.getVoucher().getCode() : null);
                 response.setPaymentMethod(order.getPaymentMethod().getName());
+                response.setPaymentStatus(order.getPaymentStatus().name());
 
                 return ResponseEntity.ok(response);
         }
@@ -283,7 +390,7 @@ public class OrderService implements IOrderService {
                                 return orderDetailResponse;
                         }).toList());
 
-                        response.setPaymentStatus(null);
+                        response.setPaymentStatus(o.getPaymentStatus().name());
                         response.setPrice(o.getFinalPrice());
                         response.setStatus(o.getStatus().name());
                         response.setTrackingCode(o.getTrackingCode());
@@ -291,5 +398,31 @@ public class OrderService implements IOrderService {
                         return response;
                 }).toList();
                 return ResponseEntity.ok(responses);
+        }
+
+        @Override
+        public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
+                Order order = findById(orderId);
+
+                // Validate chuyển trạng thái hợp lệ
+                validateStatusTransition(order.getStatus(), newStatus);
+
+                order.setStatus(newStatus);
+                orderRepository.save(order);
+        }
+
+        @Override
+        public void validateStatusTransition(OrderStatus current, OrderStatus next) {
+                Map<OrderStatus, List<OrderStatus>> allowed = Map.of(
+                                OrderStatus.PENDING, List.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
+                                OrderStatus.CONFIRMED, List.of(OrderStatus.SHIPPING, OrderStatus.CANCELLED),
+                                OrderStatus.SHIPPING, List.of(OrderStatus.DELIVERED),
+                                OrderStatus.DELIVERED, List.of(),
+                                OrderStatus.CANCELLED, List.of());
+
+                if (!allowed.get(current).contains(next)) {
+                        throw new RuntimeException(
+                                        "Không thể chuyển từ " + current + " sang " + next);
+                }
         }
 }

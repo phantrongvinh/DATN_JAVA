@@ -12,4 +12,6 @@ public interface IVoucherService {
     BigDecimal calcDiscount(BigDecimal orderTotal, Voucher voucher);
 
     void incrementUsedCount(Voucher voucher);
+
+    void decrementUsedCount(Voucher voucher);
 }

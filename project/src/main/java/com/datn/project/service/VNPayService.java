@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.crypto.Mac;
@@ -14,9 +15,12 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.datn.project.config.VNPayConfig;
+import com.datn.project.entity.Order;
 
 @Service
 public class VNPayService {
@@ -66,5 +70,51 @@ public class VNPayService {
         Mac mac = Mac.getInstance("HmacSHA512");
         mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
         return Hex.encodeHexString(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    public boolean refund(Order order, String transactionDate) throws Exception {
+        Map<String, String> params = new TreeMap<>();
+        params.put("vnp_RequestId", UUID.randomUUID().toString().replace("-", "").substring(0, 32));
+        params.put("vnp_Version", "2.1.0");
+        params.put("vnp_Command", "refund");
+        params.put("vnp_TmnCode", config.getTmnCode());
+        params.put("vnp_TransactionType", "02"); // 02 = hoàn toàn bộ
+        params.put("vnp_TxnRef", order.getId() + "_" + System.currentTimeMillis());
+        params.put("vnp_Amount", String.valueOf(
+                order.getFinalPrice().multiply(BigDecimal.valueOf(100)).longValue()));
+        params.put("vnp_OrderInfo", "Hoan tien don hang " + order.getId());
+        params.put("vnp_TransactionNo", order.getPaymentTransactionId());
+        params.put("vnp_TransactionDate", transactionDate);
+        params.put("vnp_CreateBy", "system");
+        params.put("vnp_CreateDate", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+        params.put("vnp_IpAddr", "127.0.0.1");
+
+        String hashData = String.join("|",
+                params.get("vnp_RequestId"),
+                params.get("vnp_Version"),
+                params.get("vnp_Command"),
+                params.get("vnp_TmnCode"),
+                params.get("vnp_TransactionType"),
+                params.get("vnp_TxnRef"),
+                params.get("vnp_Amount"),
+                params.get("vnp_TransactionNo"),
+                params.get("vnp_TransactionDate"),
+                params.get("vnp_CreateBy"),
+                params.get("vnp_CreateDate"),
+                params.get("vnp_IpAddr"),
+                params.get("vnp_OrderInfo"));
+
+        params.put("vnp_SecureHash", hmacSHA512(config.getHashSecret(), hashData));
+
+        // Gọi VNPay Refund API
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Map> res = restTemplate.postForEntity(
+                "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction",
+                params,
+                Map.class);
+
+        System.out.println("=== VNPay Refund response: " + res.getBody());
+        String responseCode = (String) res.getBody().get("vnp_ResponseCode");
+        return "00".equals(responseCode);
     }
 }

@@ -235,12 +235,56 @@ const {
 
             <!-- Summary -->
             <div class="mt-6 border-t pt-4 space-y-3 text-sm">
+              <div class="mt-4 space-y-2">
+                <div
+                  v-for="i in items"
+                  :key="i.productVariantId"
+                  class="flex justify-between text-sm"
+                >
+                  <span class="text-gray-500 truncate max-w-[200px]">
+                    {{ i.name }} x{{ i.quantity }}
+                  </span>
+                  <div class="text-right">
+                    <!-- Khi voucher không stackable và item có promotion -->
+                    <template
+                      v-if="
+                        voucher &&
+                        !voucher.isStackable &&
+                        i.originalPrice &&
+                        i.originalPrice !== i.price
+                      "
+                    >
+                      <span class="block text-xs text-muted-foreground line-through">
+                        {{ ulti.formatVND(i.price * i.quantity) }}
+                      </span>
+                      <span class="text-amber-600">
+                        {{ ulti.formatVND(i.originalPrice * i.quantity) }}
+                      </span>
+                    </template>
+                    <template v-else>
+                      <span :class="i.originalPrice !== i.price ? 'text-red-500' : ''">
+                        {{ ulti.formatVND(i.price * i.quantity) }}
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-t border-border my-3" />
               <div class="flex justify-between">
                 <span class="text-gray-500"> Tạm tính </span>
 
                 <span>
                   {{ ulti.formatVND(subtotal) }}
                 </span>
+              </div>
+
+              <div
+                v-if="voucher && !voucher.isStackable"
+                class="text-xs text-amber-600 bg-amber-50 p-2 rounded"
+              >
+                ⚠️ Mã giảm giá này không áp dụng cùng với khuyến mãi sản phẩm. Giá gốc sẽ được tính
+                cho các sản phẩm đang có khuyến mãi.
               </div>
 
               <div v-if="voucherDiscount > 0" class="flex justify-between text-green-600">

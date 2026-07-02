@@ -27,7 +27,9 @@ import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
+import com.datn.project.entity.OrderStatus;
 import com.datn.project.repository.ITimePromotionRepository;
+import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
 import com.datn.project.service.ITimePromotionService;
@@ -57,6 +59,9 @@ public class AdminController {
     @Autowired
     private ITimePromotionRepository timePromotionRepository;
 
+    @Autowired
+    private IOrderService orderService;
+
     // phần products
     @GetMapping("/products/top5")
     public ResponseEntity<?> getTop5Product() {
@@ -75,7 +80,7 @@ public class AdminController {
         ProductFilterDTO filter = new ProductFilterDTO(audienceIds, brandIds, categoryIds, search, onSale, minPrice,
                 maxPrice, sortBy);
 
-                System.out.println(filter);
+        System.out.println(filter);
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
@@ -183,5 +188,14 @@ public class AdminController {
     public ResponseEntity<?> delete(@PathVariable int id) {
         timePromotionRepository.deleteById(id);
         return ResponseEntity.ok("Xóa thành công");
+    }
+
+    // phần order
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Integer orderId,
+            @RequestParam OrderStatus status) {
+        orderService.updateOrderStatus(orderId, status);
+        return ResponseEntity.ok("Cập nhật trạng thái thành công");
     }
 }

@@ -39,4 +39,9 @@ public interface IProductVariantRepository extends JpaRepository<ProductVariant,
     @Transactional
     @Query("DELETE FROM ProductVariant v WHERE v.product.id = :productId")
     void deleteByProductId(@Param("productId") Integer productId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE ProductVariant pv SET pv.stock = pv.stock + :qty WHERE pv.id = :id")
+    void increaseStock(@Param("id") Integer id, @Param("qty") Integer qty);
 }

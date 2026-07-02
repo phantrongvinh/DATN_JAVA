@@ -8,11 +8,16 @@ import ulti from '@/ulti/ulti'
 import { useCart } from '@/composables/useCart'
 import SummaryRow from '@/components/site/SummaryRow.vue'
 import { useCheckout } from '@/composables/useCheckout'
+import { onMounted } from 'vue'
 
 const { items, removeItem, updateQuantity } = useCart()
 
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()
+
+onMounted(() => {
+  console.log(items.value)
+})
 
 //
 const url = 'http://localhost:8080/uploads/images'
@@ -105,8 +110,16 @@ const url = 'http://localhost:8080/uploads/images'
             </div>
 
             <!-- Price -->
-            <span class="hidden text-sm md:block">
-              {{ ulti.formatVND(item.price) }}
+            <span class="hidden text-sm md:block text-end">
+              <span :class="item.originalPrice !== item.price ? 'text-red-500' : ''">
+                {{ ulti.formatVND(item.price) }}
+              </span>
+              <span
+                v-if="item.originalPrice && item.originalPrice !== item.price"
+                class="block text-xs text-muted-foreground line-through"
+              >
+                {{ ulti.formatVND(item.originalPrice) }}
+              </span>
             </span>
 
             <!-- Qty -->
@@ -126,7 +139,15 @@ const url = 'http://localhost:8080/uploads/images'
 
             <!-- Total -->
             <span class="hidden font-display md:block">
-              {{ ulti.formatVND(item.price * item.quantity) }}
+              <span :class="item.originalPrice !== item.price ? 'text-red-500' : ''">
+                {{ ulti.formatVND(item.price * item.quantity) }}
+              </span>
+              <span
+                v-if="item.originalPrice && item.originalPrice !== item.price"
+                class="block text-xs text-muted-foreground line-through"
+              >
+                {{ ulti.formatVND(item.originalPrice * item.quantity) }}
+              </span>
             </span>
 
             <!-- Delete -->
@@ -146,11 +167,6 @@ const url = 'http://localhost:8080/uploads/images'
 
         <div class="mt-6 space-y-3 text-sm">
           <SummaryRow label="Tạm tính" :value="ulti.formatVND(subtotal)" />
-
-          <!-- <SummaryRow
-            label="Phí vận chuyển"
-            :value="shipping === 0 ? 'Miễn phí' : ulti.formatVND(shipping)"
-          /> -->
 
           <!-- Khung giờ vàng -->
           <div v-if="timeDiscount > 0" class="flex justify-between">

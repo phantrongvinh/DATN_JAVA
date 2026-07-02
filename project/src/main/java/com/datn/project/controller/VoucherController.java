@@ -33,6 +33,7 @@ public class VoucherController {
                 "discountValue", voucher.getDiscountValue(),
                 "discount", discount,
                 "minOrderValue", voucher.getMinOrderValue(),
-                "maxDiscount", voucher.getMaxDiscount()));
+                "maxDiscount", voucher.getMaxDiscount(),
+                "isStackable", voucher.isStackable()));
     }
 }

@@ -55,6 +55,9 @@ public class Voucher implements Serializable {
     @Column(name = "used_count")
     private Integer usedCount;
 
+    @Column(name="is_stackable")
+    private boolean isStackable;
+
     @Column(name = "start_date")
     private LocalDateTime startDate;
 
