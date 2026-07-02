@@ -6,13 +6,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.project.dto.order.OrderRequest;
+import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.User;
 import com.datn.project.repository.IUserRepository;
 import com.datn.project.security.CustomUserDetail;
@@ -55,4 +58,11 @@ public class OrderController {
     public ResponseEntity<?> getAllMyOrders() {
         return ResponseEntity.ok(orderService.getAllMyOrder(getCurrentUserId())).getBody();
     }
+
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Integer orderId) {
+        orderService.cancelOrderByUser(orderId, getCurrentUserId());
+        return ResponseEntity.ok("Hủy đơn hàng thành công");
+    }
+
 }

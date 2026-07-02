@@ -287,6 +287,15 @@ CREATE TABLE time_promotions (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE orders
+    ADD COLUMN payment_status       	ENUM('PENDING','PAID','FAILED','REFUNDED','UNPAID') DEFAULT 'PENDING',
+    ADD COLUMN payment_transaction_id 	VARCHAR(255) NULL,
+	ADD COLUMN tracking_code 			VARCHAR(255) NULL;
+    
+ALTER TABLE addresses ADD COLUMN receiver_name VARCHAR(100);
+ALTER TABLE addresses ADD COLUMN receiver_phone VARCHAR(15);
+ALTER TABLE vouchers ADD COLUMN is_stackable BOOLEAN DEFAULT FALSE;
+
 INSERT INTO roles(`name`) values("USER"),("ADMIN");
 
 INSERT INTO target_audiences(`name`) VALUES
@@ -561,33 +570,24 @@ INSERT INTO time_promotions (name, discount_type, discount_value, start_time, en
 ('Khung Giờ Vàng Sáng 9-10h', 'PERCENT', 15.00, '09:00:00', '10:00:00', 1),
 ('Khung Giờ Vàng Chiều 4-6h',  'FIXED',  300000.00, '16:00:00', '18:00:00', 1);
 
-INSERT INTO vouchers (code, description, discount_type, discount_value, min_order_value, max_discount, quantity, used_count, start_date, end_date, is_active) VALUES
+INSERT INTO vouchers (code, description, discount_type, discount_value, min_order_value, max_discount, quantity, used_count, start_date, end_date, is_active, is_stackable) VALUES
 
 -- Giảm % có giới hạn max
-('SUMMER20',    'Giảm 20% tối đa 100.000đ',         'PERCENT', 20.00,  200000.00, 100000.00, 100, 0,  '2026-06-01 00:00:00', '2026-08-31 23:59:59', TRUE),
-('WELCOME10',   'Giảm 10% cho đơn từ 500.000đ',      'PERCENT', 10.00,  500000.00, 50000.00,  50,  0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE),
-
--- Giảm % không giới hạn max
-('SALE30',      'Giảm 30% không giới hạn',            'PERCENT', 30.00,  300000.00, NULL,      30,  0,  '2026-06-20 00:00:00', '2026-06-30 23:59:59', TRUE),
+('SUMMER20',    'Giảm 20% tối đa 100.000đ',         'PERCENT', 20.00,  200000.00, 100000.00, 100, 0,  '2026-06-01 00:00:00', '2026-08-31 23:59:59', TRUE,TRUE),
+('WELCOME10',   'Giảm 10% cho đơn từ 500.000đ',      'PERCENT', 10.00,  500000.00, 50000.00,  50,  0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE),
 
 -- Giảm tiền cố định
-('FREESHIP',    'Giảm 50.000đ phí ship',              'FIXED',   50000.00,  0.00,   NULL,      200, 0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE),
-('SAVE100K',    'Giảm 100.000đ cho đơn từ 1.000.000', 'FIXED',  100000.00, 1000000.00, NULL,   50,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE),
+('FREESHIP',    'Giảm 50.000đ phí ship',              'FIXED',   50000.00,  0.00,   NULL,      200, 0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE,TRUE),
+('SAVE100K',    'Giảm 100.000đ cho đơn từ 1.000.000', 'FIXED',  100000.00, 1000000.00, NULL,   50,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE),
 
 -- Hết hạn
-('EXPIRED50',   'Giảm 50% (đã hết hạn)',              'PERCENT', 50.00,  100000.00, 200000.00, 100, 80, '2026-01-01 00:00:00', '2026-05-31 23:59:59', FALSE),
+('EXPIRED50',   'Giảm 50% (đã hết hạn)',              'PERCENT', 50.00,  100000.00, 200000.00, 100, 80, '2026-01-01 00:00:00', '2026-05-31 23:59:59', FALSE,TRUE),
 
 -- Hết lượt
-('SOLDOUT',     'Giảm 200.000đ (đã hết lượt)',        'FIXED',  200000.00, 500000.00, NULL,    10,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE);
+('SOLDOUT',     'Giảm 200.000đ (đã hết lượt)',        'FIXED',  200000.00, 500000.00, NULL,    10,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE);
 
 INSERT INTO payment_methods (name) VALUES
 ('COD'),
 ('VNPAY'),
 ('MOMO');
-ALTER TABLE orders
-    ADD COLUMN payment_status       	ENUM('PENDING','PAID','FAILED') DEFAULT 'PENDING',
-    ADD COLUMN payment_transaction_id 	VARCHAR(255) NULL,
-	ADD COLUMN tracking_code 			VARCHAR(255) NULL;
-    
-ALTER TABLE addresses ADD COLUMN receiver_name VARCHAR(100);
-ALTER TABLE addresses ADD COLUMN receiver_phone VARCHAR(15);
+

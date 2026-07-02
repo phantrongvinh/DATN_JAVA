@@ -28,6 +28,7 @@ public class VoucherService implements IVoucherService {
                 .orElseThrow(() -> new BadRequestException("Mã giảm giá không tồn tại"));
 
         LocalDateTime now = LocalDateTime.now();
+
         if (!voucher.isActive())
             throw new BadRequestException("Mã giảm giá không còn hiệu lực");
         if (voucher.getStartDate() != null && now.isBefore(voucher.getStartDate()))
@@ -36,10 +37,17 @@ public class VoucherService implements IVoucherService {
             throw new BadRequestException("Mã giảm giá đã hết hạn");
         if (voucher.getQuantity() != null && voucher.getUsedCount() >= voucher.getQuantity())
             throw new BadRequestException("Mã giảm giá đã hết lượt sử dụng");
-        if (voucher.getMinOrderValue() != null && orderTotal.compareTo(voucher.getMinOrderValue()) < 0)
-            throw new BadRequestException(
-                    "Đơn hàng tối thiểu " + NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(voucher.getMinOrderValue())  + " để dùng mã này");
 
+        // Chỉ check minOrderValue khi orderTotal > 0
+        if (orderTotal.compareTo(BigDecimal.ZERO) > 0
+                && voucher.getMinOrderValue() != null
+                && orderTotal.compareTo(voucher.getMinOrderValue()) < 0) {
+            throw new BadRequestException(
+                    "Đơn hàng tối thiểu "
+                            + NumberFormat.getCurrencyInstance(new Locale("vi", "VN"))
+                                    .format(voucher.getMinOrderValue())
+                            + " để dùng mã này");
+        }
         return voucher;
     }
 
@@ -66,6 +74,14 @@ public class VoucherService implements IVoucherService {
     public void incrementUsedCount(Voucher voucher) {
         voucher.setUsedCount(voucher.getUsedCount() + 1);
         voucherRepository.save(voucher);
+    }
+
+    @Override
+    public void decrementUsedCount(Voucher voucher) {
+        if (voucher.getUsedCount() > 0) {
+            voucher.setUsedCount(voucher.getUsedCount() - 1);
+            voucherRepository.save(voucher);
+        }
     }
 
 }

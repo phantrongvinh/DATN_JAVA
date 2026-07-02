@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import com.datn.project.dto.order.OrderRequest;
 import com.datn.project.dto.order.OrderResponse;
 import com.datn.project.entity.Order;
+import com.datn.project.entity.OrderStatus;
 
 public interface IOrderService {
     ResponseEntity<?> placeOrder(Integer userId, OrderRequest request) throws BadRequestException;
@@ -19,4 +20,12 @@ public interface IOrderService {
     ResponseEntity<?> getOrdersByIdByUser(int id, int userid);
 
     ResponseEntity<?> getAllMyOrder(int userId);
+
+    void cancelOrder(Integer orderId);
+
+    void cancelOrderByUser(Integer orderId, Integer userId);
+
+    void updateOrderStatus(Integer orderId, OrderStatus newStatus);
+
+    void validateStatusTransition(OrderStatus current, OrderStatus next);
 }

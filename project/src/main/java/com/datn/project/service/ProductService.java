@@ -138,9 +138,10 @@ public class ProductService implements IProductService {
         @Override
         public ResponseEntity<?> getFilterProducts(ProductFilterDTO filterDTO, int page, int size) {
                 Sort sort = switch (filterDTO.getSortBy() == null ? "" : filterDTO.getSortBy()) {
-                        case "price_asc" -> Sort.by("basePrice").ascending();
-                        case "price_desc" -> Sort.by("basePrice").descending();
+                        case "price-asc" -> Sort.by("basePrice").ascending();
+                        case "price-desc" -> Sort.by("basePrice").descending();
                         case "newest" -> Sort.by("createdAt").descending();
+                        case "oldest" -> Sort.by("createdAt").ascending();
                         default -> Sort.by("createdAt").descending();
                 };
 

@@ -22,7 +22,21 @@ export function useCheckout() {
   const timeLeft = ref(null)
 
   // subtotal — price trong cart đã là discountedPrice sau product promotion
-  const subtotal = computed(() => cartStore.items.reduce((sum, i) => sum + i.price * i.quantity, 0))
+  const subtotal = computed(() => {
+    if (voucher.value && !voucher.value.isStackable) {
+      console.log(cartStore.items)
+
+      return cartStore.items.reduce((sum, i) => {
+        const price =
+          i.originalPrice && i.originalPrice !== i.price
+            ? i.originalPrice // có promotion → dùng giá gốc
+            : i.price // không có promotion → giá bình thường
+        return sum + price * i.quantity
+      }, 0)
+    }
+    // stackable hoặc không có voucher → dùng discountedPrice
+    return cartStore.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  })
 
   // voucher discount (preview)
   const voucherDiscount = computed(() => {
@@ -143,6 +157,20 @@ export function useCheckout() {
     }
   }
 
+  const repay = async (orderId) => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await paymentAPI.repay(orderId)
+      window.location.href = res.paymentUrl
+    } catch (err) {
+      error.value = err.response?.data?.message ?? 'Không thể tạo lại thanh toán'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   onMounted(async () => {
     await loadTimePromotion()
     timer = setInterval(updateCountdown, 1000)
@@ -164,5 +192,6 @@ export function useCheckout() {
     handleApplyVoucher,
     removeVoucher,
     checkout,
+    repay,
   }
 }

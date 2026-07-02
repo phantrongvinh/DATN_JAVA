@@ -46,14 +46,6 @@ watch(
   { immediate: true },
 )
 
-onMounted(() => {
-  console.log(product.value)
-
-  console.log(filterProducts.value)
-
-  console.log(productRelate.value)
-})
-
 // tabs
 const activeTab = ref('desc')
 
@@ -152,9 +144,10 @@ const handleAddToCart = async () => {
     productVariantId: selectedVariant.value.id,
     sku: selectedVariant.value.sku,
     image: image?.imageUrl,
-    size: selectedVariant.value.sizeName,
+    sizeName: selectedVariant.value.sizeName,
     color: selectedVariant.value.color,
     quantity: qty.value,
+    originalPrice: selectedVariant.value.price,
     price: selectedVariant.value.discountedPrice
       ? selectedVariant.value.discountedPrice
       : selectedVariant.value.price,

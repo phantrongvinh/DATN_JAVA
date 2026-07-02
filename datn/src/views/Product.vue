@@ -213,6 +213,18 @@ const selectedOnSale = computed({
   },
 })
 
+// handle sort
+const selectedSort = computed({
+  get() {
+    return route.query.sortBy ?? 'newest'
+  },
+  set(value) {
+    router.push({
+      query: { ...route.query, sortBy: value, page: 1 },
+    })
+  },
+})
+
 const togglePrice = (price) => {
   // Click lại range đang chọn thì bỏ chọn
   if (selectedPrice.value.min === price.min && selectedPrice.value.max === price.max) {
@@ -266,14 +278,6 @@ const activeFilters = computed(() => {
       })
     }
   })
-
-  // Search
-  //   if (route.query.search) {
-  //     filters.push({
-  //       label: `"${route.query.search}"`,
-  //       clear: () => router.push({ query: { ...route.query, search: undefined } }),
-  //     })
-  //   }
 
   return filters
 })
@@ -343,18 +347,6 @@ const activeFilters = computed(() => {
           @change="togglePrice(price)"
         />
       </FilterGroup>
-
-      <!-- <FilterGroup title="Khuyến mãi">
-        <FilterCheck
-          label="Chỉ hiện sản phẩm giảm giá"
-          :checked="search.onSale === 'true'"
-          @change="
-            setSearch({
-              onSale: search.onSale === 'true' ? undefined : 'true',
-            })
-          "
-        />
-      </FilterGroup> -->
     </aside>
 
     <!-- Product -->
@@ -371,19 +363,18 @@ const activeFilters = computed(() => {
           sản phẩm
         </p>
 
-        <select
-          class="border-b border-foreground bg-transparent py-1 outline-none"
-          @change="
-            setSearch({
-              sort: $event.target.value,
-            })
-          "
-        >
-          <option value="newest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="price-asc">Giá tăng dần</option>
-          <option value="price-desc">Giá giảm dần</option>
-        </select>
+        <div className="flex items-center gap-2 text-sm">
+          <label className="text-muted-foreground">Sắp xếp:</label>
+          <select
+            class="border-b border-foreground bg-transparent py-1 pr-4 outline-none"
+            v-model="selectedSort"
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+            <option value="price-asc">Giá tăng dần</option>
+            <option value="price-desc">Giá giảm dần</option>
+          </select>
+        </div>
       </div>
 
       <!-- Active filter -->
@@ -401,10 +392,7 @@ const activeFilters = computed(() => {
 
       <!-- Grid -->
       <div v-if="filterProducts && filterProducts.length > 0">
-        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
-          <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
-        </div>
-        <div v-if="totalPages > 1" class="mt-20 flex items-center justify-end gap-2">
+        <div v-if="totalPages > 1" class="mt-10 flex items-center justify-end gap-2">
           <button
             class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
             :disabled="currentPage === 1"
@@ -437,6 +425,9 @@ const activeFilters = computed(() => {
           >
             Sau →
           </button>
+        </div>
+        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+          <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
         </div>
       </div>
 
