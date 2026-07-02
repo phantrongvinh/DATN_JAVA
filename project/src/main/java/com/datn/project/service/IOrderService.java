@@ -3,6 +3,7 @@ package com.datn.project.service;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 
+import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.order.OrderRequest;
 import com.datn.project.dto.order.OrderResponse;
 import com.datn.project.entity.Order;
@@ -28,4 +29,6 @@ public interface IOrderService {
     void updateOrderStatus(Integer orderId, OrderStatus newStatus);
 
     void validateStatusTransition(OrderStatus current, OrderStatus next);
+
+    ResponseEntity<?> getAllOrders(int page, int size, OrderFilterDTO filter);
 }

@@ -98,6 +98,9 @@ public class Order implements Serializable {
     @Column(name = "tracking_code")
     private String trackingCode;
 
+    @Column(name = "payment_txn_ref")
+    private String paymentTxnRef;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -6,12 +6,14 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
 import { storeToRefs } from 'pinia'
+import { useCheckout } from '@/composables/useCheckout'
 
 const authStore = useAuthStore()
 const orderStore = useOrderStore()
 
 const { user } = storeToRefs(useAuthStore)
 const { myOrders } = storeToRefs(orderStore)
+const { repayVnpay } = useCheckout()
 
 const loadOrder = async () => {
   await orderStore.fetchMyOrder()
@@ -68,13 +70,29 @@ const canCancel = (order) => {
   }
 }
 
+const handleCancelOrder = async (order) => {
+  try {
+    await orderStore.cancelOrder(order.id)
+  } catch (error) {
+    console.log('Hủy đơn hàng thất bại', error)
+  }
+}
+
 // handle repay order
 const canPay = (order) => {
   return (
     order.paymentMethod === 'VNPAY' &&
-    order.paymentStatus === 'UNPAID' &&
-    ['PENDING', 'CONFIRMED'].includes(order.status)
+    order.paymentStatus === 'PENDING' &&
+    ['PENDING'].includes(order.status)
   )
+}
+
+const handleRepay = async (order) => {
+  try {
+    await repayVnpay(order.id)
+  } catch (error) {
+    console.log('Thanh toán lại thất bại', error)
+  }
 }
 </script>
 
@@ -169,7 +187,7 @@ const canPay = (order) => {
           <div class="mt-4 flex justify-end gap-2">
             <button
               v-if="canPay(order)"
-              @click="handlePayment(order)"
+              @click="handleRepay(order)"
               class="rounded border border-emerald-600 px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white cursor-pointer"
             >
               Thanh toán

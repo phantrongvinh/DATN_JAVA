@@ -30,4 +30,5 @@ public class OrderResponse {
     private String paymentStatus;
     private String trackingCode;
     private String paymentMethod;
+    private String transactionId;
 }

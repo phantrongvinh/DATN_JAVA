@@ -15,10 +15,6 @@ const { items, removeItem, updateQuantity } = useCart()
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()
 
-onMounted(() => {
-  console.log(items.value)
-})
-
 //
 const url = 'http://localhost:8080/uploads/images'
 </script>

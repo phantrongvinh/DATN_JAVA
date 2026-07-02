@@ -34,10 +34,8 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        ProductFilterDTO filter = new ProductFilterDTO( brandIds, categoryIds,audienceIds, search, onSale, minPrice,
+        ProductFilterDTO filter = new ProductFilterDTO(brandIds, categoryIds, audienceIds, search, onSale, minPrice,
                 maxPrice, sortBy);
-
-                System.out.println(filter);
 
         return ResponseEntity.ok(productService.getFilterProducts(filter, page, size)).getBody();
     }
