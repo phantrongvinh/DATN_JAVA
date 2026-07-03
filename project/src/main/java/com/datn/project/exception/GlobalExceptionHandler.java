@@ -12,6 +12,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import io.jsonwebtoken.ExpiredJwtException;
 
@@ -71,6 +72,13 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(BadRequestException.class)
         public ResponseEntity<?> handleNotFound(BadRequestException be) {
                 return ResponseEntity.status(404).body(Map.of("message", be.getMessage()));
+        }
+
+        // GlobalExceptionHandler.java
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<?> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of("message", "File upload quá lớn. Vui lòng chọn file nhỏ hơn 10MB"));
         }
 
 }

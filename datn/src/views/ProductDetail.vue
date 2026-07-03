@@ -170,7 +170,7 @@ const handleAddToCart = async () => {
   </div>
 
   <div class="py-24 text-center text-muted-foreground" v-if="product?.variants?.length === 0">
-    Chưa cập nhật sản phẩm
+    Chưa cập nhật sản phẩm. Vui lòng quay lại sau.
   </div>
   <div v-else-if="product">
     <div className="container-x grid gap-12 pb-16 md:grid-cols-2">

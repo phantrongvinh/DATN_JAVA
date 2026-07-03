@@ -451,18 +451,6 @@ INSERT INTO products (
     1
 );
 
-INSERT INTO product_images (product_id, image_url,is_primary) VALUES
-(1, 'products/nike-mercurial-vapor-16-academy-tf.jpg', 1),
-(2, 'products/adidas-predator-league-tf.jpg', 1),
-(3, 'products/puma-future-7-match-it.jpg', 1),
-(4, 'products/nike-tiempo-legend-10-kids-tf.jpg', 1),
-(5, 'products/adidas-x-crazyfast-women-tf.jpg', 1),
-(6, 'products/ao-real-madrid-2025.jpg', 1),
-(7, 'products/ao-manchester-city-women.jpg', 1),
-(8, 'products/balo-nike-academy.jpg', 1),
-(9, 'products/adidas-ucl-league-ball.jpg', 1),
-(10, 'products/puma-ultra-goalkeeper-gloves.jpg', 1);
-
 INSERT INTO product_variants (
     product_id,
     color,
@@ -483,7 +471,7 @@ INSERT INTO product_variants (
 
 -- Puma Future
 (3, 'Black', 4, 7, 2190000, 'PM-FUT-IT-41-BK'),
-(3, 'Black', 5, 5, 2190000, 'PM-FUT-IT-42-BK'),
+(3, 'Black', 5, 5, 2190000, 'PM-FUT-IT-42-BK'),-- 
 
 -- Nike Tiempo Kids
 (4, 'Orange', 1, 10, 1790000, 'NK-KID-TF-38-OR'),
@@ -512,11 +500,38 @@ INSERT INTO product_variants (
 (10, 'Green', 8, 8, 1490000, 'PM-GK-M-GR'),
 (10, 'Green', 9, 6, 1490000, 'PM-GK-L-GR');
 
-INSERT INTO `product_images`
-(`product_id`, `image_url`, `is_primary`)
-VALUES
-(2, 'products/adidas-predator-league-tf-2.jpg', 0),
-(2, 'products/adidas-predator-league-tf-1.jpg', 0);
+INSERT INTO product_images (product_id, image_url, is_primary) VALUES
+-- Product 1
+(1, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783045885/products/hmhqzdwmrvgmm2mm9pkh.png', 1),
+
+-- Product 2
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046965/products/l1chftowmh8o7z4cxueh.png', 1),
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046967/products/l0xee6h6asbghaatwrv4.avif', 0),
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046969/products/cwaosnrvbyzjgf8zofnk.avif', 0),
+
+-- Product 3
+(3, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046668/products/bv7zb6oeu1ju7zvcsaoy.png', 1),
+
+-- Product 4
+(4, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046704/products/li5stlatfzskixdfcpvr.png', 1),
+
+-- Product 5
+(5, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046720/products/a96gfokgfb088fzss4bb.png', 1),
+
+-- Product 6
+(6, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046732/products/hi9zv1zxb8enqm8iolcv.png', 1),
+
+-- Product 7
+(7, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046743/products/egprwqfnidkovkhi9szn.png', 1),
+
+-- Product 8
+(8, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046754/products/d9ltehxpyi9pcgkejhnh.png', 1),
+
+-- Product 9
+(9, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046765/products/rly3h8rcdjvmgwpatfmw.png', 1),
+
+-- Product 10
+(10, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046776/products/nu0o3oasdhz9gxo2jaej.png', 1);
 
 INSERT INTO users (full_name, email, password, phone, birth_day, provider, is_actived, created_at)
 VALUES 
@@ -524,7 +539,9 @@ VALUES
 
 ('Tran Thi B', 'thib@gmail.com', '$2a$10$k9b8c7d6e5f4g3h2j1k0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0912345678', '1999-05-20', 'LOCAL', TRUE, NOW()),
 
-('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'GOOGLE', TRUE, NOW());
+('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'GOOGLE', TRUE, NOW()),
+
+('Vinh', '1phantrongvinh98@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'LOCAL', TRUE, NOW());
 
 INSERT INTO addresses (address, is_primary, user_id)
 VALUES 
@@ -539,7 +556,8 @@ INSERT INTO user_roles (user_id, role_id)
 VALUES 
 (1, 1), 
 (2, 1),
-(3, 1);
+(3, 1),
+(4, 2);
 -- Thêm time_promotion_id và time_discount vào orders
 ALTER TABLE orders
     ADD COLUMN time_promotion_id INT NULL,
@@ -557,12 +575,12 @@ INSERT INTO promotions (name, discount_type, discount_value, start_at, end_at) V
 
 -- ─── Promotion Products ───────────────────────────────────────────────────────
 -- Promotion 1 (còn hạn) → product 1, 2, 3, 5, 7, 9
-INSERT INTO promotion_products (promotion_id, product_id) VALUES
-(1, 1), (1, 2), (1, 3), (1, 5), (1, 7), (1, 9);
+-- INSERT INTO promotion_products (promotion_id, product_id) VALUES
+-- (1, 1), (1, 2), (1, 3), (1, 5), (1, 7), (1, 9);
 
 -- Promotion 2 (hết hạn) → product 4, 6, 8, 10
-INSERT INTO promotion_products (promotion_id, product_id) VALUES
-(2, 4), (2, 6), (2, 8), (2, 10);
+-- INSERT INTO promotion_products (promotion_id, product_id) VALUES
+-- (2, 4), (2, 6), (2, 8), (2, 10);
 
 -- product 1, 3, 6 không có promotion nào → null (không insert)
 

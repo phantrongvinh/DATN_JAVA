@@ -18,14 +18,13 @@ const props = defineProps<{
     }
   }
 }>()
-const url = 'http://localhost:8080/uploads/images'
 </script>
 
 <template>
   <RouterLink :to="'/productDetail/' + props.product.id" class="group block">
     <div class="relative aspect-[4/5] overflow-hidden bg-secondary">
       <img
-        :src="url + '/' + props.product.image"
+        :src="props.product.image"
         loading="lazy"
         class="h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
       />

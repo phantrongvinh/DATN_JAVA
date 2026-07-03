@@ -58,6 +58,7 @@ public interface IProductRepository extends JpaRepository<Product, Integer>, Jpa
                 LEFT JOIN FETCH p.category
                 LEFT JOIN FETCH p.brand
                 LEFT JOIN FETCH p.targetAudience
+                LEFT JOIN FETCH p.promotions
                 WHERE p.id = :id AND p.deletedAt IS NULL
             """)
     Optional<Product> findDetailByIdWithImages(@Param("id") Integer id);
@@ -70,13 +71,13 @@ public interface IProductRepository extends JpaRepository<Product, Integer>, Jpa
             """)
     Optional<Product> findDetailByIdWithVariants(@Param("id") Integer id);
 
-    
     @Query("""
                 SELECT DISTINCT p FROM Product p
                 LEFT JOIN FETCH p.productImages
                 LEFT JOIN FETCH p.category
                 LEFT JOIN FETCH p.brand
                 LEFT JOIN FETCH p.targetAudience
+                LEFT JOIN FETCH p.promotions
                 WHERE p.id IN :ids AND p.deletedAt IS NULL
             """)
     List<Product> findAllWithImagesByIds(@Param("ids") List<Integer> ids);

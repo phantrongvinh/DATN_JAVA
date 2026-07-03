@@ -97,7 +97,7 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <img :src="p.image" :alt="p.name" class="h-10 w-10 object-cover" />
+                    <img :src="imagePrimary(p.imgs)" :alt="p.name" class="h-10 w-10 object-cover" />
 
                     <span class="line-clamp-1 font-medium">
                       {{ p.name }}
@@ -436,6 +436,11 @@ const changePage = async (page) => {
     newPage: page,
     newSize: size.value,
   })
+}
+
+// handle image
+const imagePrimary = (imgs) => {
+  return imgs?.find((i) => i.primary)?.imageUrl ?? ''
 }
 
 // handle select product

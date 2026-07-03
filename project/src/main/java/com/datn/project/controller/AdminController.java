@@ -82,7 +82,6 @@ public class AdminController {
         ProductFilterDTO filter = new ProductFilterDTO(audienceIds, brandIds, categoryIds, search, onSale, minPrice,
                 maxPrice, sortBy);
 
-        System.out.println(filter);
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 
