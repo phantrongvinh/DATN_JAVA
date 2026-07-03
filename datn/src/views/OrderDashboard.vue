@@ -7,6 +7,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
+import OrderModal from '@/components/admin/OrderModal.vue'
 
 const orderStore = useOrderStore()
 
@@ -155,6 +156,16 @@ const resetFilter = async () => {
 
   await handleFilter()
 }
+
+// handle detail order
+
+const show = ref(false)
+const selectOrder = ref(null)
+
+const handleOpenDetail = (o) => {
+  show.value = true
+  selectOrder.value = o
+}
 </script>
 
 <template>
@@ -273,6 +284,7 @@ const resetFilter = async () => {
                 v-for="order in filteredOrders"
                 :key="order.id"
                 class="border-b border-border hover:bg-secondary/20"
+                @click="handleOpenDetail(order)"
               >
                 <td class="px-4 py-4 font-medium">#{{ order.trackingCode }}</td>
 
@@ -291,7 +303,7 @@ const resetFilter = async () => {
                 </td>
 
                 <td>
-                  {{ order.items.length }}
+                  {{ order.items?.reduce((sum, item) => sum + item.quantity, 0) }}
                 </td>
 
                 <td class="font-medium">
@@ -346,7 +358,7 @@ const resetFilter = async () => {
 
             {{ totalElements }}
 
-            khung giờ
+            Đơn hàng
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -380,4 +392,6 @@ const resetFilter = async () => {
       </div>
     </main>
   </div>
+
+  <OrderModal v-model:show="show" :order="selectOrder"></OrderModal>
 </template>

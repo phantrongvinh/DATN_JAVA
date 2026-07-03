@@ -71,9 +71,7 @@ onMounted(async () => {
         <!-- Success -->
         <div v-else-if="status === 'success'">
           <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-            <i class="material-symbols-rounded text-green-600" style="font-size: 48px">
-              check_circle
-            </i>
+            <i class="material-symbols-rounded text-green-600" style="font-size: 48px"> </i>
           </div>
 
           <h1 class="mt-6 font-display text-5xl text-green-600">Thanh toán thành công</h1>

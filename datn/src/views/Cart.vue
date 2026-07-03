@@ -14,9 +14,6 @@ const { items, removeItem, updateQuantity } = useCart()
 
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()
-
-//
-const url = 'http://localhost:8080/uploads/images'
 </script>
 
 <template>
@@ -69,11 +66,7 @@ const url = 'http://localhost:8080/uploads/images'
           >
             <!-- Product -->
             <div class="flex items-center gap-4 md:col-span-1">
-              <img
-                :src="url + '/' + item.image"
-                :alt="item.name"
-                class="h-20 w-20 object-contain"
-              />
+              <img :src="item.image" :alt="item.name" class="h-20 w-20 object-contain" />
 
               <div class="hidden md:block">
                 <p class="font-medium">

@@ -52,24 +52,24 @@ const navs = [
     label: 'Đơn hàng',
     icon: ShoppingCart,
   },
-  {
-    // to: '/admin/users',
-    to: '/',
-    label: 'Người dùng',
-    icon: Users,
-  },
-  {
-    // to: '/admin/blog',
-    to: '/',
-    label: 'Bài viết',
-    icon: FileText,
-  },
-  {
-    // to: '/admin/landing',
-    to: '/',
-    label: 'Trang chủ',
-    icon: Palette,
-  },
+  // {
+  //   // to: '/admin/users',
+  //   to: '/',
+  //   label: 'Người dùng',
+  //   icon: Users,
+  // },
+  // {
+  //   // to: '/admin/blog',
+  //   to: '/',
+  //   label: 'Bài viết',
+  //   icon: FileText,
+  // },
+  // {
+  //   // to: '/admin/landing',
+  //   to: '/',
+  //   label: 'Trang chủ',
+  //   icon: Palette,
+  // },
 ]
 
 const isActive = (item) => {

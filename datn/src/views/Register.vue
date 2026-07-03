@@ -25,7 +25,7 @@ const schema = yup.object({
     .oneOf([yup.ref('password')], 'Mật khẩu xác nhận không khớp'),
 })
 
-const { handleSubmit, defineField, errors } = useForm({
+const { handleSubmit, defineField, errors, resetForm } = useForm({
   validationSchema: schema,
 })
 

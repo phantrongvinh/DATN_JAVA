@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -75,5 +77,5 @@ public class Product implements Serializable {
     private List<ProductVariant> productVariants= new ArrayList<>();
 
     @ManyToMany(mappedBy = "products", fetch = FetchType.LAZY)
-    private List<Promotion> promotions = new ArrayList<>();
+    private Set<Promotion> promotions = new HashSet<>();
 }

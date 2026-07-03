@@ -196,7 +196,7 @@ public class OrderService implements IOrderService {
 
                 // ─── 6. Xử lý theo payment method ────────────────────
                 if (request.getPaymentMethodId() == 1) {
-                        savedOrder.setPaymentStatus(PaymentStatus.PAID);
+                        savedOrder.setPaymentStatus(PaymentStatus.PENDING);
                         savedOrder.setStatus(OrderStatus.CONFIRMED);
                         orderRepository.save(savedOrder);
                         ghnService.createShipment(savedOrder.getId());
@@ -419,6 +419,11 @@ public class OrderService implements IOrderService {
                 validateStatusTransition(order.getStatus(), newStatus);
 
                 order.setStatus(newStatus);
+
+                if(order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1){
+                        order.setPaymentStatus(PaymentStatus.PAID);
+                }
+
                 orderRepository.save(order);
         }
 

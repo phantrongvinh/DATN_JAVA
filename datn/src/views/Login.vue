@@ -148,7 +148,7 @@ const handleResend = async () => {
         <button
           type="submit"
           class="w-full bg-ink py-3 text-ivory cursor-pointer"
-          :class="loadding ? 'disabled' : ''"
+          :disabled="loadding"
         >
           {{ loadding ? 'Đăng nhập ... ' : 'Đăng nhập' }}
         </button>

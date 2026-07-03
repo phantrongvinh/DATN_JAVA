@@ -34,7 +34,7 @@ export const useProductStore = defineStore('product', () => {
       spotlightProducts.value = res
 
       return { success: true }
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
@@ -52,7 +52,7 @@ export const useProductStore = defineStore('product', () => {
       productOnSale.value = res
 
       return { success: true }
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
@@ -90,7 +90,7 @@ export const useProductStore = defineStore('product', () => {
       const res = await adminAPI.fetchProductOverview()
       productOverview.value = res
       return { success: true }
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
@@ -145,7 +145,7 @@ export const useProductStore = defineStore('product', () => {
       const res = await adminAPI.deactivateProduct(id)
 
       await fetchAllProducts({ newPage: page.value, newSize: size.value })
-    } catch (error) {
+    } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: error.message }
     } finally {
