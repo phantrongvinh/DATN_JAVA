@@ -25,4 +25,13 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 WHERE o.id = :id
             """)
     Optional<Order> findByIdWithDetails(@Param("id") Integer id);
+
+    @Query("""
+                SELECT o.user.id, o.id, o.finalPrice, o.status, o.createdAt
+                FROM Order o
+                WHERE o.user.id IN :userIds
+                AND o.status = 'DELIVERED'
+                ORDER BY o.createdAt DESC
+            """)
+    List<Object[]> findDeliveredOrdersByUserIds(@Param("userIds") List<Integer> userIds);
 }

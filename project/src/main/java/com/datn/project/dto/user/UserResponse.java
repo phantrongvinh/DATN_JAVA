@@ -1,23 +1,26 @@
 package com.datn.project.dto.user;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class UserResponse {
-    private int id;
+    private Integer id;
     private String fullName;
     private String email;
     private String phone;
-    private LocalDate birthDay;
-    private boolean isActive;
+    private String provider;
+    private boolean isActived;
     private LocalDateTime createdAt;
-    private List<RoleResponse> role;
+
+    // Thống kê đơn hàng
+    private Integer totalOrders;
+    private Integer completedOrders;
+    private BigDecimal totalSpending;
+    private List<OrderSummaryResponse> deliveredOrders;
 }

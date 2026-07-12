@@ -39,6 +39,29 @@ const STATUS_STEPS = [
   { key: 'CANCELLED', label: 'Đã hủy', icon: 'cancel' },
 ]
 
+const STATUS_LABEL = {
+  PENDING: {
+    label: 'Chờ xác nhận',
+    tone: 'bg-muted text-muted-foreground',
+  },
+  CONFIRMED: {
+    label: 'Đang xử lý',
+    tone: 'bg-gold-soft text-ink',
+  },
+  SHIPPING: {
+    label: 'Đang giao',
+    tone: 'bg-ink/10 text-ink',
+  },
+  DELIVERED: {
+    label: 'Đã giao',
+    tone: 'bg-emerald-100 text-emerald-800',
+  },
+  CANCELLED: {
+    label: 'Đã hủy',
+    tone: 'bg-red-100 text-red-700',
+  },
+}
+
 const currentStepIndex = computed(() =>
   STATUS_STEPS.findIndex((s) => s.key === order.value?.status),
 )
@@ -104,9 +127,10 @@ const currentStepIndex = computed(() =>
                 <p class="text-xs uppercase tracking-widest text-muted-foreground">Trạng thái</p>
 
                 <span
-                  class="mt-1 inline-block rounded bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700"
+                  class="mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                  :class="STATUS_LABEL[order?.status]?.tone"
                 >
-                  Chờ xác nhận
+                  {{ STATUS_LABEL[order?.status]?.label }}
                 </span>
               </div>
 
@@ -121,9 +145,7 @@ const currentStepIndex = computed(() =>
               <div>
                 <p class="text-xs uppercase tracking-widest text-muted-foreground">Mã vận đơn</p>
 
-                <p class="mt-1">
-                  {{ order?.trackingCode }}
-                </p>
+                <p class="mt-1">#{{ order?.trackingCode }}</p>
               </div>
             </div>
           </div>
