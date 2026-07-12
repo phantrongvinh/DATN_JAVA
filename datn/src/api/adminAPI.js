@@ -97,6 +97,13 @@ const updateStatusOrder = async (id, status) => {
   return res.data
 }
 
+// user
+const fetchAlluser = async (params) => {
+  const res = await axiosClient.get(`${url}/users`, { params: params })
+
+  return res.data
+}
+
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
@@ -113,6 +120,7 @@ const adminAPI = {
   deleteTimePromotion,
   fetchAllOrders,
   updateStatusOrder,
+  fetchAlluser,
 }
 
 export default adminAPI

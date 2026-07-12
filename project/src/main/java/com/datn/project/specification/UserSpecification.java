@@ -18,15 +18,6 @@ public class UserSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Subquery<Integer> roleSub = query.subquery(Integer.class);
-            // Root<User> roleUserRoot = roleSub.from(User.class);
-            // Join<User, Role> roleJoin = roleUserRoot.join("roles");
-            // roleSub.select(roleUserRoot.get("id"))
-            // .where(
-            // cb.equal(roleUserRoot.get("id"), root.get("id")),
-            // cb.equal(cb.lower(roleJoin.get("name")), "user"));
-            // predicates.add(cb.exists(roleSub));
-
             // Search: email > phone > address
             if (filterDTO.getSearch() != null && !filterDTO.getSearch().trim().isEmpty()) {
                 String kw = "%" + filterDTO.getSearch().trim().toLowerCase() + "%";
@@ -43,6 +34,10 @@ public class UserSpecification {
                                 cb.like(cb.lower(addressRoot.get("address")), kw));
 
                 predicates.add(cb.or(byEmail, byPhone, cb.exists(addressSub)));
+            }
+
+            if (filterDTO.getIsActive() != null) {
+                predicates.add(cb.equal(root.get("isActived"), filterDTO.getIsActive()));
             }
 
             // Khoảng birthDay
