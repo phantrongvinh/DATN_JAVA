@@ -52,12 +52,11 @@ const navs = [
     label: 'Đơn hàng',
     icon: ShoppingCart,
   },
-  // {
-  //   // to: '/admin/users',
-  //   to: '/',
-  //   label: 'Người dùng',
-  //   icon: Users,
-  // },
+  {
+    to: '/admin/users',
+    label: 'Người dùng',
+    icon: Users,
+  },
   // {
   //   // to: '/admin/blog',
   //   to: '/',

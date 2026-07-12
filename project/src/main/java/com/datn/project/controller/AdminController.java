@@ -121,25 +121,36 @@ public class AdminController {
 
     // phần khách hàng
     @GetMapping("/users")
-    public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "1") int page,
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) LocalDate birthDayFrom,
-            @RequestParam(required = false) LocalDate birthDayTo,
-            @RequestParam(required = false) LocalDateTime createdAtFrom,
-            @RequestParam(required = false) LocalDateTime createdAtTo,
-            @RequestParam(required = false) String sortBy) {
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String birthDayFrom,
+            @RequestParam(required = false) String birthDayTo,
+            @RequestParam(required = false) String createdAtFrom,
+            @RequestParam(required = false) String createdAtTo) {
+        UserFilterDTO filter = new UserFilterDTO();
+        filter.setSearch(search);
+        filter.setIsActive(isActive);
+        filter.setSortBy(sortBy);
+        filter.setBirthDayFrom(birthDayFrom != null ? LocalDate.parse(birthDayFrom) : null);
+        filter.setBirthDayTo(birthDayTo != null ? LocalDate.parse(birthDayTo) : null);
+        filter.setCreatedAtFrom(createdAtFrom != null
+                ? LocalDateTime.parse(createdAtFrom + "T00:00:00")
+                : null);
+        filter.setCreatedAtTo(createdAtTo != null
+                ? LocalDateTime.parse(createdAtTo + "T23:59:59")
+                : null);
 
-        UserFilterDTO filterDTO = new UserFilterDTO(search, birthDayFrom, birthDayTo, createdAtFrom, createdAtTo,
-                sortBy);
-
-        return ResponseEntity.ok(userService.getAllUser(filterDTO, page, size)).getBody();
+        return ResponseEntity.ok(userService.getAllUsers(filter, page, size));
     }
 
-    @GetMapping("/users/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable(value = "id") int id) {
-        return ResponseEntity.ok(userService.getUserById(id)).getBody();
-    }
+    // @GetMapping("/users/{id}")
+    // public ResponseEntity<?> getUserById(@PathVariable(value = "id") int id) {
+    // return ResponseEntity.ok(userService.getUserById(id)).getBody();
+    // }
 
     // phần khuyến mãi
     @PostMapping("/promotions")

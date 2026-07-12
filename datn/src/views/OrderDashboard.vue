@@ -284,9 +284,10 @@ const handleOpenDetail = (o) => {
                 v-for="order in filteredOrders"
                 :key="order.id"
                 class="border-b border-border hover:bg-secondary/20"
-                @click="handleOpenDetail(order)"
               >
-                <td class="px-4 py-4 font-medium">#{{ order.trackingCode }}</td>
+                <td class="px-4 py-4 font-medium cursor-pointer" @click="handleOpenDetail(order)">
+                  #{{ order.trackingCode }}
+                </td>
 
                 <td>
                   <p class="font-medium">

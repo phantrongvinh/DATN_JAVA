@@ -1,6 +1,7 @@
 package com.datn.project.repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,37 @@ public interface IUserRepository extends JpaRepository<User, Integer>, JpaSpecif
                 AND YEAR(u.createdAt) = :year
             """)
     Integer findNewCustomersByMonth(@Param("month") Integer month, @Param("year") Integer year);
+    // Tổng số đơn hàng của user
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId")
+    Integer countOrdersByUserId(@Param("userId") Integer userId);
+
+    // Tổng tiền đơn đã hoàn thành
+    @Query("""
+                SELECT COALESCE(SUM(o.finalPrice), 0)
+                FROM Order o
+                WHERE o.user.id = :userId
+                AND o.status IN ( 'DELIVERED')
+            """)
+    BigDecimal sumSpendingByUserId(@Param("userId") Integer userId);
+
+    // Tổng đơn hoàn thành
+    @Query("""
+                SELECT COUNT(o) FROM Order o
+                WHERE o.user.id = :userId
+                AND o.status IN ( 'DELIVERED')
+            """)
+    Integer countCompletedOrdersByUserId(@Param("userId") Integer userId);
+
+    @Query("""
+                SELECT u.id,
+                       COUNT(o.id),
+                       COUNT(CASE WHEN o.status IN ('CONFIRMED', 'DELIVERED') THEN 1 END),
+                       COALESCE(SUM(CASE WHEN o.status IN ('CONFIRMED', 'DELIVERED')
+                                    THEN o.finalPrice ELSE 0 END), 0)
+                FROM User u
+                LEFT JOIN Order o ON o.user.id = u.id
+                WHERE u.id IN :userIds
+                GROUP BY u.id
+            """)
+    List<Object[]> findOrderStatsByUserIds(@Param("userIds") List<Integer> userIds);
 }

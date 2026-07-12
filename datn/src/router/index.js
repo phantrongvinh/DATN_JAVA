@@ -153,6 +153,9 @@ const router = createRouter({
           path: 'landing',
           name: 'landing',
           component: () => import('../views/AdminLandingPage.vue'),
+          path: 'users',
+          name: 'users',
+          component: () => import('../views/UserDashboard.vue'),
         },
         // Thêm các route admin khác ở đây
         // { path: 'orders', name: 'admin-orders', component: () => import('../views/admin/Orders.vue') },
