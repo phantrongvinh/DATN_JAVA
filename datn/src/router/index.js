@@ -153,6 +153,8 @@ const router = createRouter({
           path: 'landing',
           name: 'landing',
           component: () => import('../views/AdminLandingPage.vue'),
+        },
+        {
           path: 'users',
           name: 'users',
           component: () => import('../views/UserDashboard.vue'),

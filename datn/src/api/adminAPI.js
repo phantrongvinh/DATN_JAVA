@@ -104,6 +104,12 @@ const fetchAlluser = async (params) => {
   return res.data
 }
 
+// dashboard
+const fetchDashboard = async (params) => {
+  const res = await axiosClient.get(`${url}/dashboard`, { params: params })
+  return res.data
+}
+
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
@@ -121,6 +127,7 @@ const adminAPI = {
   fetchAllOrders,
   updateStatusOrder,
   fetchAlluser,
+  fetchDashboard,
 }
 
 export default adminAPI

@@ -9,11 +9,13 @@ import router from './router'
 import VueVirtualScroller from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useAuthStore } from './stores/useAuthStore'
+import VueApexCharts from 'vue3-apexcharts'
 
 const app = createApp(App)
 
 app.use(VueVirtualScroller)
-
+app.use(VueApexCharts)
+app.component('apexchart', VueApexCharts)
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
