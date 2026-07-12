@@ -64,12 +64,11 @@ const navs = [
   //   label: 'Bài viết',
   //   icon: FileText,
   // },
-  // {
-  //   // to: '/admin/landing',
-  //   to: '/',
-  //   label: 'Trang chủ',
-  //   icon: Palette,
-  // },
+  {
+    to: '/admin/landing',
+    label: 'Trang chủ',
+    icon: Palette,
+  },
 ]
 
 const isActive = (item) => {

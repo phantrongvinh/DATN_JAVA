@@ -31,6 +31,7 @@ import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.repository.ITimePromotionRepository;
+import com.datn.project.service.IDashboardService;
 import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
@@ -63,6 +64,9 @@ public class AdminController {
 
     @Autowired
     private IOrderService orderService;
+
+    @Autowired
+    private IDashboardService dashboardService;
 
     // phần products
     @GetMapping("/products/top5")
@@ -196,7 +200,7 @@ public class AdminController {
     public ResponseEntity<?> updateStatus(
             @PathVariable Integer orderId,
             @RequestParam String status) {
-        OrderStatus orderStatus = status !=null? OrderStatus.valueOf(status.toUpperCase()): null;
+        OrderStatus orderStatus = status != null ? OrderStatus.valueOf(status.toUpperCase()) : null;
 
         orderService.updateOrderStatus(orderId, orderStatus);
         return ResponseEntity.ok("Cập nhật trạng thái thành công");
@@ -213,7 +217,8 @@ public class AdminController {
             @RequestParam(required = false) LocalDateTime dateFrom,
             @RequestParam(required = false) LocalDateTime dateTo, @RequestParam(required = false) String sortBy) {
 
-        PaymentStatus paymentStatusEnum = paymentStatus != null ||  paymentStatus == "" ? PaymentStatus.valueOf(paymentStatus.toUpperCase())
+        PaymentStatus paymentStatusEnum = paymentStatus != null || paymentStatus == ""
+                ? PaymentStatus.valueOf(paymentStatus.toUpperCase())
                 : null;
 
         OrderFilterDTO filterDTO = new OrderFilterDTO(search, status,
@@ -226,4 +231,12 @@ public class AdminController {
     // public ResponseEntity<?> getOrderDetail(@PathVariable Integer id) {
     // return ResponseEntity.ok(orderService.getOrderDetail(id));
     // }
+
+    // Dashboard
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboard(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(dashboardService.getDashboard(month, year));
+    }
 }
