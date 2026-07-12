@@ -150,6 +150,11 @@ const router = createRouter({
           component: () => import('../views/OrderDashboard.vue'),
         },
         {
+          path: 'landing',
+          name: 'landing',
+          component: () => import('../views/AdminLandingPage.vue'),
+        },
+        {
           path: 'users',
           name: 'users',
           component: () => import('../views/UserDashboard.vue'),

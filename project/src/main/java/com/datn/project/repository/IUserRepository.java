@@ -32,6 +32,13 @@ public interface IUserRepository extends JpaRepository<User, Integer>, JpaSpecif
             """)
     BigDecimal sumFinalPriceByUserId(@Param("userId") int userId);
 
+    @Query("""
+                SELECT COUNT(u.id)
+                FROM User u
+                WHERE MONTH(u.createdAt) = :month
+                AND YEAR(u.createdAt) = :year
+            """)
+    Integer findNewCustomersByMonth(@Param("month") Integer month, @Param("year") Integer year);
     // Tổng số đơn hàng của user
     @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId")
     Integer countOrdersByUserId(@Param("userId") Integer userId);

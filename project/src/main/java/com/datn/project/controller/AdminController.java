@@ -31,6 +31,7 @@ import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.repository.ITimePromotionRepository;
+import com.datn.project.service.IDashboardService;
 import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
@@ -63,6 +64,9 @@ public class AdminController {
 
     @Autowired
     private IOrderService orderService;
+
+    @Autowired
+    private IDashboardService dashboardService;
 
     // phần products
     @GetMapping("/products/top5")
@@ -238,4 +242,12 @@ public class AdminController {
     // public ResponseEntity<?> getOrderDetail(@PathVariable Integer id) {
     // return ResponseEntity.ok(orderService.getOrderDetail(id));
     // }
+
+    // Dashboard
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboard(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(dashboardService.getDashboard(month, year));
+    }
 }

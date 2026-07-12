@@ -89,4 +89,14 @@ public interface IProductRepository extends JpaRepository<Product, Integer>, Jpa
                 WHERE p.id IN :ids
             """)
     List<Product> findAllWithVariantsByIds(@Param("ids") List<Integer> ids);
+
+    @Query("""
+                SELECT c.name, COUNT(p.id)
+                FROM Product p
+                JOIN p.category c
+                WHERE p.deletedAt IS NULL
+                GROUP BY c.name
+                ORDER BY COUNT(p.id) DESC
+            """)
+    List<Object[]> findCategoryStats();
 }
