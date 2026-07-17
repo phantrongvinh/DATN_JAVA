@@ -86,21 +86,19 @@ const deleteTimePromotion = async (id) => {
 
 // order
 const fetchAllOrders = async (param) => {
-  console.log(param)
-
   const res = await axiosClient.get(`${url}/orders`, { params: param })
   return res.data
 }
 
 const updateStatusOrder = async (id, status) => {
   const res = await axiosClient.patch(`${url}/orders/${id}/status`, null, { params: { status } })
+
   return res.data
 }
 
 // user
 const fetchAlluser = async (params) => {
   const res = await axiosClient.get(`${url}/users`, { params: params })
-
   return res.data
 }
 

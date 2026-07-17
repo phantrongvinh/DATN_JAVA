@@ -105,19 +105,8 @@ const handleRepay = async (order) => {
       <p class="mt-1 text-sm text-muted-foreground">Theo dõi trạng thái các đơn hàng gần đây</p>
     </div>
 
-    <!-- Empty -->
-    <div v-if="myOrders.length === 0" class="p-12 text-center text-sm text-muted-foreground">
-      Bạn chưa có đơn hàng nào.
-
-      <div class="mt-4">
-        <RouterLink to="/products" class="border-b border-foreground pb-0.5 text-foreground">
-          Khám phá sản phẩm
-        </RouterLink>
-      </div>
-    </div>
-
     <!-- Orders -->
-    <ul v-else class="divide-y divide-border">
+    <ul v-if="myOrders && myOrders.length > 0" class="divide-y divide-border">
       <li v-for="order in myOrders" :key="order.id" class="flex justify-between gap-4 p-6">
         <div>
           <RouterLink :to="`/orders/${order.id}`">
@@ -129,7 +118,7 @@ const handleRepay = async (order) => {
 
             <span>•</span>
 
-            <span>{{ order.items.length }} sản phẩm</span>
+            <span>{{ order.items?.length }} sản phẩm</span>
 
             <span>•</span>
 
@@ -204,5 +193,17 @@ const handleRepay = async (order) => {
         </div>
       </li>
     </ul>
+
+    <!-- Empty -->
+
+    <div v-else class="p-12 text-center text-sm text-muted-foreground">
+      Bạn chưa có đơn hàng nào.
+
+      <div class="mt-4">
+        <RouterLink to="/products" class="border-b border-foreground pb-0.5 text-foreground">
+          Khám phá sản phẩm
+        </RouterLink>
+      </div>
+    </div>
   </div>
 </template>

@@ -92,6 +92,7 @@ export const useOrderStore = defineStore('order', () => {
       message.value = res
     } catch (err) {
       error.value = err.response?.data?.message
+      throw err
     } finally {
       loading.value = false
     }

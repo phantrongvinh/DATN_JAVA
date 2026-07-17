@@ -75,26 +75,26 @@ const handleLogout = () => {
     class="sticky top-0 z-50 w-full border-b transition-shadow"
     :class="{ 'shadow-sm': scrolled }"
     :style="{
-      backgroundColor: `color-mix(in oklab, ${t.headerBg} 92%, transparent)`,
-      color: t.headerText,
-      borderColor: `color-mix(in oklab, ${t.headerText} 15%, transparent)`,
+      backgroundColor: `color-mix(in oklab, ${t?.headerBg} 92%, transparent)`,
+      color: t?.headerText,
+      borderColor: `color-mix(in oklab, ${t?.headerText} 15%, transparent)`,
       backdropFilter: 'blur(10px)',
     }"
   >
     <!-- Announcement bar -->
     <div
-      v-if="landing.announcement"
+      v-if="landing?.announcement"
       class="text-center text-[11px] uppercase tracking-[0.25em]"
-      :style="{ backgroundColor: t.announcementBg, color: t.announcementText }"
+      :style="{ backgroundColor: t?.announcementBg, color: t?.announcementText }"
     >
-      <p class="container-x py-2">{{ landing.announcement }}</p>
+      <p class="container-x py-2">{{ landing?.announcement }}</p>
     </div>
 
     <div class="container-x flex h-16 items-center justify-between gap-6">
       <!-- Logo -->
       <RouterLink to="/" class="flex items-baseline gap-1">
         <span class="font-display text-2xl font-semibold tracking-tight">Maison</span>
-        <span class="font-display text-2xl italic" :style="{ color: t.headerAccent }">Calcio</span>
+        <span class="font-display text-2xl italic" :style="{ color: t?.headerAccent }">Calcio</span>
       </RouterLink>
 
       <!-- Navigation -->
@@ -148,13 +148,13 @@ const handleLogout = () => {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem @click="router.push('/account')">
+            <DropdownMenuItem @click="router.push('/profile')">
               <User class="mr-2 h-4 w-4" /> Hồ sơ cá nhân
             </DropdownMenuItem>
-            <DropdownMenuItem @click="router.push('/account/orders')">
+            <DropdownMenuItem @click="router.push('/profile/orders')">
               <Package class="mr-2 h-4 w-4" /> Đơn hàng của tôi
             </DropdownMenuItem>
-            <DropdownMenuItem @click="router.push('/account/wishlist')">
+            <DropdownMenuItem @click="router.push('/profile/wishlist')">
               <Heart class="mr-2 h-4 w-4" /> Yêu thích
             </DropdownMenuItem>
 

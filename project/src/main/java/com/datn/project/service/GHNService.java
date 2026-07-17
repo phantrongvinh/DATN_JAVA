@@ -34,10 +34,6 @@ public class GHNService {
 
     public void createShipment(Integer orderId) {
         try {
-            System.out.println(token);
-            System.out.println(shopId);
-            System.out.println(orderId);
-
             Order order = orderRepository.findById(orderId).orElseThrow();
 
             HttpHeaders headers = new HttpHeaders();

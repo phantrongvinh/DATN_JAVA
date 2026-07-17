@@ -8,8 +8,10 @@ import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import OrderModal from '@/components/admin/OrderModal.vue'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 const orderStore = useOrderStore()
+const notificationStore = useNotificationStore()
 
 const { orders, currentPage, totalPages, totalElements, size } = storeToRefs(orderStore)
 
@@ -70,6 +72,10 @@ const PAYMENT_STATUS = {
     label: 'Đã hoàn tiền',
     tone: 'bg-purple-100 text-purple-700',
   },
+  UNPAID: {
+    label: 'Hủy giao dịch',
+    tone: 'bg-red-100 text-red-700',
+  },
 }
 
 // ==============================
@@ -114,11 +120,18 @@ const changePage = async (page) => {
 }
 
 const updateOrderStatus = async (id, status) => {
-  await orderStore.updateStatusOrder(id, status)
-  await orderStore.fetchAllOrder({
-    page: currentPage.value,
-    size: size.value,
-  })
+  try {
+    await orderStore.updateStatusOrder(id, status)
+    notificationStore.notify(`Cập nhật trạng thái mã đơn hàng #${id} thành công`, 'success')
+  } catch (err) {
+    notificationStore.notify(err.response?.data?.message, 'error')
+  } finally {
+    await orderStore.fetchAllOrder({
+      page: currentPage.value,
+      size: size.value,
+      ...filter.value,
+    })
+  }
 }
 // handle filter
 const filter = ref({
@@ -141,6 +154,9 @@ const handleFilter = async () => {
 
     dateTo: filter.value.dateTo ? ulti.formatLocalDateTime(filter.value.dateTo) : null,
   }
+
+  notificationStore.notify('Sử dụng bộ lọc', 'success')
+
   await orderStore.fetchAllOrder(params)
 }
 
@@ -153,6 +169,7 @@ const resetFilter = async () => {
     dateFrom: null,
     dateTo: null,
   }
+  notificationStore.notify('Đặt lại bộ lọc', 'success')
 
   await handleFilter()
 }
@@ -286,7 +303,7 @@ const handleOpenDetail = (o) => {
                 class="border-b border-border hover:bg-secondary/20"
               >
                 <td class="px-4 py-4 font-medium cursor-pointer" @click="handleOpenDetail(order)">
-                  #{{ order.trackingCode }}
+                  #{{ order.id }}
                 </td>
 
                 <td>
@@ -314,9 +331,9 @@ const handleOpenDetail = (o) => {
                 <td>
                   <span
                     class="rounded-full px-3 py-1 text-xs"
-                    :class="PAYMENT_STATUS[order.paymentStatus].tone"
+                    :class="PAYMENT_STATUS[order.paymentStatus]?.tone"
                   >
-                    {{ PAYMENT_STATUS[order.paymentStatus].label }}
+                    {{ PAYMENT_STATUS[order.paymentStatus]?.label }}
                   </span>
                 </td>
 

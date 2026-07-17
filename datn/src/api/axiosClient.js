@@ -35,7 +35,6 @@ axiosClient.interceptors.response.use(
     const status = error.response?.status
     if (status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/login'
     } else if (status === 403) {
       window.location.href = '/forbidden'
     } else if (status === 500) {

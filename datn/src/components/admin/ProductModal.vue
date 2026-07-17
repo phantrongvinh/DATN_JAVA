@@ -409,6 +409,9 @@ import { useCategoryStore } from '@/stores/useCategoryStore'
 import { storeToRefs } from 'pinia'
 import { useSizeStore } from '@/stores/useSizeStore'
 import ulti from '@/ulti/ulti'
+import { useNotificationStore } from '@/stores/useNotificationStore'
+
+const notificationStore = useNotificationStore()
 
 const props = defineProps({
   showProductModal: {
@@ -503,6 +506,7 @@ const addVariant = () => {
 }
 const removeVariant = (index) => {
   variants.value.splice(index, 1)
+  notificationStore.notify('Xóa biến thể thành công, nhấn cập nhật để xác nhận', 'success')
 }
 
 // handle promotion
@@ -510,6 +514,7 @@ const promotion = ref(props.product?.promotion ?? null)
 
 const removePromotion = () => {
   promotion.value = null
+  notificationStore.notify('Xóa khuyến mãi thành công, nhấn cập nhật để xác nhận', 'success')
 }
 
 const existingImageUrls = ref([])
@@ -587,6 +592,7 @@ const primaryImageIndex = ref(0)
 
 const setPrimary = (index) => {
   primaryImageIndex.value = index
+  notificationStore.notify('Thay đổi ảnh chính thành công, nhấn cập nhật để xác nhận', 'success')
 }
 
 const handleImageUpload = (e) => {
@@ -612,6 +618,7 @@ const removeImage = (index) => {
   if (primaryImageIndex.value >= previewImages.value.length) {
     primaryImageIndex.value = 0
   }
+  notificationStore.notify('Xóa hình ảnh thành công, nhấn cập nhật để xác nhận', 'success')
 }
 
 // handle save
@@ -649,16 +656,21 @@ const onSubmit = handleSubmit(async (values) => {
   const formData = new FormData()
   formData.append('data', JSON.stringify(payload))
 
-  // Edit
-  if (props.product?.id) {
-    // Ảnh cũ giữ lại không gửi file, chỉ gửi ảnh mới
-    images.value.forEach((file) => formData.append('images', file))
-    await productStore.updateProductById(props.product.id, formData)
-  }
-  // Add
-  else {
-    images.value.forEach((file) => formData.append('images', file))
-    await productStore.createProduct(formData)
+  try {
+    // Edit
+    if (props.product?.id) {
+      images.value.forEach((file) => formData.append('images', file))
+      await productStore.updateProductById(props.product.id, formData)
+      notificationStore.notify('Cập nhật sản phẩm thành công', 'success')
+    }
+    // Add
+    else {
+      images.value.forEach((file) => formData.append('images', file))
+      await productStore.createProduct(formData)
+      notificationStore.notify('Tạo sản phẩm mới thành công', 'success')
+    }
+  } catch (error) {
+    notificationStore.notify(err.response?.data?.message, 'error')
   }
 
   closeModal()

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -30,6 +31,8 @@ import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
+import com.datn.project.entity.SiteSetting;
+import com.datn.project.repository.ISiteSettingRepository;
 import com.datn.project.repository.ITimePromotionRepository;
 import com.datn.project.service.IDashboardService;
 import com.datn.project.service.IOrderService;
@@ -37,8 +40,9 @@ import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
 import com.datn.project.service.ITimePromotionService;
 import com.datn.project.service.IUserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tools.jackson.databind.ObjectMapper;
+
 
 @RestController
 @RequestMapping(value = "/api/v1/admin")
@@ -67,6 +71,10 @@ public class AdminController {
 
     @Autowired
     private IDashboardService dashboardService;
+
+    @Autowired
+    private ISiteSettingRepository siteSettingRepository;
+
 
     // phần products
     @GetMapping("/products/top5")
@@ -249,5 +257,24 @@ public class AdminController {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
         return ResponseEntity.ok(dashboardService.getDashboard(month, year));
+    }
+
+    // site setting
+    // Admin - load và save
+    @GetMapping("/site-setting")
+    public ResponseEntity<?> get() throws Exception {
+        SiteSetting setting = siteSettingRepository.findById(1)
+            .orElseThrow();
+        return ResponseEntity.ok(objectMapper.readValue(setting.getData(), Map.class));
+    }
+
+    @PutMapping("/site-setting")
+    public ResponseEntity<?> save(@RequestBody Map<String, Object> body) throws Exception {
+        SiteSetting setting = siteSettingRepository.findById(1)
+            .orElse(new SiteSetting());
+        setting.setData(objectMapper.writeValueAsString(body));
+        setting.setUpdatedAt(LocalDateTime.now());
+        siteSettingRepository.save(setting);
+        return ResponseEntity.ok(body);
     }
 }

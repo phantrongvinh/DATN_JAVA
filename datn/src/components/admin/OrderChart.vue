@@ -31,6 +31,11 @@ const chartOptions = computed(() => ({
       show: false,
     },
   },
+  colors: [
+    '#22C55E', // xanh lá
+    '#3B82F6', // xanh dương
+    '#EF4444', // đỏ
+  ],
 
   plotOptions: {
     bar: {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   RotateCcw,
@@ -22,27 +22,51 @@ import { useNotificationStore } from '@/stores/useNotificationStore'
 const siteSettingsStore = useSiteSettingsStore()
 const notificationStore = useNotificationStore()
 const { landing } = storeToRefs(siteSettingsStore)
+const { DEFAULT_LANDING, DEFAULT_THEME } = siteSettingsStore
 
-// draft: bản nháp để user chỉnh trước khi bấm "Lưu"
-const draft = reactive(JSON.parse(JSON.stringify(landing.value)))
+const draft = ref({
+  ...DEFAULT_LANDING,
+  ...landing.value,
+  theme: {
+    ...DEFAULT_THEME,
+    ...(landing.value?.theme ?? {}),
+  },
+})
 
-const save = () => {
-  siteSettingsStore.updateLanding({ ...draft })
+onMounted(() => {
+  siteSettingsStore.fetchFromServer()
+})
+
+watch(
+  landing,
+  (newVal) => {
+    draft.value = {
+      ...DEFAULT_LANDING,
+      ...newVal,
+      theme: {
+        ...DEFAULT_THEME,
+        ...(newVal?.theme ?? {}),
+      },
+    }
+  },
+  { immediate: true },
+)
+
+const save = async () => {
+  await siteSettingsStore.updateLanding(draft.value)
   notificationStore.notify('Đã lưu cấu hình trang chủ', 'success')
 }
 
 const reset = () => {
   siteSettingsStore.resetLanding()
-  Object.assign(draft, structuredClone(siteSettingsStore.landing))
+  Object.assign(draft.value, structuredClone(landing.value))
   notificationStore.notify('Đã khôi phục mặc định', 'success')
 }
 
 const applyPreset = (preset) => {
-  siteSettingsStore.applySeasonalPreset(preset.id)
-  draft.seasonalPresetId = preset.id
-  draft.primaryColor = preset.primaryColor
-  draft.theme = { ...preset.colors }
-  notificationStore.notify(`Áp dụng chủ đề: ${preset.name}`, 'success')
+  draft.value.seasonalPresetId = preset.id
+  draft.value.primaryColor = preset.primaryColor
+  draft.value.theme = { ...preset.colors }
 }
 
 const editing = ref(null)
@@ -62,27 +86,27 @@ const openNewSlide = () => {
 }
 
 const moveSlideDraft = (id, dir) => {
-  siteSettingsStore.moveSlide(id, dir)
-  const idx = draft.slides.findIndex((s) => s.id === id)
+  const slides = draft.value.slides
+  const idx = slides.findIndex((s) => s.id === id)
+
   const target = idx + dir
-  if (idx < 0 || target < 0 || target >= draft.slides.length) return
-  ;[draft.slides[idx], draft.slides[target]] = [draft.slides[target], draft.slides[idx]]
+
+  if (idx < 0 || target < 0 || target >= slides.length) return
+  ;[slides[idx], slides[target]] = [slides[target], slides[idx]]
 }
 
 const removeSlideDraft = (id) => {
-  siteSettingsStore.removeSlide(id)
-  const i = draft.slides.findIndex((s) => s.id === id)
-  if (i >= 0) draft.slides.splice(i, 1)
+  draft.value.slides = draft.value.slides.filter((s) => s.id !== id)
   notificationStore.notify('Đã xóa slide', 'success')
 }
 
 const saveSlide = (slide) => {
-  siteSettingsStore.upsertSlide(slide)
-  const idx = draft.slides.findIndex((s) => s.id === slide.id)
-  if (idx >= 0) draft.slides[idx] = slide
-  else draft.slides.push(slide)
+  const idx = draft.value.slides.findIndex((s) => s.id === slide.id)
+
+  if (idx >= 0) draft.value.slides[idx] = slide
+  else draft.value.slides.push(slide)
+
   editing.value = null
-  notificationStore.notify('Đã lưu slide', 'success')
 }
 </script>
 
@@ -237,7 +261,7 @@ const saveSlide = (slide) => {
           </div>
 
           <p
-            v-if="draft.slides.length === 0"
+            v-if="draft.slides?.length === 0"
             class="border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground"
           >
             Chưa có slide nào. Nhấn "Thêm slide" để bắt đầu.

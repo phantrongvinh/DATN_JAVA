@@ -14,6 +14,7 @@ import { useSiteSettingsStore } from '@/stores/useSiteSettingsStore'
 import { useTimePromotionStore } from '@/stores/useTimePromotionStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useFlashSaleCountdown } from '@/composables/useCountDown'
+import ulti from '@/ulti/ulti'
 
 const productStore = useProductStore()
 const audienceStore = useAudienceStore()
@@ -92,7 +93,7 @@ const posts = computed(() => landing.value.posts ?? [])
   <!-- USP -->
   <section class="border-b border-border">
     <div class="container-x grid grid-cols-2 gap-8 py-10 md:grid-cols-4">
-      <div v-for="(u, i) in uspItems" :key="i" class="flex items-center gap-3">
+      <div v-for="(u, i) in uspItems" :key="i" class="flex items-center justify-center gap-3">
         <component :is="u.icon" class="h-5 w-5 text-gold" stroke-width="1.5" />
         <div>
           <p class="text-sm font-medium">{{ u.t }}</p>
@@ -118,10 +119,14 @@ const posts = computed(() => landing.value.posts ?? [])
           <Flame class="h-3.5 w-3.5" /> Flash Sale
         </p>
         <h2 class="font-display text-3xl md:text-4xl">
-          {{ flashState.promo.name }} —
+          {{ flashState.promo.name }} -
           <span class="italic text-gold">
-            giảm {{ flashState.promo.discountValue
-            }}{{ flashState.promo.discountType === 'PERCENT' ? '%' : '₫' }} tổng đơn
+            giảm
+            {{
+              flashState.promo.discountType === 'PERCENT'
+                ? flashState.promo.discountValue
+                : ulti.formatVND(flashState.promo.discountValue)
+            }}{{ flashState.promo.discountType === 'PERCENT' ? '%' : '' }} tổng đơn
           </span>
         </h2>
         <p class="text-sm text-ivory/70">
