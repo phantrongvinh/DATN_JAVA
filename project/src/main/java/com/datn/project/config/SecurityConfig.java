@@ -90,6 +90,7 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/api/v1/promotions/**").permitAll()
 
                             // ─── Admin ───────────────────────────────────────
+                            .requestMatchers(HttpMethod.GET,"/api/v1/admin/time-promotions/all").permitAll()
                             .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                             // ─── User (đã login) ─────────────────────────────

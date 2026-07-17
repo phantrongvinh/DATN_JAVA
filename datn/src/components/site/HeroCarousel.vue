@@ -11,7 +11,7 @@ const props = defineProps({
 const current = ref(0)
 let intervalId = null
 
-const activeSlide = computed(() => props.slides[current.value])
+const activeSlide = computed(() => props.slides?.[current.value] ?? props.slides?.[0] ?? null)
 
 const goTo = (idx) => {
   current.value = idx
@@ -20,7 +20,7 @@ const goTo = (idx) => {
 
 const startAutoplay = () => {
   if (intervalId) clearInterval(intervalId)
-  if (props.slides.length <= 1) return
+  if (props.slides?.length <= 1) return
   intervalId = setInterval(() => {
     current.value = (current.value + 1) % props.slides.length
   }, props.autoplayMs)
@@ -34,7 +34,7 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="relative h-[70vh] min-h-[480px] w-full overflow-hidden border-b border-border md:h-[85vh]"
+    class="relative h-[570px] md:h-[650px] w-full overflow-hidden border-b border-border md:h-[85vh]"
   >
     <Transition name="fade" mode="out-in">
       <div :key="activeSlide?.id" class="absolute inset-0">
@@ -82,7 +82,7 @@ onUnmounted(() => {
 
     <!-- Dots -->
     <div
-      v-if="slides.length > 1"
+      v-if="slides?.length > 1"
       class="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2"
     >
       <button

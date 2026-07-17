@@ -85,19 +85,23 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <!-- views/layout/AdminLayout.vue -->
-  <div class="flex min-h-screen bg-secondary/30">
+  <div class="flex h-screen bg-secondary/30 overflow-hidden">
     <!-- Sidebar -->
-    <aside class="hidden w-60 shrink-0 flex-col border-r border-border bg-background md:flex">
-      <div class="border-b border-border px-6 py-5">
+    <aside
+      class="hidden md:flex w-60 shrink-0 h-screen flex-col border-r border-border bg-background"
+    >
+      <!-- Header -->
+      <div class="border-b border-border px-6 py-5 shrink-0">
         <RouterLink to="/" class="flex items-baseline gap-1">
           <span class="font-display text-xl font-semibold">Maison</span>
           <span class="font-display text-xl italic text-gold">Calcio</span>
         </RouterLink>
+
         <p class="mt-1 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Admin</p>
       </div>
 
-      <nav class="flex-1 space-y-0.5 p-3">
+      <!-- Menu -->
+      <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
         <RouterLink
           v-for="item in navs"
           :key="item.to"
@@ -110,9 +114,12 @@ const handleLogout = () => {
         </RouterLink>
       </nav>
 
-      <div class="border-t border-border p-4 text-sm">
+      <!-- Footer -->
+      <div class="shrink-0 border-t border-border p-4 text-sm">
         <p class="font-medium">{{ user?.name }}</p>
-        <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
+        <p class="truncate text-xs text-muted-foreground">
+          {{ user?.email }}
+        </p>
 
         <div class="mt-3 flex gap-2">
           <RouterLink
@@ -125,7 +132,7 @@ const handleLogout = () => {
 
           <button
             @click="handleLogout"
-            class="flex items-center justify-center border border-border p-1.5 hover:bg-secondary text-destructive border-destructive"
+            class="flex items-center justify-center border border-destructive p-1.5 text-destructive hover:bg-secondary"
           >
             <LogOut class="h-3.5 w-3.5" />
           </button>
@@ -133,6 +140,27 @@ const handleLogout = () => {
       </div>
     </aside>
 
-    <RouterView />
+    <!-- Content -->
+    <main class="flex-1 h-screen overflow-y-auto">
+      <!-- <RouterView v-slot="{ Component, route }">
+        <Transition name="page" mode="out-in" appear>
+          <component :is="Component" :key="route.fullPath" />
+        </Transition>
+      </RouterView> -->
+
+      <RouterView />
+    </main>
   </div>
 </template>
+
+<style scoped>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+</style>

@@ -15,9 +15,9 @@ const t = computed(() => landing.value.theme)
   <footer
     class="mt-24 border-t"
     :style="{
-      backgroundColor: t.footerBg,
-      color: t.footerText,
-      borderColor: `color-mix(in oklab, ${t.footerText} 20%, transparent)`,
+      backgroundColor: t?.footerBg,
+      color: t?.footerText,
+      borderColor: `color-mix(in oklab, ${t?.footerText} 20%, transparent)`,
     }"
   >
     <div class="container-x grid gap-12 py-16 md:grid-cols-4">
@@ -90,7 +90,7 @@ const t = computed(() => landing.value.theme)
 
         <form
           class="mt-4 flex border-b focus-within:opacity-100"
-          :style="{ borderColor: `color-mix(in oklab, ${t.footerText} 30%, transparent)` }"
+          :style="{ borderColor: `color-mix(in oklab, ${t?.footerText} 30%, transparent)` }"
         >
           <input
             type="email"
@@ -112,7 +112,7 @@ const t = computed(() => landing.value.theme)
       </div>
     </div>
 
-    <div :style="{ borderTop: `1px solid color-mix(in oklab, ${t.footerText} 15%, transparent)` }">
+    <div :style="{ borderTop: `1px solid color-mix(in oklab, ${t?.footerText} 15%, transparent)` }">
       <div
         class="container-x flex flex-col items-center justify-between gap-2 py-6 text-xs opacity-70 md:flex-row"
       >

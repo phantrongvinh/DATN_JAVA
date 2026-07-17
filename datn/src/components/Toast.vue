@@ -54,7 +54,7 @@ const close = () => {
     >
       <div
         v-if="show"
-        class="fixed bottom-6 right-6 z-[100] flex min-w-[280px] max-w-sm items-center gap-3 px-4 py-3 shadow-lg"
+        class="fixed top-6 right-6 z-[100] flex min-w-[280px] max-w-sm items-center gap-3 px-4 py-3 shadow-lg"
         :class="[config.bg, config.text]"
       >
         <component :is="config.icon" class="h-5 w-5 shrink-0" :class="config.iconColor" />

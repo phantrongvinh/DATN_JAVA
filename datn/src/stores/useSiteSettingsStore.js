@@ -1,5 +1,6 @@
-import { ref, watch } from 'vue'
+import { ref, toRaw, unref, watch } from 'vue'
 import { defineStore } from 'pinia'
+import axiosClient from '@/api/axiosClient'
 
 const STORAGE_KEY = 'site-settings'
 
@@ -22,33 +23,78 @@ export const SEASONAL_PRESETS = [
     colors: { ...DEFAULT_THEME },
   },
   {
+    id: 'worldcup',
+    name: 'World Cup',
+    emoji: '🏆',
+    primaryColor: '#c9a34e',
+    colors: {
+      headerBg: '#0b1d3a',
+      headerText: '#f5f0e6',
+      headerAccent: '#c9a34e',
+      footerBg: '#0b1d3a',
+      footerText: '#e8e2d3',
+      announcementBg: '#c9a34e',
+      announcementText: '#0b1d3a',
+    },
+  },
+  {
+    id: 'champions',
+    name: 'Champions League',
+    emoji: '⭐',
+    primaryColor: '#7ac8ff',
+    colors: {
+      headerBg: '#020617',
+      headerText: '#e6edff',
+      headerAccent: '#7ac8ff',
+      footerBg: '#020617',
+      footerText: '#c7d2fe',
+      announcementBg: '#1e293b',
+      announcementText: '#7ac8ff',
+    },
+  },
+  {
     id: 'summer',
     name: 'Hè sôi động',
-    emoji: '☀️',
-    primaryColor: '#ff6b35',
+    emoji: '🌞',
+    primaryColor: '#f97316',
     colors: {
-      headerBg: '#0a2540',
-      headerText: '#ffffff',
-      headerAccent: '#ff6b35',
-      footerBg: '#0a2540',
-      footerText: '#ffffff',
-      announcementBg: '#ff6b35',
+      headerBg: '#fff8ec',
+      headerText: '#7c2d12',
+      headerAccent: '#f97316',
+      footerBg: '#7c2d12',
+      footerText: '#fed7aa',
+      announcementBg: '#f97316',
       announcementText: '#ffffff',
     },
   },
   {
-    id: 'worldcup',
-    name: 'World Cup',
-    emoji: '🏆',
-    primaryColor: '#ffd700',
+    id: 'derby',
+    name: 'Derby đỏ',
+    emoji: '🔥',
+    primaryColor: '#dc2626',
     colors: {
-      headerBg: '#0b3d2e',
-      headerText: '#ffffff',
-      headerAccent: '#ffd700',
-      footerBg: '#0b3d2e',
-      footerText: '#ffffff',
-      announcementBg: '#ffd700',
-      announcementText: '#0b3d2e',
+      headerBg: '#1a0505',
+      headerText: '#fee2e2',
+      headerAccent: '#f87171',
+      footerBg: '#1a0505',
+      footerText: '#fecaca',
+      announcementBg: '#dc2626',
+      announcementText: '#ffffff',
+    },
+  },
+  {
+    id: 'premier',
+    name: 'Premier xanh',
+    emoji: '💚',
+    primaryColor: '#10b981',
+    colors: {
+      headerBg: '#022c22',
+      headerText: '#d1fae5',
+      headerAccent: '#34d399',
+      footerBg: '#022c22',
+      footerText: '#a7f3d0',
+      announcementBg: '#10b981',
+      announcementText: '#022c22',
     },
   },
 ]
@@ -93,7 +139,9 @@ function saveLanding(value) {
 export const useSiteSettingsStore = defineStore('siteSettings', () => {
   const landing = ref(loadLanding() ?? { ...DEFAULT_LANDING })
   const posts = ref([])
+  const loading = ref(false)
 
+  // ─── Sync localStorage khi landing thay đổi ──────
   watch(landing, (value) => saveLanding(value), { deep: true })
 
   window.addEventListener('storage', (e) => {
@@ -104,58 +152,116 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     }
   })
 
-  function updateLanding(next) {
-    landing.value = { ...next }
+  // ─── Load từ server ───────────────────────────────
+  async function fetchFromServer() {
+    loading.value = true
+    try {
+      const res = await axiosClient.get('/site-setting')
+      if (res.data && Object.keys(res.data).length > 0) {
+        landing.value = {
+          ...DEFAULT_LANDING,
+          ...res.data,
+          theme: {
+            ...DEFAULT_THEME,
+            ...(res.data.theme ?? {}),
+          },
+          slides: res.data.slides ?? DEFAULT_SLIDES,
+        }
+        saveLanding(landing.value)
+      }
+    } catch {
+      console.warn('Không thể load settings từ server, dùng cache local')
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ─── Save lên server ──────────────────────────────
+  async function saveToServer(next) {
+    loading.value = true
+    try {
+      const plainData = structuredClone(next)
+      const res = await axiosClient.put('/admin/site-setting', plainData)
+      landing.value = res.data
+      saveLanding(res.data)
+    } catch (err) {
+      console.error('Lỗi save settings:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ─── Actions (giữ nguyên logic, thêm sync server) ─
+  async function updateLanding(next) {
+    const plain = JSON.parse(JSON.stringify(next))
+
+    landing.value = plain
+
+    await saveToServer(plain)
   }
 
   function resetLanding() {
     landing.value = { ...DEFAULT_LANDING }
+    saveToServer({ ...DEFAULT_LANDING })
   }
 
   function applySeasonalPreset(id) {
     const preset = SEASONAL_PRESETS.find((p) => p.id === id)
     if (!preset) return
-    landing.value = {
+    const next = {
       ...landing.value,
       seasonalPresetId: preset.id,
       primaryColor: preset.primaryColor,
       theme: { ...preset.colors },
     }
+    landing.value = next
+    saveToServer(next)
   }
 
   function upsertSlide(slide) {
-    const slides = [...landing.value.slides]
+    const slides = [...(landing.value.slides ?? [])]
     const idx = slides.findIndex((s) => s.id === slide.id)
     if (idx >= 0) slides[idx] = slide
     else slides.push(slide)
-    landing.value = { ...landing.value, slides }
+    const next = { ...landing.value, slides }
+    landing.value = next
+    saveToServer(next)
   }
 
   function removeSlide(id) {
-    landing.value = {
+    const next = {
       ...landing.value,
-      slides: landing.value.slides.filter((s) => s.id !== id),
+      slides: (landing.value.slides ?? []).filter((s) => s.id !== id),
     }
+    landing.value = next
+    saveToServer(next)
   }
 
   function moveSlide(id, direction) {
-    const slides = [...landing.value.slides]
+    const slides = [...(landing.value.slides ?? [])]
     const idx = slides.findIndex((s) => s.id === id)
     if (idx < 0) return
     const target = idx + direction
     if (target < 0 || target >= slides.length) return
     ;[slides[idx], slides[target]] = [slides[target], slides[idx]]
-    landing.value = { ...landing.value, slides }
+    const next = { ...landing.value, slides }
+    landing.value = next
+    saveToServer(next)
   }
 
   return {
     landing,
     posts,
+    loading,
+    fetchFromServer,
     updateLanding,
     resetLanding,
     applySeasonalPreset,
     upsertSlide,
     removeSlide,
     moveSlide,
+    DEFAULT_LANDING,
+    DEFAULT_SLIDES,
+    DEFAULT_THEME,
   }
 })

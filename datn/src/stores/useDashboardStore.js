@@ -37,7 +37,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
       })
 
       data.value = res
-      console.log(data.value)
     } catch (err) {
       error.value = err.response?.data?.message ?? err.message ?? 'Có lỗi xảy ra'
     } finally {
