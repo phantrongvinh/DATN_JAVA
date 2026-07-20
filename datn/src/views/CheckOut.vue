@@ -1,13 +1,13 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { CheckCircle2 } from 'lucide-vue-next'
-
+import { computed, onMounted, ref, watch } from 'vue'
 import { useCheckout } from '@/composables/useCheckout'
 import { useCartStore } from '@/stores/useCartStore'
 import ulti from '@/ulti/ulti'
 import { useAddressStore } from '@/stores/useAddressStore'
 import { storeToRefs } from 'pinia'
+import axiosClient from '@/api/axiosClient'
+import * as yup from 'yup'
+import { useForm } from 'vee-validate'
 
 const addressStore = useAddressStore()
 
@@ -22,42 +22,197 @@ const selectedAddress = ref(null)
 const paymentMethodId = ref(1)
 const showNewForm = ref(false)
 
+// address
+const schema = yup.object({
+  receiverName: yup
+    .string()
+    .trim()
+    .required('Vui lòng nhập họ tên người nhận')
+    .min(2, 'Họ tên phải có ít nhất 2 ký tự')
+    .max(50, 'Họ tên không quá 50 ký tự')
+    .matches(/^[A-Za-zÀ-ỹ\s]+$/, 'Họ tên chỉ được chứa chữ cái'),
+
+  receiverPhone: yup
+    .string()
+    .required('Vui lòng nhập số điện thoại')
+    .matches(/^(0|\+84)(3|5|7|8|9)\d{8}$/, 'Số điện thoại không hợp lệ'),
+
+  detail: yup
+    .string()
+    .trim()
+    .required('Vui lòng nhập địa chỉ chi tiết')
+    .min(5, 'Địa chỉ quá ngắn')
+    .max(200, 'Địa chỉ không quá 200 ký tự'),
+
+  provinceName: yup.string().required('Vui lòng chọn tỉnh/thành phố'),
+
+  districtName: yup.string().required('Vui lòng chọn quận/huyện'),
+
+  wardName: yup.string().required('Vui lòng chọn phường/xã'),
+})
+
+const { errors, defineField, handleSubmit, setFieldValue, resetForm } = useForm({
+  validationSchema: schema,
+  initialValues: {
+    receiverName: '',
+    receiverPhone: '',
+    detail: '',
+    provinceName: '',
+    districtName: '',
+    wardName: '',
+  },
+})
+
+const [receiverName] = defineField('receiverName')
+const [receiverPhone] = defineField('receiverPhone')
+const [detail] = defineField('detail')
+
+const provinces = ref([])
+const districts = ref([])
+const wards = ref([])
+
 const newAddress = ref({
   receiverName: '',
   receiverPhone: '',
+  detail: '',
+  provinceName: '',
+  districtId: null,
+  districtName: '',
+  wardCode: '',
+  wardName: '',
   address: '',
   isPrimary: false,
 })
 
+const selectedProvince = ref(null)
+const selectedDistrict = ref(null)
+const selectedWard = ref(null)
+
 onMounted(async () => {
   await addressStore.fetchAddresses()
-
   const primary = addresses.value?.find((a) => a.primary)
   if (primary) selectAddress(primary)
+
+  // Load provinces
+  const res = await axiosClient.get('/shipping/provinces')
+  provinces.value = res.data
 })
 
-const selectAddress = (addr) => {
+watch(selectedProvince, async (p) => {
+  if (!p) return
+
+  setFieldValue('provinceName', p.ProvinceName)
+
+  newAddress.value.provinceName = p.ProvinceName
+
+  districts.value = []
+  wards.value = []
+
+  selectedDistrict.value = null
+  selectedWard.value = null
+
+  setFieldValue('districtName', '')
+  setFieldValue('wardName', '')
+
+  const res = await axiosClient.get('/shipping/districts', {
+    params: {
+      provinceId: p.ProvinceID,
+    },
+  })
+
+  districts.value = res.data
+})
+
+watch(selectedDistrict, async (d) => {
+  if (!d) return
+
+  setFieldValue('districtName', d.DistrictName)
+
+  newAddress.value.districtId = d.DistrictID
+  newAddress.value.districtName = d.DistrictName
+
+  wards.value = []
+  selectedWard.value = null
+
+  setFieldValue('wardName', '')
+
+  const res = await axiosClient.get('/shipping/wards', {
+    params: {
+      districtId: d.DistrictID,
+    },
+  })
+
+  wards.value = res.data
+})
+
+watch(selectedWard, (w) => {
+  if (!w) return
+
+  setFieldValue('wardName', w.WardName)
+
+  newAddress.value.wardCode = w.WardCode
+  newAddress.value.wardName = w.WardName
+})
+
+const selectAddress = async (addr) => {
   selectedAddressId.value = addr.id
   selectedAddress.value = addr
+
+  await calculateShipping(addr)
 }
 
-const handleAddAddress = async () => {
-  await addressStore.addAddress(newAddress.value)
-  showNewForm.value = false
-  newAddress.value = { receiverName: '', receiverPhone: '', address: '', isPrimary: false }
+const handleAddAddress = handleSubmit(async (values) => {
+  const payload = {
+    ...newAddress.value,
+    receiverName: values.receiverName,
+    receiverPhone: values.receiverPhone,
+    detail: values.detail,
+  }
 
-  // Auto chọn địa chỉ vừa thêm nếu là primary
-  const primary = addresses.value?.find((a) => a.primary)
-  if (primary) selectAddress(primary)
-}
+  payload.address = [payload.detail, payload.wardName, payload.districtName, payload.provinceName]
+    .filter(Boolean)
+    .join(', ')
+
+  try {
+    const address = await addressStore.addAddress(payload)
+
+    selectAddress(address)
+
+    showNewForm.value = false
+
+    resetForm({
+      values: {
+        receiverName: '',
+        receiverPhone: '',
+        detail: '',
+        provinceName: '',
+        districtName: '',
+        wardName: '',
+      },
+    })
+
+    setFieldValue('provinceName', '')
+    setFieldValue('districtName', '')
+    setFieldValue('wardName', '')
+  } catch (e) {
+    console.error(e)
+  }
+})
 
 const handleCheckout = async () => {
   if (!selectedAddress.value) return
   const form = {
     shippingAddress: selectedAddress.value.address,
+
     receiverName: selectedAddress.value.receiverName,
+
     receiverPhone: selectedAddress.value.receiverPhone,
+
     paymentMethodId: paymentMethodId.value,
+
+    districtId: selectedAddress.value.districtId,
+
+    wardCode: selectedAddress.value.wardCode,
   }
   await checkout(form)
 }
@@ -78,6 +233,8 @@ const {
   handleApplyVoucher,
   removeVoucher,
   checkout,
+  calculateShipping,
+  shippingFee,
 } = useCheckout()
 </script>
 
@@ -136,34 +293,91 @@ const {
             + Thêm địa chỉ mới
           </button>
 
-          <div v-if="showNewForm" class="mt-4 border border-border p-4">
-            <div class="grid gap-4 md:grid-cols-2">
-              <input
-                v-model="newAddress.receiverName"
-                placeholder="Họ tên"
-                class="border border-border px-3 py-2"
-              />
-
-              <input
-                v-model="newAddress.receiverPhone"
-                placeholder="Số điện thoại"
-                class="border border-border px-3 py-2"
-              />
+          <div v-if="showNewForm" class="mt-4 border border-border p-4 space-y-3">
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="">
+                <input
+                  v-model="receiverName"
+                  placeholder="Họ tên người nhận"
+                  class="border border-border px-3 py-2 text-sm w-full"
+                />
+                <p class="mt-1 text-xs text-red-500">
+                  {{ errors.receiverName }}
+                </p>
+              </div>
+              <div>
+                <input
+                  v-model="receiverPhone"
+                  placeholder="Số điện thoại"
+                  class="border border-border px-3 py-2 text-sm w-full"
+                />
+                <p class="mt-1 text-xs text-red-500">
+                  {{ errors.receiverPhone }}
+                </p>
+              </div>
             </div>
 
-            <input
-              v-model="newAddress.address"
-              placeholder="Địa chỉ"
-              class="mt-4 w-full border border-border px-3 py-2"
-            />
+            <!-- Tỉnh/TP -->
+            <select
+              v-model="selectedProvince"
+              class="w-full border border-border px-3 py-2 text-sm"
+            >
+              <option :value="null">Chọn tỉnh/thành phố</option>
+              <option v-for="p in provinces" :key="p.ProvinceID" :value="p">
+                {{ p.ProvinceName }}
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-red-500">
+              {{ errors.provinceName }}
+            </p>
 
-            <label class="mt-4 flex items-center gap-2 text-sm">
+            <!-- Quận/Huyện -->
+            <select
+              v-model="selectedDistrict"
+              :disabled="!selectedProvince"
+              class="w-full border border-border px-3 py-2 text-sm disabled:opacity-50"
+            >
+              <option :value="null">Chọn quận/huyện</option>
+              <option v-for="d in districts" :key="d.DistrictID" :value="d">
+                {{ d.DistrictName }}
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-red-500">
+              {{ errors.districtName }}
+            </p>
+
+            <!-- Phường/Xã -->
+            <select
+              v-model="selectedWard"
+              :disabled="!selectedDistrict"
+              class="w-full border border-border px-3 py-2 text-sm disabled:opacity-50"
+            >
+              <option :value="null">Chọn phường/xã</option>
+              <option v-for="w in wards" :key="w.WardCode" :value="w">
+                {{ w.WardName }}
+              </option>
+            </select>
+            <p class="mt-1 text-xs text-red-500">
+              {{ errors.wardName }}
+            </p>
+
+            <!-- Số nhà, đường -->
+            <input
+              v-model="detail"
+              placeholder="Số nhà, tên đường..."
+              class="w-full border border-border px-3 py-2 text-sm"
+            />
+            <p class="mt-1 text-xs text-red-500">
+              {{ errors.detail }}
+            </p>
+
+            <label class="flex items-center gap-2 text-sm">
               <input type="checkbox" v-model="newAddress.isPrimary" />
               Đặt làm mặc định
             </label>
 
             <button
-              class="mt-4 bg-ink px-6 py-2 text-xs uppercase tracking-widest text-ivory"
+              class="bg-ink px-6 py-2 text-xs uppercase tracking-widest text-ivory"
               @click="handleAddAddress"
             >
               Lưu địa chỉ
@@ -277,6 +491,17 @@ const {
                 <span>
                   {{ ulti.formatVND(subtotal) }}
                 </span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Phí vận chuyển</span>
+
+                <span v-if="selectedAddress && shippingFee > 0">
+                  {{ ulti.formatVND(shippingFee) }}
+                </span>
+
+                <span v-else-if="selectedAddress"> Đang tính... </span>
+
+                <span v-else class="text-gray-400"> Chọn địa chỉ </span>
               </div>
 
               <div

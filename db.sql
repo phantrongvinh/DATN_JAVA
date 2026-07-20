@@ -100,6 +100,15 @@ CREATE TABLE addresses(
     address				TEXT NOT NULL,
     is_primary			BOOLEAN NOT NULL DEFAULT FALSE,
     user_id				INT NOT NULL,
+ 
+	receiver_name  	VARCHAR(100) NULL,
+	receiver_phone 	VARCHAR(15) NULL,
+	province_name  	VARCHAR(100) NULL,
+	district_id    	INT NULL,
+	district_name  	VARCHAR(100) NULL,
+	ward_code      	VARCHAR(20) NULL,
+	ward_name      	VARCHAR(100) NULL,
+	detail         	TEXT NULL,
     CONSTRAINT FK_AD_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -136,6 +145,17 @@ CREATE TABLE product_reviews(
     CONSTRAINT FK_PR_P FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+CREATE TABLE wishlist(
+	user_id				INT NOT NULL,
+    
+    product_id			INT NOT NULL,
+    
+    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT FK_WL_U FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT FK_WL_P FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
 CREATE TABLE vouchers(
 	id 					INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -162,7 +182,7 @@ CREATE TABLE vouchers(
 
     created_at 			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-     user_id 			INT NULL,
+	user_id 			INT NULL,
 	CONSTRAINT FK_V_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -172,37 +192,40 @@ CREATE TABLE payment_methods(
 );
 
 CREATE TABLE orders(
-	id 					INT AUTO_INCREMENT PRIMARY KEY,
-    user_id 			INT NOT NULL,
-    total_price			DECIMAL(10,2),
-	`status` 			ENUM(
+	id 						INT AUTO_INCREMENT PRIMARY KEY,
+    user_id 				INT NOT NULL,
+    total_price				DECIMAL(10,2),
+	`status` 				ENUM(
 							'PENDING',
 							'CONFIRMED',
 							'SHIPPING',
 							'DELIVERED',
 							'CANCELLED'
 							)
-						DEFAULT 'PENDING',
+							DEFAULT 'PENDING',
     
-    voucher_id			INT,
-    discount_amount		DECIMAL(10,2) DEFAULT 0,
-    final_price			DECIMAL(10,2),
+    voucher_id				INT,
+    discount_amount			DECIMAL(10,2) DEFAULT 0,
+    shipping_fee			DECIMAL(10,2),
+    final_price				DECIMAL(10,2),
     
-    shipping_address	TEXT NOT NULL,
-    reciever_name       VARCHAR(100) NOT NULL,
-    reviever_phone      VARCHAR(15) NOT NULL,
+    shipping_address		TEXT NOT NULL,
+    reciever_name       	VARCHAR(100) NOT NULL,
+    reviever_phone      	VARCHAR(15) NOT NULL,
 
-    payment_method_id	INT NOT NULL,
-    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-						ON UPDATE CURRENT_TIMESTAMP,
+    payment_method_id		INT NOT NULL,
+    created_at				TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at				TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+							ON UPDATE CURRENT_TIMESTAMP,
                         
-	payment_txn_ref		VARCHAR(500),
+	payment_txn_ref			VARCHAR(500),
 	
 	payment_status       	ENUM('PENDING','PAID','FAILED','REFUNDED','UNPAID') DEFAULT 'PENDING',
     payment_transaction_id 	VARCHAR(255) NULL,
 	tracking_code 			VARCHAR(255) NULL,
-    
+    shipping_detail 		VARCHAR(500) NULL,
+    to_district_id  		INT NULL,
+    to_ward_code    		VARCHAR(20) NULL,
     
     CONSTRAINT FK_O_U FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT FK_O_V FOREIGN KEY (voucher_id) REFERENCES vouchers(id),
@@ -305,9 +328,6 @@ CREATE TABLE site_settings (
 INSERT INTO site_settings (id, data) VALUES (1, '{}')
 ON DUPLICATE KEY UPDATE id = id;
 
-    
-ALTER TABLE addresses ADD COLUMN receiver_name VARCHAR(100);
-ALTER TABLE addresses ADD COLUMN receiver_phone VARCHAR(15);
 ALTER TABLE vouchers ADD COLUMN is_stackable BOOLEAN DEFAULT FALSE;
 
 INSERT INTO roles(`name`) values("USER"),("ADMIN");

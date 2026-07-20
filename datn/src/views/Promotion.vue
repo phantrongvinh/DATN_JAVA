@@ -7,22 +7,56 @@
 
     <main class="p-6">
       <div class="border border-border bg-background">
-        <!-- Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
-          <div class="relative">
-            <Search
-              class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            />
+        <div
+          class="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between"
+        >
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:flex-wrap">
+            <!-- Search -->
+            <div class="relative w-full md:w-64">
+              <Search
+                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                v-model="keyword"
+                placeholder="Tìm khuyến mãi..."
+                class="w-full border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none focus:border-foreground"
+              />
+            </div>
 
-            <input
-              v-model="keyword"
-              placeholder="Tìm khuyến mãi..."
-              class="w-72 border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-foreground"
-            />
+            <!-- Filter loại giảm giá -->
+            <select
+              v-model="discountTypeFilter"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option :value="null">Tất cả loại giảm</option>
+              <option value="PERCENT">Giảm theo %</option>
+              <option value="FIXED">Giảm số tiền cố định</option>
+            </select>
+
+            <!-- Filter trạng thái -->
+            <select
+              v-model="statusFilter"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option :value="null">Tất cả trạng thái</option>
+              <option value="ACTIVE">Đang chạy</option>
+              <option value="UPCOMING">Sắp diễn ra</option>
+              <option value="ENDED">Đã hết hạn</option>
+            </select>
+
+            <!-- Reset -->
+            <button
+              @click="handleResetFilters"
+              class="flex items-center justify-center gap-2 border border-border px-3 py-2 text-sm hover:bg-secondary"
+            >
+              <RotateCcw class="h-4 w-4" />
+              Đặt lại
+            </button>
           </div>
 
           <button
-            class="flex items-center gap-2 bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90"
+            class="flex items-center justify-center gap-2 bg-ink px-4 py-2 text-sm text-white hover:bg-ink/90"
             @click="handleOpenNewModal"
           >
             <Plus class="h-4 w-4" />
@@ -43,6 +77,7 @@
                 <th>Bắt đầu</th>
                 <th>Kết thúc</th>
                 <th>Trạng thái</th>
+                <th>Sản phẩm áp dụng</th>
                 <th class="pr-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -85,10 +120,24 @@
 
                 <td>
                   <span
-                    class="inline-flex rounded bg-green-100 px-2 py-1 text-[10px] uppercase tracking-widest text-green-700"
+                    class="inline-flex rounded px-2 py-1 text-[10px] uppercase tracking-widest"
+                    :class="STATUS_CONFIG[getPromotionStatus(promotion)].class"
                   >
-                    Đang chạy
+                    {{ STATUS_CONFIG[getPromotionStatus(promotion)].label }}
                   </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="max-w-[240px]">
+                    <p class="text-sm font-medium">{{ promotion.productCount }} sản phẩm</p>
+                    <p
+                      v-if="promotion.productCount > 0"
+                      class="truncate text-xs text-muted-foreground"
+                      :title="promotion.productNames.join(', ')"
+                    >
+                      {{ promotion.productNames.slice(0, 3).join(', ') }}
+                      <span v-if="promotion.productCount > 3">...</span>
+                    </p>
+                  </div>
                 </td>
 
                 <td class="pr-4">
@@ -172,22 +221,32 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { Search, Plus, Pencil, Trash2, Tag } from 'lucide-vue-next'
+import { Search, Plus, Pencil, Trash2, Tag, RotateCcw } from 'lucide-vue-next'
 import PromotionModal from '@/components/admin/PromotionModal.vue'
 import { usePromotionStore } from '@/stores/usePromotionStore'
 import { storeToRefs } from 'pinia'
 import ulti from '@/ulti/ulti'
-
-const keyword = ref('')
+import { useDebounce } from '@/composables/useDebounce'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 const showModal = ref(false)
 const editingPromotion = ref(null)
 const editingPromotionId = ref(null)
 
 const promotionStore = usePromotionStore()
+const notificationStore = useNotificationStore()
 
-const { promotions, page, size, totalElements, totalPages, currentPage } =
-  storeToRefs(promotionStore)
+const {
+  promotions,
+  page,
+  size,
+  totalElements,
+  totalPages,
+  currentPage,
+  keyword,
+  statusFilter,
+  discountTypeFilter,
+} = storeToRefs(promotionStore)
 
 onMounted(async () => {
   await promotionStore.fetchAllPromotion({
@@ -208,6 +267,7 @@ watch(currentPage, async (curPage) => {
 const handleOpenNewModal = () => {
   showModal.value = true
   editingPromotion.value = null
+  notificationStore.notify('Đang mở bảng THÊM khuyến mãi', 'success')
 }
 
 // handle chinh sua khuyen mai
@@ -215,6 +275,7 @@ const handleOpenEditModal = (p) => {
   showModal.value = true
   editingPromotion.value = p
   editingPromotionId.value = p.id
+  notificationStore.notify('Đang mở bảng SỬA khuyến mãi', 'success')
 }
 
 const handleSavePromotion = async () => {
@@ -227,5 +288,44 @@ const handleSavePromotion = async () => {
     console.log('new')
     showModal.value = false
   }
+}
+
+// handle status
+const getPromotionStatus = (item) => {
+  const now = new Date()
+  const start = new Date(item.startAt)
+  const end = new Date(item.endAt)
+
+  if (now < start) return 'UPCOMING'
+  if (now > end) return 'ENDED'
+  return 'ACTIVE'
+}
+
+const STATUS_CONFIG = {
+  ACTIVE: { label: 'Đang chạy', class: 'bg-green-100 text-green-700' },
+  UPCOMING: { label: 'Sắp diễn ra', class: 'bg-blue-100 text-blue-700' },
+  ENDED: { label: 'Đã hết hạn', class: 'bg-gray-100 text-gray-500' },
+}
+
+// handle filter
+const debouncedKeyword = useDebounce(keyword, 500)
+
+watch(debouncedKeyword, async () => {
+  await promotionStore.fetchAllPromotion({ newPage: 1 })
+})
+
+watch([discountTypeFilter, statusFilter], async () => {
+  await promotionStore.fetchAllPromotion({ newPage: 1 })
+})
+
+const handleResetFilters = () => {
+  promotionStore.resetFilters()
+  notificationStore.notify('Đặt lại bộ lọc', 'success')
+}
+
+// handle pagination
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return
+  await promotionStore.fetchAllPromotion({ newPage: p, newSize: size.value })
 }
 </script>

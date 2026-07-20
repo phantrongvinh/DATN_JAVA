@@ -19,4 +19,5 @@ public class CartItemResponse {
     private int quantity;
     private BigDecimal price;
     private BigDecimal originalPrice;
+    private Integer stock;
 }

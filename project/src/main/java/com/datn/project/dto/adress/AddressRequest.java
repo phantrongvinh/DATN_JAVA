@@ -8,8 +8,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddressRequest {
-    private String address;
-    private boolean isPrimary;
     private String receiverName;
     private String receiverPhone;
+    private String detail;
+    private String provinceName;
+    private Integer districtId;
+    private String districtName;
+    private String wardCode;
+    private String wardName;
+    private boolean isPrimary;
 }

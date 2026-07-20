@@ -3,13 +3,18 @@ package com.datn.project.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +25,7 @@ import com.datn.project.entity.Product;
 import com.datn.project.entity.Promotion;
 import com.datn.project.repository.IProductRepository;
 import com.datn.project.repository.IPromotionRepository;
+import com.datn.project.specification.PromotionSpecification;
 
 @Service
 public class PromotionService implements IPromotionService {
@@ -71,12 +77,30 @@ public class PromotionService implements IPromotionService {
     }
 
     @Override
-    public ResponseEntity<?> getAllPromotion(int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+    public ResponseEntity<?> getAllPromotion(int page, int size, String search, DiscountType discountType,
+            String status) {
+        Specification<Promotion> spec = PromotionSpecification.build(search, discountType, status);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
 
-        Page<PromotionResponse> resPage = promotionRepository.findAll(pageable).map(p -> {
+        Page<Promotion> promotionPage = promotionRepository.findAll(spec, pageable);
+
+        List<Integer> promotionIds = promotionPage.getContent().stream()
+                .map(Promotion::getId)
+                .toList();
+
+        Map<Integer, List<String>> productNamesByPromotion = new HashMap<>();
+        if (!promotionIds.isEmpty()) {
+            for (Object[] row : promotionRepository.findProductNamesByPromotionIds(promotionIds)) {
+                Integer promotionId = (Integer) row[0];
+                String productName = (String) row[1];
+                productNamesByPromotion
+                        .computeIfAbsent(promotionId, k -> new ArrayList<>())
+                        .add(productName);
+            }
+        }
+
+        Page<PromotionResponse> resPage = promotionPage.map(p -> {
             PromotionResponse res = new PromotionResponse();
-
             res.setId(p.getId());
             res.setName(p.getName());
             res.setDiscountType(p.getDiscountType().name());
@@ -84,8 +108,13 @@ public class PromotionService implements IPromotionService {
             res.setStartAt(p.getStartAt());
             res.setEndAt(p.getEndAt());
 
+            List<String> names = productNamesByPromotion.getOrDefault(p.getId(), List.of());
+            res.setProductNames(names);
+            res.setProductCount((long) names.size());
+
             return res;
         });
+
         return ResponseEntity.ok(resPage);
     }
 

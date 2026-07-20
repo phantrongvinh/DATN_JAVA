@@ -12,7 +12,7 @@ public interface ITimePromotionService {
 
     Optional<TimePromotion> getActiveTimePromotion();
 
-    ResponseEntity<?> getAllTimePromotion(int page, int size);
+    ResponseEntity<?> getAllTimePromotion(int page, int size, String search, Boolean isActive);
 
     BigDecimal calcDiscount(BigDecimal orderTotal, TimePromotion promotion);
 

@@ -1,14 +1,17 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Plus, Search, Pencil, Trash2, Clock } from 'lucide-vue-next'
+import { Plus, Search, Pencil, Trash2, Clock, RotateCcw } from 'lucide-vue-next'
 
 import ulti from '@/ulti/ulti'
 
 import TimePromotionModal from '@/components/admin/TimePromotionModal.vue'
 import { useTimePromotionStore } from '@/stores/useTimePromotionStore'
+import { useDebounce } from '@/composables/useDebounce'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 const timePromotionStore = useTimePromotionStore()
+const notificationStore = useNotificationStore()
 
 const {
   timePromotions,
@@ -20,11 +23,11 @@ const {
   loading,
   error,
   message,
+  keyword,
+  activeFilter,
 } = storeToRefs(timePromotionStore)
 
-// ========================
 // Load data
-// ========================
 onMounted(async () => {
   await timePromotionStore.fetchAllTimePromotion({
     newPage: page.value,
@@ -32,22 +35,24 @@ onMounted(async () => {
   })
 })
 
-// ========================
 // Search
-// ========================
-// const keyword = ref('')
+const searchQuery = useDebounce(keyword, 500)
 
-// const handleSearch = async () => {
-//   await timePromotionStore.fetchAllTimePromotions({
-//     page: 1,
-//     size: size.value,
-//     keyword: keyword.value,
-//   })
-// }
+watch(searchQuery, async () => {
+  await timePromotionStore.fetchAllTimePromotion({ newPage: 1 })
+})
 
-// ========================
+// Filter
+watch(activeFilter, async () => {
+  await timePromotionStore.fetchAllTimePromotion({ newPage: 1 })
+})
+
+const handleResetFilters = () => {
+  timePromotionStore.resetFilters()
+  notificationStore.notify('Đặt lại bộ lọc', 'success')
+}
+
 // Pagination
-// ========================
 const changePage = async (page) => {
   if (page < 1 || page > totalPages.value) return
 
@@ -57,9 +62,7 @@ const changePage = async (page) => {
   })
 }
 
-// ========================
 // Modal
-// ========================
 const showModal = ref(false)
 
 const editingPromotion = ref(null)
@@ -67,16 +70,16 @@ const editingPromotion = ref(null)
 const handleOpenNewModal = () => {
   editingPromotion.value = null
   showModal.value = true
+  notificationStore.notify('Đang mở bảng THÊM khung giờ khuyến mãi', 'success')
 }
 
 const handleEdit = (promotion) => {
   editingPromotion.value = promotion
   showModal.value = true
+  notificationStore.notify('Đang mở bảng SỬA khung giờ khuyến mãi', 'success')
 }
 
-// ========================
 // Save
-// ========================
 const handleSavePromotion = async (values) => {
   try {
     if (editingPromotion.value) {
@@ -108,9 +111,7 @@ const toggleStatus = async (promotion) => {
   console.log(message.value)
 }
 
-// ========================
 // Delete
-// ========================
 const handleDelete = async (id) => {
   await timePromotionStore.deleteTimePromotion(id)
 
@@ -134,16 +135,38 @@ const handleDelete = async (id) => {
         <div
           class="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between"
         >
-          <!-- Search -->
-          <div class="relative w-full md:w-80">
-            <Search
-              class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            />
+          <div class="flex flex-col gap-3 md:flex-row md:items-center">
+            <!-- Search -->
+            <div class="relative w-full md:w-80">
+              <Search
+                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                v-model="keyword"
+                placeholder="Tìm khung giờ..."
+                class="w-full border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none focus:border-foreground"
+              />
+            </div>
 
-            <input
-              placeholder="Tìm khung giờ..."
-              class="w-full border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none focus:border-foreground"
-            />
+            <!-- Filter trạng thái -->
+            <select
+              v-model="activeFilter"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option :value="null">Tất cả trạng thái</option>
+              <option :value="true">Đang hiệu lực</option>
+              <option :value="false">Hết hiệu lực</option>
+            </select>
+
+            <!-- Reset -->
+            <button
+              @click="handleResetFilters"
+              class="flex items-center justify-center gap-2 border border-border px-3 py-2 text-sm hover:bg-secondary"
+            >
+              <RotateCcw class="h-4 w-4" />
+              Đặt lại
+            </button>
           </div>
 
           <button
@@ -198,7 +221,7 @@ const handleDelete = async (id) => {
                 <td class="font-medium">
                   <span v-if="item.discountType === 'PERCENT'"> {{ item.discountValue }}% </span>
 
-                  <span v-else> {{ ulti.formatVND(item.discountValue) }} ₫ </span>
+                  <span v-else> {{ ulti.formatVND(item.discountValue) }}</span>
                 </td>
 
                 <!-- Start -->
@@ -249,7 +272,7 @@ const handleDelete = async (id) => {
                 </td>
               </tr>
 
-              <tr v-if="timePromotions.length === 0">
+              <tr v-if="!timePromotions || timePromotions.length === 0">
                 <td colspan="7" class="py-12 text-center text-muted-foreground">
                   Chưa có khung giờ vàng nào.
                 </td>

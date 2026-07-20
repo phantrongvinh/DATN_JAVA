@@ -63,6 +63,9 @@ public class Order implements Serializable {
     @Column(name = "time_discount")
     private BigDecimal timeDiscount;
 
+    @Column(name = "shipping_fee")
+    private BigDecimal shippingFee;
+
     @Column(name = "final_price")
     private BigDecimal finalPrice;
 
@@ -100,6 +103,15 @@ public class Order implements Serializable {
 
     @Column(name = "payment_txn_ref")
     private String paymentTxnRef;
+
+    @Column(name = "shipping_detail")
+    private String shippingDetail;
+
+    @Column(name = "to_district_id")
+    private Integer toDistrictId;
+
+    @Column(name = "to_ward_code")
+    private String toWardCode;
 
     @PrePersist
     protected void onCreate() {

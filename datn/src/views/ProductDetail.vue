@@ -9,6 +9,7 @@ import { useCart } from '@/composables/useCart'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import ProductCard from '@/components/site/ProductCard.vue'
 import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-next'
+import { useCartStore } from '@/stores/useCartStore'
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -94,7 +95,7 @@ const displayPrice = computed(() => {
 })
 
 // discount %
-const discountPercent = computed(() => product.value?.promotion?.discountValue ?? 0)
+// const discountPercent = computed(() => product.value?.promotion?.discountValue ?? 0)
 
 // gallery
 const activeImg = ref(0)
@@ -116,24 +117,39 @@ const url = 'http://localhost:8080/uploads/images'
 const qty = ref(1)
 
 // hanlde add to cart
-const quantityMessage = ref('')
 
 const { addItem } = useCart()
 
 const notification = useNotificationStore()
 
-watch(qty, (newQuantity) => {
-  if (newQuantity) quantityMessage.value = ''
-})
+const cartStore = useCartStore()
 
 const handleAddToCart = async () => {
   if (qty.value <= 0) {
-    quantityMessage.value = 'Vui lòng chọn số lượng'
+    notification.notify('Vui lòng chọn số lượng', 'error')
     return
   }
 
   if (!selectedVariant.value) {
-    quantityMessage.value = 'Vui lòng chọn phân loại'
+    notification.notify('Vui lòng chọn phân loại', 'error')
+    return
+  }
+
+  if (qty.value > selectedVariant.value.stock) {
+    notification.notify(`Chỉ còn ${selectedVariant.value.stock} sản phẩm`, 'error')
+
+    return
+  }
+
+  // Check tổng quantity trong cart + qty mới không vượt stock
+  const existingItem = cartStore.items.find((i) => i.productVariantId === selectedVariant.value.id)
+  const totalQty = (existingItem?.quantity ?? 0) + qty.value
+  if (totalQty > selectedVariant.value.stock) {
+    notification.notify(
+      `Chỉ còn ${selectedVariant.value.stock} sản phẩm (bạn đã có ${existingItem?.quantity ?? 0} trong giỏ)`,
+      'error',
+    )
+
     return
   }
 
@@ -277,8 +293,14 @@ const handleAddToCart = async () => {
             <button @click="qty = Math.max(1, qty - 1)" class="p-3 cursor-pointer">
               <Minus class="h-3.5 w-3.5" />
             </button>
+
             <span class="w-10 text-center text-sm">{{ qty }}</span>
-            <button @click="qty++" class="p-3 cursor-pointer">
+
+            <button
+              @click="qty = Math.min(selectedVariant?.stock ?? 1, qty + 1)"
+              class="p-3 cursor-pointer disabled:opacity-40"
+              :disabled="qty >= (selectedVariant?.stock ?? 1)"
+            >
               <Plus class="h-3.5 w-3.5" />
             </button>
           </div>
@@ -286,10 +308,15 @@ const handleAddToCart = async () => {
           <!-- Add to cart -->
           <button
             @click.prevent="handleAddToCart"
-            class="flex-1 bg-ink py-3 text-sm font-medium uppercase tracking-widest text-ivory transition-colors hover:bg-ink/85 cursor-pointer"
-            :disabled="!selectedVariant || selectedVariant.stock === 0"
+            class="flex-1 bg-ink py-3 text-sm font-medium uppercase tracking-widest text-ivory transition-colors hover:bg-ink/85 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="
+              !selectedVariant || selectedVariant.stock === 0 || qty > selectedVariant?.stock
+            "
           >
-            Thêm vào giỏ
+            <span v-if="!selectedVariant">Chọn phân loại</span>
+            <span v-else-if="selectedVariant.stock === 0">Hết hàng</span>
+            <span v-else-if="qty > selectedVariant.stock">Vượt quá tồn kho</span>
+            <span v-else>Thêm vào giỏ</span>
           </button>
           <button
             class="border border-border p-3 transition-colors hover:border-foreground"

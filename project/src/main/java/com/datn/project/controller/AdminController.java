@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,11 +26,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionRequest;
 import com.datn.project.dto.TimePromotionRequest;
+import com.datn.project.dto.dashboard.DashboardResponse;
 import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
+import com.datn.project.dto.voucher.BirthdayPreviewResponse;
+import com.datn.project.dto.voucher.VoucherRequest;
+import com.datn.project.dto.voucher.VoucherResponse;
+import com.datn.project.entity.DiscountType;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.entity.SiteSetting;
@@ -40,9 +47,8 @@ import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
 import com.datn.project.service.ITimePromotionService;
 import com.datn.project.service.IUserService;
+import com.datn.project.service.IVoucherService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 
 @RestController
 @RequestMapping(value = "/api/v1/admin")
@@ -75,6 +81,8 @@ public class AdminController {
     @Autowired
     private ISiteSettingRepository siteSettingRepository;
 
+    @Autowired
+    private IVoucherService voucherService;
 
     // phần products
     @GetMapping("/products/top5")
@@ -180,15 +188,18 @@ public class AdminController {
 
     @GetMapping("/promotions/all")
     public ResponseEntity<?> getAllPromotion(@RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(promotionService.getAllPromotion(page, size)).getBody();
+            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
+            @RequestParam(required = false) DiscountType discountType,
+            @RequestParam(required = false) String status) {
+        return ResponseEntity.ok(promotionService.getAllPromotion(page, size, search, discountType, status)).getBody();
     }
 
     // time promotion
     @GetMapping("/time-promotions/all")
     public ResponseEntity<?> getAllTimePromotion(@RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(timePromotionService.getAllTimePromotion(page, size)).getBody();
+            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean isActive) {
+        return ResponseEntity.ok(timePromotionService.getAllTimePromotion(page, size, search, isActive)).getBody();
     }
 
     @PutMapping("/time-promotions/{id}")
@@ -253,10 +264,11 @@ public class AdminController {
 
     // Dashboard
     @GetMapping("/dashboard")
-    public ResponseEntity<?> getDashboard(
-            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) Integer year) {
-        return ResponseEntity.ok(dashboardService.getDashboard(month, year));
+    public DashboardResponse getDashboard(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+            @RequestParam(required = false) Integer chartYear) {
+        return dashboardService.getDashboard(start, end, chartYear);
     }
 
     // site setting
@@ -264,17 +276,56 @@ public class AdminController {
     @GetMapping("/site-setting")
     public ResponseEntity<?> get() throws Exception {
         SiteSetting setting = siteSettingRepository.findById(1)
-            .orElseThrow();
+                .orElseThrow();
         return ResponseEntity.ok(objectMapper.readValue(setting.getData(), Map.class));
     }
 
     @PutMapping("/site-setting")
     public ResponseEntity<?> save(@RequestBody Map<String, Object> body) throws Exception {
         SiteSetting setting = siteSettingRepository.findById(1)
-            .orElse(new SiteSetting());
+                .orElse(new SiteSetting());
         setting.setData(objectMapper.writeValueAsString(body));
         setting.setUpdatedAt(LocalDateTime.now());
         siteSettingRepository.save(setting);
         return ResponseEntity.ok(body);
+    }
+
+    // phần voucher
+    @GetMapping
+    public Page<VoucherResponse> getAll(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) DiscountType discountType,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Boolean isStackable,
+            @RequestParam(required = false) Boolean isPersonal) {
+        return voucherService.fetchAll(page, size, search, discountType, isActive, isStackable, isPersonal);
+    }
+
+    @PostMapping
+    public VoucherResponse create(@RequestBody VoucherRequest req) {
+        return voucherService.create(req);
+    }
+
+    @PutMapping("/{id}")
+    public VoucherResponse update(@PathVariable Integer id, @RequestBody VoucherRequest req) {
+        return voucherService.update(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        voucherService.delete(id);
+    }
+
+    @GetMapping("/birthday/preview")
+    public BirthdayPreviewResponse previewBirthday() {
+        return voucherService.previewBirthdayVouchers();
+    }
+
+    @PostMapping("/birthday/generate")
+    public Map<String, Object> generateBirthday() {
+        int created = voucherService.generateBirthdayVouchers();
+        return Map.of("created", created);
     }
 }

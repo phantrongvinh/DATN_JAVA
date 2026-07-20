@@ -21,6 +21,7 @@ const loadOrder = async () => {
 
 onMounted(async () => {
   await loadOrder()
+  console.log(myOrders.value)
 })
 
 watch(
@@ -39,23 +40,23 @@ watch(
 const STATUS_LABEL = {
   PENDING: {
     label: 'Chờ xác nhận',
-    tone: 'bg-muted text-muted-foreground',
+    tone: 'bg-amber-100 text-amber-800',
   },
   CONFIRMED: {
-    label: 'Đang xử lý',
-    tone: 'bg-gold-soft text-ink',
+    label: 'Đã xác nhận',
+    tone: 'bg-blue-100 text-blue-800',
   },
   SHIPPING: {
     label: 'Đang giao',
-    tone: 'bg-ink/10 text-ink',
+    tone: 'bg-purple-100 text-purple-800',
   },
   DELIVERED: {
     label: 'Đã giao',
-    tone: 'bg-emerald-100 text-emerald-800',
+    tone: 'bg-green-100 text-green-800',
   },
   CANCELLED: {
     label: 'Đã hủy',
-    tone: 'bg-red-100 text-red-700',
+    tone: 'bg-red-100 text-red-800',
   },
 }
 

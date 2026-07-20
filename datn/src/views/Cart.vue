@@ -1,14 +1,11 @@
 <script setup>
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Minus, Plus, X, ShoppingBag } from 'lucide-vue-next'
 
-import { useCartStore } from '@/stores/useCartStore'
 import ulti from '@/ulti/ulti'
 import { useCart } from '@/composables/useCart'
 import SummaryRow from '@/components/site/SummaryRow.vue'
 import { useCheckout } from '@/composables/useCheckout'
-import { onMounted } from 'vue'
 
 const { items, removeItem, updateQuantity } = useCart()
 
@@ -117,13 +114,21 @@ const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheck
                 <Minus class="h-3 w-3" />
               </button>
 
-              <span class="w-8 text-center text-sm">
-                {{ item.quantity }}
-              </span>
+              <span class="w-8 text-center text-sm">{{ item.quantity }}</span>
 
-              <button class="p-2" @click="updateQuantity(item.productVariantId, item.quantity + 1)">
-                <Plus class="h-3 w-3" />
-              </button>
+              <button
+                class="p-2 disabled:opacity-40"
+                :disabled="item.stock && item.quantity >= item.stock"
+                @click="updateQuantity(item.productVariantId, item.quantity + 1)"
+              >
+                <Plus class="h-3 w-3" /></button
+              ><!-- Cảnh báo gần hết hàng -->
+              <p
+                v-if="item.stock && item.quantity >= item.stock"
+                class="col-span-full text-xs text-amber-600"
+              >
+                Đã đạt số lượng tối đa trong kho
+              </p>
             </div>
 
             <!-- Total -->

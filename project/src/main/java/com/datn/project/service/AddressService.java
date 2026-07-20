@@ -33,17 +33,27 @@ public class AddressService implements IAddressService {
 
     @Override
     public ResponseEntity<?> addAddress(AddressRequest request) {
-
         User user = getCurrentUser();
 
-        // Nếu isPrimary thì bỏ primary cũ
         if (request.isPrimary()) {
             addressRepository.clearPrimary(user);
         }
 
+        String fullAddress = String.join(", ",
+                request.getDetail(),
+                request.getWardName(),
+                request.getDistrictName(),
+                request.getProvinceName());
+
         Address address = new Address();
         address.setUser(user);
-        address.setAddress(request.getAddress());
+        address.setDetail(request.getDetail());
+        address.setProvinceName(request.getProvinceName());
+        address.setDistrictId(request.getDistrictId());
+        address.setDistrictName(request.getDistrictName());
+        address.setWardCode(request.getWardCode());
+        address.setWardName(request.getWardName());
+        address.setAddress(fullAddress);
         address.setReceiverName(request.getReceiverName());
         address.setReceiverPhone(request.getReceiverPhone());
         address.setPrimary(request.isPrimary());
@@ -53,23 +63,14 @@ public class AddressService implements IAddressService {
     }
 
     @Override
-    public ResponseEntity<?> deleteAddress(int id) {
-        User user = getCurrentUser();
-        Address address = addressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy địa chỉ"));
-        if (address.getUser().getId() != user.getId()) {
-            return ResponseEntity.status(403).body(Map.of("message", "Không có quyền"));
-        }
-        addressRepository.delete(address);
-        return ResponseEntity.ok(Map.of("message", "Xoá thành công"));
-    }
-
-    @Override
     public ResponseEntity<?> getAddresses() {
         User user = getCurrentUser();
         List<AddressResponse> list = addressRepository.findByUserOrderByIsPrimaryDesc(user)
                 .stream()
-                .map(a -> new AddressResponse(a.getId(),a.getAddress(),a.getReceiverName(),a.getReceiverPhone(),a.isPrimary()))
+                .map(a -> new AddressResponse(a.getId(), a.getAddress(), a.getDetail(), a.getProvinceName(),
+                        a.getDistrictId(), a.getDistrictName(), a.getWardCode(), a.getWardName(), a.getReceiverName(),
+                        a.getReceiverPhone(),
+                        a.isPrimary()))
                 .toList();
         return ResponseEntity.ok(list);
     }
@@ -83,5 +84,17 @@ public class AddressService implements IAddressService {
         address.setPrimary(true);
         addressRepository.save(address);
         return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));
+    }
+
+    @Override
+    public ResponseEntity<?> deleteAddress(int id) {
+        User user = getCurrentUser();
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy địa chỉ"));
+        if (address.getUser().getId() != user.getId()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Không có quyền"));
+        }
+        addressRepository.delete(address);
+        return ResponseEntity.ok(Map.of("message", "Xoá thành công"));
     }
 }

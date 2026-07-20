@@ -1,6 +1,7 @@
 import adminAPI from '@/api/adminAPI'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useNotificationStore } from './useNotificationStore'
 
 export const usePromotionStore = defineStore('promotion', () => {
   // state
@@ -15,6 +16,10 @@ export const usePromotionStore = defineStore('promotion', () => {
   const totalPages = ref(0)
   const totalElements = ref(0)
   const currentPage = ref(1)
+
+  const keyword = ref('')
+  const discountTypeFilter = ref(null)
+  const statusFilter = ref(null)
 
   //action
 
@@ -34,11 +39,23 @@ export const usePromotionStore = defineStore('promotion', () => {
   }
 
   // lấy tất promotions
-  const fetchAllPromotion = async ({ newPage = page.value, newSize = size.value }) => {
+  const fetchAllPromotion = async ({
+    newPage = page.value,
+    newSize = size.value,
+    search = keyword.value,
+    discountType = discountTypeFilter.value,
+    status = statusFilter.value,
+  }) => {
     loading.value = true
     error.value = null
     try {
-      const res = await adminAPI.fetchAllPromotion({ page: newPage, size: newSize })
+      const res = await adminAPI.fetchAllPromotion({
+        page: newPage,
+        size: newSize,
+        search: search || undefined,
+        discountType: discountType || undefined,
+        status: status || undefined,
+      })
 
       promotions.value = res.content
 
@@ -53,6 +70,13 @@ export const usePromotionStore = defineStore('promotion', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  const resetFilters = () => {
+    keyword.value = ''
+    statusFilter.value = null
+    discountTypeFilter.value = null
+    return fetchAllPromotion({ newPage: 1 })
   }
 
   // add promotion to product
@@ -82,5 +106,9 @@ export const usePromotionStore = defineStore('promotion', () => {
     fetchActivePromotion,
     addPromotionToProduct,
     fetchAllPromotion,
+    resetFilters,
+    statusFilter,
+    discountTypeFilter,
+    keyword,
   }
 })

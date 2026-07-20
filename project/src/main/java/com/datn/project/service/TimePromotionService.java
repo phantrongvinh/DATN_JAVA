@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import com.datn.project.dto.TimePromotionRequest;
 import com.datn.project.entity.DiscountType;
 import com.datn.project.entity.TimePromotion;
 import com.datn.project.repository.ITimePromotionRepository;
+import com.datn.project.specification.TimePromotionSpecification;
 
 import jakarta.transaction.Transactional;
 
@@ -46,10 +49,10 @@ public class TimePromotionService implements ITimePromotionService {
 
     // lấy danh sách khuyến mãi theo khung giờ
     @Override
-    public ResponseEntity<?> getAllTimePromotion(int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-        Page<TimePromotion> resPage = timePromotionRepository.findAll(pageable);
+    public ResponseEntity<?> getAllTimePromotion(int page, int size, String search, Boolean isActive) {
+        Specification<TimePromotion> spec = TimePromotionSpecification.build(search, isActive);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
+        Page<TimePromotion> resPage = timePromotionRepository.findAll(spec, pageable);
 
         if (resPage.isEmpty()) {
             return ResponseEntity.ok(Map.of("message", "Không có khuyến mãi khung giờ vàng"));

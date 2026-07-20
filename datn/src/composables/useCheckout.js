@@ -1,10 +1,11 @@
+import axiosClient from '@/api/axiosClient'
 import orderAPI from '@/api/orderAPI'
 import paymentAPI from '@/api/paymentAPI'
 import timePromotionAPI from '@/api/timePromotion'
 import voucherAPI from '@/api/voucherAPI'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCartStore } from '@/stores/useCartStore'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // composables/useCheckout.js
@@ -20,6 +21,7 @@ export function useCheckout() {
   const loading = ref(false)
   const error = ref(null)
   const timeLeft = ref(null)
+  const shippingFee = ref(null)
 
   // subtotal — price trong cart đã là discountedPrice sau product promotion
   const subtotal = computed(() => {
@@ -58,8 +60,27 @@ export function useCheckout() {
     return Math.min(timePromotion.value.discountValue, afterVoucher.value)
   })
 
+  //shipping fee
+  const calculateShipping = async (address) => {
+    console.log('Address:', address)
+    if (!address?.districtId || !address?.wardCode) return
+    try {
+      const res = await axiosClient.get('/shipping/fee', {
+        params: {
+          toDistrictId: address.districtId,
+          toWardCode: address.wardCode,
+          weight: 500,
+        },
+      })
+
+      shippingFee.value = res.data ?? 0
+    } catch {
+      shippingFee.value = 0
+    }
+  }
+
   const finalPrice = computed(() =>
-    Math.max(subtotal.value - voucherDiscount.value - timeDiscount.value, 0),
+    Math.max(subtotal.value - voucherDiscount.value - timeDiscount.value + shippingFee.value, 0),
   )
 
   // load time promotion
@@ -126,6 +147,8 @@ export function useCheckout() {
         receiverName: form.receiverName,
         receiverPhone: form.receiverPhone,
         paymentMethodId: form.paymentMethodId,
+        districtId: form.districtId,
+        wardCode: form.wardCode,
       }
 
       const res = await orderAPI.placeOrder(payload)
@@ -193,5 +216,7 @@ export function useCheckout() {
     removeVoucher,
     checkout,
     repayVnpay,
+    calculateShipping,
+    shippingFee,
   }
 }

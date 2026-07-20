@@ -32,11 +32,10 @@ watch(orderId, async (newVal) => {
 // Handle status
 
 const STATUS_STEPS = [
-  { key: 'PENDING', label: 'Chờ xác nhận', icon: 'pending' },
-  { key: 'CONFIRMED', label: 'Đã xác nhận', icon: 'check_circle' },
-  { key: 'SHIPPING', label: 'Đang giao hàng', icon: 'local_shipping' },
-  { key: 'DELIVERED', label: 'Đã giao hàng', icon: 'done_all' },
-  { key: 'CANCELLED', label: 'Đã hủy', icon: 'cancel' },
+  { key: 'PENDING', label: 'Chờ xác nhận' },
+  { key: 'CONFIRMED', label: 'Đã xác nhận' },
+  { key: 'SHIPPING', label: 'Đang giao hàng' },
+  { key: 'DELIVERED', label: 'Đã giao hàng' },
 ]
 
 const STATUS_LABEL = {
@@ -65,6 +64,8 @@ const STATUS_LABEL = {
 const currentStepIndex = computed(() =>
   STATUS_STEPS.findIndex((s) => s.key === order.value?.status),
 )
+
+console.log(order.value)
 </script>
 
 <template>
@@ -124,7 +125,9 @@ const currentStepIndex = computed(() =>
               </div>
 
               <div>
-                <p class="text-xs uppercase tracking-widest text-muted-foreground">Trạng thái</p>
+                <p class="text-xs uppercase tracking-widest text-muted-foreground">
+                  Trạng thái thanh toán
+                </p>
 
                 <span
                   class="mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
@@ -181,8 +184,6 @@ const currentStepIndex = computed(() =>
                 :key="item.id"
                 class="flex gap-4 border-b border-border p-6 last:border-0"
               >
-                <img :src="item.image" class="h-24 w-24 object-cover" />
-
                 <div class="flex-1">
                   <h3 class="font-medium">
                     {{ item.productName }}
@@ -249,45 +250,54 @@ const currentStepIndex = computed(() =>
               </div>
             </div>
           </div>
+          <div
+            v-if="order?.status === 'CANCELLED'"
+            class="rounded-lg border border-red-200 bg-red-50 p-4 mt-4"
+          >
+            <p class="font-medium text-red-600">Đơn hàng đã bị hủy</p>
+            <p class="text-sm text-red-500">Đơn hàng không tiếp tục quy trình giao hàng.</p>
+          </div>
 
-          <!-- TIMELINE -->
-          <div class="mt-8 border-t border-border pt-6">
-            <h3 class="mb-4 text-sm font-semibold uppercase tracking-widest">
-              Trạng thái đơn hàng
-            </h3>
+          <div v-else>
+            <!-- TIMELINE -->
+            <div class="mt-8 border-t border-border pt-6">
+              <h3 class="mb-4 text-sm font-semibold uppercase tracking-widest">
+                Trạng thái đơn hàng
+              </h3>
 
-            <div class="space-y-5">
-              <div class="flex gap-3" v-for="(status, index) in STATUS_STEPS" :key="status.key">
-                <!-- dot -->
-                <div class="flex flex-col items-center">
-                  <div
-                    class="mt-1 h-3 w-3 rounded-full"
-                    :class="index <= currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
-                  ></div>
-                  <!-- line nối giữa các bước -->
-                  <div
-                    v-if="index < STATUS_STEPS.length - 1"
-                    class="w-0.5 flex-1 mt-1"
-                    :class="index < currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
-                  ></div>
-                </div>
+              <div class="space-y-5">
+                <div class="flex gap-3" v-for="(status, index) in STATUS_STEPS" :key="status.key">
+                  <!-- dot -->
+                  <div class="flex flex-col items-center">
+                    <div
+                      class="mt-1 h-3 w-3 rounded-full"
+                      :class="index <= currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
+                    ></div>
+                    <!-- line nối giữa các bước -->
+                    <div
+                      v-if="index < STATUS_STEPS.length - 1"
+                      class="w-0.5 flex-1 mt-1"
+                      :class="index < currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
+                    ></div>
+                  </div>
 
-                <div class="pb-5">
-                  <p
-                    class="font-medium"
-                    :class="
-                      index === currentStepIndex
-                        ? 'text-green-600'
-                        : index < currentStepIndex
-                          ? 'text-gray-500'
-                          : 'text-gray-300'
-                    "
-                  >
-                    {{ status.label }}
-                  </p>
-                  <p v-if="index === currentStepIndex" class="text-xs text-muted-foreground">
-                    {{ ulti.formatDate(order?.createdAt) }}
-                  </p>
+                  <div class="pb-5">
+                    <p
+                      class="font-medium"
+                      :class="
+                        index === currentStepIndex
+                          ? 'text-green-600'
+                          : index < currentStepIndex
+                            ? 'text-gray-500'
+                            : 'text-gray-300'
+                      "
+                    >
+                      {{ status.label }}
+                    </p>
+                    <p v-if="index === currentStepIndex" class="text-xs text-muted-foreground">
+                      {{ ulti.formatDate(order?.createdAt) }}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
