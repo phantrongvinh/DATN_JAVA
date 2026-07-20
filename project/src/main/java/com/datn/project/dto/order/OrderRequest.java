@@ -10,10 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequest {
-    private List<OrderItemRequest> items;
+     private List<OrderItemRequest> items;
     private String voucherCode;
     private String shippingAddress;
     private String receiverName;
     private String receiverPhone;
     private Integer paymentMethodId;
+    private Integer districtId;
+    private String wardCode;
 }

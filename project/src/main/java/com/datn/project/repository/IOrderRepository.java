@@ -1,6 +1,7 @@
 package com.datn.project.repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,6 +75,14 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
     Integer findOrderCountByMonth(@Param("month") Integer month, @Param("year") Integer year);
 
     @Query("""
+                SELECT COALESCE(SUM(o.finalPrice), 0)
+                FROM Order o
+                WHERE FUNCTION('DATE', o.createdAt) = CURRENT_DATE
+                AND o.status <> 'CANCELLED'
+            """)
+    BigDecimal findRevenueToday();
+
+    @Query("""
                 SELECT o.status, COUNT(o.id)
                 FROM Order o
                 WHERE DATE(o.createdAt) = CURRENT_DATE
@@ -98,4 +107,22 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 ORDER BY o.createdAt DESC
             """)
     List<Object[]> findDeliveredOrdersByUserIds(@Param("userIds") List<Integer> userIds);
+
+    // range
+    @Query("""
+                SELECT COALESCE(SUM(o.finalPrice), 0)
+                FROM Order o
+                WHERE o.createdAt >= :start AND o.createdAt < :end
+                AND o.status <> 'CANCELLED'
+            """)
+    BigDecimal findRevenueByRange(LocalDateTime start, LocalDateTime end);
+
+    @Query("""
+                SELECT COUNT(o)
+                FROM Order o
+                WHERE o.createdAt >= :start AND o.createdAt < :end
+                AND o.status <> 'CANCELLED'
+            """)
+    Integer findOrderCountByRange(LocalDateTime start, LocalDateTime end);
+
 }

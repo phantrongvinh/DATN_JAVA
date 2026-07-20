@@ -71,14 +71,14 @@ const t = computed(() => landing.value.theme)
         <h4 class="font-display text-sm font-semibold uppercase tracking-widest">Hỗ trợ</h4>
 
         <ul class="mt-4 space-y-2 text-sm opacity-70">
-          <li><RouterLink to="/about" class="hover:opacity-100">Về chúng tôi</RouterLink></li>
+          <li><span class="hover:opacity-100">Về chúng tôi</span></li>
           <li>
-            <RouterLink to="/map" class="inline-flex items-center gap-1 hover:opacity-100">
+            <span class="inline-flex items-center gap-1 hover:opacity-100">
               <MapPin class="h-3 w-3" /> Cửa hàng & Bản đồ
-            </RouterLink>
+            </span>
           </li>
-          <li><a href="#" class="hover:opacity-100">Chính sách đổi trả</a></li>
-          <li><a href="#" class="hover:opacity-100">Hướng dẫn chọn size</a></li>
+          <li><span class="hover:opacity-100">Chính sách đổi trả</span></li>
+          <li><span class="hover:opacity-100">Hướng dẫn chọn size</span></li>
         </ul>
       </div>
 

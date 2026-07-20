@@ -96,7 +96,7 @@ public class CartService implements ICartService {
                             item.getQuantity(),
                             discountedPrice,
 
-                            v.getPrice());
+                            v.getPrice(), v.getStock());
                 })
                 .toList();
 

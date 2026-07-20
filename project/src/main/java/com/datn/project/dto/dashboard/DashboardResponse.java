@@ -9,25 +9,26 @@ import lombok.Data;
 @Data
 @Builder
 public class DashboardResponse {
-    private BigDecimal revenueThisMonth;
-    private BigDecimal revenueLastMonth;
-    private Double revenueGrowthPercent;     
+    private BigDecimal revenueToday;
 
-    private Integer ordersThisMonth;
-    private Integer ordersLastMonth;
-    private Double ordersGrowthPercent;
+    private BigDecimal revenueInRange;
+    private BigDecimal revenuePreviousRange;
+    private double revenueGrowthPercent;
 
-    private Integer newCustomersThisMonth;
-    private Integer newCustomersLastMonth;
-    private Double customersGrowthPercent;
+    private Integer ordersInRange;
+    private Integer ordersPreviousRange;
+    private double ordersGrowthPercent;
+
+    private Integer newCustomersInRange;
+    private Integer newCustomersPreviousRange;
+    private double customersGrowthPercent;
 
     private List<MonthlyRevenueDTO> monthlyRevenue;
-
     private List<MonthlyOrderDTO> monthlyOrders;
-
     private List<CategoryStatsDTO> categoryStats;
-
     private List<OrderStatusStatsDTO> orderStatusToday;
-
     private List<OrderSummaryResponse> recentOrdersToday;
+
+    private List<TopProductDTO> topSellingProducts;
+    private List<TopProductDTO> topInteractedProducts;
 }

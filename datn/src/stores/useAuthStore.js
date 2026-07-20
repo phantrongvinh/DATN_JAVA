@@ -2,6 +2,7 @@ import authAPI from '@/api/authAPI'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useCartStore } from './useCartStore'
+import { useNotificationStore } from './useNotificationStore'
 
 export const useAuthStore = defineStore('auth', () => {
   // states
@@ -17,6 +18,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
 
   const cartStore = useCartStore()
+
+  const notification = useNotificationStore()
 
   // actions
   async function login(data) {
@@ -59,8 +62,6 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.register(data)
       message.value = res
-
-      console.log(message.value)
     } catch (err) {
       error.value = err.response?.data?.message
       throw err
@@ -72,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     try {
       await authAPI.logout()
+      notification.notify('Đã đăng xuất', 'success')
     } catch (error) {
       error.value = error
       return { success: false, errorMessages: error.message }

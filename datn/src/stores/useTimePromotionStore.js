@@ -15,13 +15,26 @@ export const useTimePromotionStore = defineStore('time-promotion', () => {
   const totalElements = ref(0)
   const currentPage = ref(1)
 
+  const keyword = ref('')
+  const activeFilter = ref(null)
+
   // action
   // lấy tất cả timepromotion
-  const fetchAllTimePromotion = async ({ newPage = page.value, newSize = size.value }) => {
+  const fetchAllTimePromotion = async ({
+    newPage = page.value,
+    newSize = size.value,
+    search = keyword.value,
+    isActive = activeFilter.value,
+  }) => {
     loading.value = true
     error.value = null
     try {
-      const res = await adminAPI.fetchAllTimePromotion({ page: newPage, size: newSize })
+      const res = await adminAPI.fetchAllTimePromotion({
+        page: newPage,
+        size: newSize,
+        search: search || undefined,
+        isActive: isActive === null ? undefined : isActive,
+      })
 
       timePromotions.value = res.content
 
@@ -36,6 +49,12 @@ export const useTimePromotionStore = defineStore('time-promotion', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  const resetFilters = () => {
+    keyword.value = ''
+    activeFilter.value = null
+    return fetchAllTimePromotion({ newPage: 1 })
   }
 
   const createTimePromotion = async (data) => {
@@ -104,7 +123,10 @@ export const useTimePromotionStore = defineStore('time-promotion', () => {
     totalPages,
     totalElements,
     currentPage,
+    keyword,
+    activeFilter,
     fetchAllTimePromotion,
+    resetFilters,
     createTimePromotion,
     updateTimePromotion,
     toggleTimePromotion,

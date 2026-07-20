@@ -32,6 +32,7 @@ import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentMethod;
 import com.datn.project.entity.PaymentStatus;
+import com.datn.project.entity.ProductImage;
 import com.datn.project.entity.ProductVariant;
 import com.datn.project.entity.Promotion;
 import com.datn.project.entity.TimePromotion;
@@ -90,6 +91,13 @@ public class OrderService implements IOrderService {
                 order.setShippingAddress(request.getShippingAddress());
                 order.setReceiverName(request.getReceiverName());
                 order.setReceiverPhone(request.getReceiverPhone());
+                order.setToDistrictId(request.getDistrictId());
+                order.setToWardCode(request.getWardCode());
+
+                BigDecimal shippingFee = ghnService.calculateShippingFee(
+                                request.getDistrictId(),
+                                request.getWardCode(),
+                                500);
 
                 PaymentMethod paymentMethod = paymentMethodRepository
                                 .findById(request.getPaymentMethodId())
@@ -180,6 +188,7 @@ public class OrderService implements IOrderService {
                 BigDecimal finalPrice = finalTotalPrice
                                 .subtract(discountAmount)
                                 .subtract(timeDiscount)
+                                .add(shippingFee)
                                 .max(BigDecimal.ZERO);
 
                 // ─── 5. Save order ────────────────────────────────────
@@ -187,6 +196,7 @@ public class OrderService implements IOrderService {
                 order.setTotalPrice(finalTotalPrice);
                 order.setDiscountAmount(discountAmount);
                 order.setTimeDiscount(timeDiscount);
+                order.setShippingFee(shippingFee);
                 order.setFinalPrice(finalPrice);
                 order.setTimePromotion(timePromo.orElse(null));
                 order.setStatus(OrderStatus.PENDING);
@@ -352,14 +362,20 @@ public class OrderService implements IOrderService {
 
                 OrderResponse response = new OrderResponse();
 
-                response.setItems(order.getOrderDetails().stream().map(i -> {
-                        OrderDetailResponse item = new OrderDetailResponse(i.getId(), i.getProductName(), i.getColor(),
-                                        i.getSizeName(), i.getQuantity(), null, i.getPrice(),
-                                        i.getPromotion() != null ? i.getPromotion().getName() : null);
+                response.setItems(order.getOrderDetails().stream().map(i -> OrderDetailResponse.builder()
+                                .productVariantId(i.getProductVariant().getId())
+                                .productName(i.getProductName())
+                                .color(i.getColor())
+                                .sizeName(i.getSizeName())
+                                .quantity(i.getQuantity())
+                                .originalPrice(i.getProductVariant().getPrice())
+                                .price(i.getPrice())
+                                .promotionName(
+                                                i.getPromotion() != null
+                                                                ? i.getPromotion().getName()
+                                                                : null)
+                                .build()).toList());
 
-                        return item;
-
-                }).toList());
                 response.setCreatedAt(order.getCreatedAt());
                 response.setDiscountAmount(order.getDiscountAmount());
                 response.setFinalPrice(order.getFinalPrice());
@@ -377,6 +393,7 @@ public class OrderService implements IOrderService {
                 response.setVoucherCode(order.getVoucher() != null ? order.getVoucher().getCode() : null);
                 response.setPaymentMethod(order.getPaymentMethod().getName());
                 response.setPaymentStatus(order.getPaymentStatus().name());
+                response.setShippingFee(order.getShippingFee());
 
                 return ResponseEntity.ok(response);
         }
@@ -393,13 +410,19 @@ public class OrderService implements IOrderService {
                         MyOrderResponse response = new MyOrderResponse();
                         response.setId(o.getId());
                         response.setCreatedAt(o.getCreatedAt());
-                        response.setItems(o.getOrderDetails().stream().map(i -> {
-                                OrderDetailResponse orderDetailResponse = new OrderDetailResponse(i.getId(),
-                                                i.getProductName(), i.getColor(), i.getSizeName(), i.getQuantity(),
-                                                null, i.getPrice(),
-                                                i.getPromotion() != null ? i.getPromotion().getName() : null);
-                                return orderDetailResponse;
-                        }).toList());
+                        response.setItems(o.getOrderDetails().stream().map(i -> OrderDetailResponse.builder()
+                                .productVariantId(i.getProductVariant().getId())
+                                .productName(i.getProductName())
+                                .color(i.getColor())
+                                .sizeName(i.getSizeName())
+                                .quantity(i.getQuantity())
+                                .originalPrice(i.getProductVariant().getPrice())
+                                .price(i.getPrice())
+                                .promotionName(
+                                                i.getPromotion() != null
+                                                                ? i.getPromotion().getName()
+                                                                : null)
+                                .build()).toList());
 
                         response.setPaymentStatus(o.getPaymentStatus().name());
                         response.setPrice(o.getFinalPrice());
@@ -420,7 +443,7 @@ public class OrderService implements IOrderService {
 
                 order.setStatus(newStatus);
 
-                if(order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1){
+                if (order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1) {
                         order.setPaymentStatus(PaymentStatus.PAID);
                 }
 

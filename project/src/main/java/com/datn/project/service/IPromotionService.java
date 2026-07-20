@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 
 import com.datn.project.dto.PromotionRequest;
+import com.datn.project.entity.DiscountType;
 import com.datn.project.entity.Promotion;
 
 public interface IPromotionService {
@@ -20,5 +21,5 @@ public interface IPromotionService {
 
     ResponseEntity<?> getAllActivePromotioEntity();
 
-    ResponseEntity<?> getAllPromotion(int page, int size);
+    ResponseEntity<?> getAllPromotion(int page, int size, String search, DiscountType discountType, String status);
 } 

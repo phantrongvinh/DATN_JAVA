@@ -20,4 +20,5 @@ public class MyOrderResponse {
     private String paymentStatus;
     private LocalDateTime createdAt;
     private String paymentMethod;
+    private BigDecimal shippingFee;
 }

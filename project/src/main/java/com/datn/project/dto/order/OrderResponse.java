@@ -31,4 +31,5 @@ public class OrderResponse {
     private String trackingCode;
     private String paymentMethod;
     private String transactionId;
+    private BigDecimal shippingFee;
 }

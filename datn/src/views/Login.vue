@@ -1,6 +1,7 @@
 <script setup>
 import Field from '@/components/site/Field.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 import { storeToRefs } from 'pinia'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
@@ -10,6 +11,8 @@ import * as yup from 'yup'
 const router = useRouter()
 
 const authStore = useAuthStore()
+
+const notification = useNotificationStore()
 
 const { loadding, error, message, resend } = storeToRefs(authStore)
 
@@ -35,6 +38,7 @@ const onSubmit = handleSubmit(async (values) => {
     }
     mailSend.value = values.email
     await authStore.login(data)
+    notification.notify('Đăng nhập thành công!', 'success')
     await router.push('/profile')
   } catch (e) {
     console.log(e)
@@ -48,9 +52,14 @@ const handleGoogleLogin = () => {
 
 // Handle resend email
 const handleResend = async () => {
-  await authStore.resendMail({ email: mailSend.value })
-  mailSend.value = ''
-  error.value = ''
+  try {
+    await authStore.resendMail({ email: mailSend.value })
+    mailSend.value = ''
+    error.value = ''
+    notification.notify('Đã gửi lại email xác nhận!', 'success')
+  } catch {
+    notification.notify('Gửi email thất bại, thử lại sau.', 'error')
+  }
 }
 </script>
 
