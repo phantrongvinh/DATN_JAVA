@@ -135,7 +135,7 @@ const handleDelete = async (id) => {
         <div
           class="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between"
         >
-          <div class="flex flex-col gap-3 md:flex-row md:items-center">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:flex-wrap">
             <!-- Search -->
             <div class="relative w-full md:w-80">
               <Search

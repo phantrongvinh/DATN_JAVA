@@ -106,6 +106,7 @@
 
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore'
+import { CheckCircle2 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { ErrorMessage, Field, Form } from 'vee-validate'
 import { onMounted, ref } from 'vue'

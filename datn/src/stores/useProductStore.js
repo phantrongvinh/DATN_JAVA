@@ -103,9 +103,13 @@ export const useProductStore = defineStore('product', () => {
     newPage = page.value,
     newSize = size.value,
     search,
-    audienceIds,
-    brandIds,
-    categoryIds,
+    audienceId,
+    brandId,
+    categoryId,
+    onSale,
+    minPrice,
+    maxPrice,
+    sortBy,
   }) {
     loadding.value = true
     error.value = null
@@ -114,9 +118,13 @@ export const useProductStore = defineStore('product', () => {
         page: newPage,
         size: newSize,
         search,
-        audienceIds,
-        brandIds,
-        categoryIds,
+        audienceId,
+        brandId,
+        categoryId,
+        onSale,
+        minPrice,
+        maxPrice,
+        sortBy,
       })
 
       message.value = res.message

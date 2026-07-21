@@ -1,5 +1,6 @@
 package com.datn.project.service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,17 @@ public class AuthService implements IAuthService {
     @Autowired
     private IForgotPasswordTokenRepository forgotPasswordToken;
 
+    private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private String generateShortToken(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(ALPHANUMERIC.charAt(RANDOM.nextInt(ALPHANUMERIC.length())));
+        }
+        return sb.toString();
+    }
+
     AuthService(MailService mailService) {
         this.mailService = mailService;
     }
@@ -92,7 +104,7 @@ public class AuthService implements IAuthService {
         user.setActived(false);
         user.setAuthProvider(AuthProvider.LOCAL);
 
-        Role role = roleRepository.findByName("ADMIN")
+        Role role = roleRepository.findByName("USER")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
 
         List<Role> roles = new ArrayList<>();
@@ -102,7 +114,7 @@ public class AuthService implements IAuthService {
 
         userRepository.save(user);
 
-        String token = UUID.randomUUID().toString();
+        String token = generateShortToken(8);
 
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(token);
@@ -113,7 +125,7 @@ public class AuthService implements IAuthService {
 
         sendVerificationEmail(user, token);
 
-        return ResponseEntity.ok(Map.of("message","Đăng ký thành công, kiểm tra email để kích hoạt tài khoản"));
+        return ResponseEntity.ok(Map.of("message", "Đăng ký thành công, kiểm tra email để kích hoạt tài khoản"));
     }
 
     @Override
@@ -178,8 +190,7 @@ public class AuthService implements IAuthService {
     private void sendVerificationEmail(User user, String token) {
         String link = "http://localhost:8080/api/v1/auth/activate?token=" + token;
 
-        mailService.sendMessageEmail(user.getEmail(), "Kích hoạt tài khoản", "Bấm vào link dưới đây để kích hoạt: " + link);
-
+        mailService.sendActivationEmail(user, link);
     }
 
     @Override
@@ -218,7 +229,7 @@ public class AuthService implements IAuthService {
 
         verificationTokenRepository.deleteAllByUser(user);
 
-        String token = UUID.randomUUID().toString();
+        String token = generateShortToken(8);
 
         VerificationToken verificationToken = new VerificationToken();
 
@@ -247,12 +258,12 @@ public class AuthService implements IAuthService {
             forgotPasswordToken.delete(oldResetToken);
         }
 
-        String token = UUID.randomUUID().toString();
+        String token = generateShortToken(8);
 
         ForgotPasswordToken resetToken = new ForgotPasswordToken();
         resetToken.setEmail(email);
         resetToken.setToken(token);
-        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15)); // hết hạn sau 15 phút
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
         forgotPasswordToken.save(resetToken);
 
         // Gửi mail
@@ -262,8 +273,7 @@ public class AuthService implements IAuthService {
 
     private void sendResetPassword(User user, String token) {
         String link = "http://localhost:5173/reset-password?token=" + token;
-        mailService.sendMessageEmail(user.getEmail(), "Khôi phục mật khẩu", "Bấm vào đây để cập nhật mật khẩu mới: " + link);
-
+        mailService.sendResetPasswordEmail(user, link);
     }
 
     @Override

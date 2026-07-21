@@ -1,24 +1,24 @@
 <template>
-  <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-    <div class="card shadow-lg border-0 text-center p-5" style="max-width: 480px; width: 100%">
+  <div class="flex min-h-screen items-center justify-center bg-secondary/30">
+    <div class="w-full max-w-[480px] border border-border bg-background p-10 text-center shadow-lg">
       <!-- Content -->
-      <h4 class="fw-bold text-dark mb-2">Kích hoạt thành công!</h4>
-      <p class="text-muted mb-4">
+      <h4 class="font-display text-xl font-bold text-foreground mb-2">Kích hoạt thành công!</h4>
+      <p class="mb-6 text-sm text-muted-foreground">
         Tài khoản của bạn đã được kích hoạt. <br />
         Bạn có thể đăng nhập ngay bây giờ.
       </p>
 
       <!-- Countdown -->
-      <div class="mb-4">
-        <div class="position-relative d-inline-block">
-          <svg width="64" height="64" class="text-success">
-            <circle cx="32" cy="32" r="28" fill="none" stroke="#e9ecef" stroke-width="4" />
+      <div class="mb-6">
+        <div class="relative inline-block">
+          <svg width="64" height="64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#e5e0d8" stroke-width="4" />
             <circle
               cx="32"
               cy="32"
               r="28"
               fill="none"
-              stroke="#198754"
+              stroke="#c9a961"
               stroke-width="4"
               stroke-linecap="round"
               stroke-dasharray="175.9"
@@ -27,15 +27,24 @@
               style="transition: stroke-dashoffset 1s linear"
             />
           </svg>
-          <span class="position-absolute top-50 start-50 translate-middle fw-bold text-dark">
+          <span
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-lg font-bold text-foreground"
+          >
             {{ countdown }}
           </span>
         </div>
-        <p class="text-muted small mt-2">Tự động chuyển hướng sau {{ countdown }} giây</p>
+        <p class="mt-3 text-xs text-muted-foreground">
+          Tự động chuyển hướng sau {{ countdown }} giây
+        </p>
       </div>
 
       <!-- Button -->
-      <a href="/login" class="btn btn-success px-5 rounded-pill"> Đăng nhập ngay </a>
+      <RouterLink
+        to="/login"
+        class="inline-flex items-center justify-center rounded-full bg-ink px-8 py-3 text-sm font-medium text-ivory transition-colors hover:bg-ink/90"
+      >
+        Đăng nhập ngay
+      </RouterLink>
     </div>
   </div>
 </template>

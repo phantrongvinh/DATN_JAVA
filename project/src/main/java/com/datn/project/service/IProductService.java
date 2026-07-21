@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
+import com.datn.project.dto.product.AdminProductFilterDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 
@@ -17,7 +18,7 @@ public interface IProductService {
 
     ResponseEntity<?> getTop5Product();
 
-    ResponseEntity<?> getAllProducts(int page, int size, ProductFilterDTO filterDTO);
+    ResponseEntity<?> getAllProducts(int page, int size, AdminProductFilterDTO filterDTO);
 
     ResponseEntity<?> deactivateProduct(Integer id);
 

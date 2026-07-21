@@ -55,6 +55,9 @@ public class User implements Serializable {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Column(name = "is_actived", nullable = false)
     private boolean isActived;
 

@@ -8,4 +8,6 @@ import com.datn.project.dto.user.UserResponse;
 public interface IUserService {
     
     Page<UserResponse> getAllUsers(UserFilterDTO filter, int page, int size);
+    void softDelete(Integer userId);
+    void restore(Integer userId);
 }

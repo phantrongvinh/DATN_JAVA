@@ -582,10 +582,7 @@ watch(
   },
 )
 
-// =======================
 // Images
-// =======================
-
 const images = ref([])
 const previewImages = ref([])
 const primaryImageIndex = ref(0)

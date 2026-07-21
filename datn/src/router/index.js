@@ -154,6 +154,11 @@ const router = createRouter({
           name: 'users',
           component: () => import('../views/UserDashboard.vue'),
         },
+        {
+          path: 'voucher',
+          name: 'voucher',
+          component: () => import('../views/Voucher.vue'),
+        },
         // Thêm các route admin khác ở đây
         // { path: 'orders', name: 'admin-orders', component: () => import('../views/admin/Orders.vue') },
         // { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue') },

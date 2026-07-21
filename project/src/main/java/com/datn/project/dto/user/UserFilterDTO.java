@@ -18,4 +18,5 @@ public class UserFilterDTO {
     private LocalDateTime createdAtTo;
     private String sortBy;
     private Boolean isActive;
+    private Boolean isDeleted;
 }

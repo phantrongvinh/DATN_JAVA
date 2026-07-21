@@ -17,6 +17,7 @@ public class UserResponse {
     private String provider;
     private boolean isActived;
     private LocalDateTime createdAt;
+    private LocalDateTime deletedAt;
 
     // Thống kê đơn hàng
     private Integer totalOrders;

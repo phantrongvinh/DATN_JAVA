@@ -92,7 +92,9 @@ CREATE TABLE users(
     -- false cho đến khi kích hoạt qua email
     is_actived       	BOOLEAN NOT NULL DEFAULT FALSE,
     
-    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    deleted_at			TIMESTAMP NULL
 );
 
 CREATE TABLE addresses(

@@ -1,6 +1,7 @@
 package com.datn.project.controller;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.coyote.BadRequestException;
@@ -27,13 +28,16 @@ public class VoucherController {
             @RequestParam BigDecimal orderTotal) throws BadRequestException {
         Voucher voucher = voucherService.validateVoucher(code, orderTotal);
         BigDecimal discount = voucherService.calcDiscount(orderTotal, voucher);
-        return ResponseEntity.ok(Map.of(
-                "code", voucher.getCode(),
-                "discountType", voucher.getDiscountType().name().toLowerCase(),
-                "discountValue", voucher.getDiscountValue(),
-                "discount", discount,
-                "minOrderValue", voucher.getMinOrderValue(),
-                "maxDiscount", voucher.getMaxDiscount(),
-                "isStackable", voucher.isStackable()));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", voucher.getCode());
+        response.put("discountType", voucher.getDiscountType().name().toLowerCase());
+        response.put("discountValue", voucher.getDiscountValue());
+        response.put("discount", discount);
+        response.put("minOrderValue", voucher.getMinOrderValue());
+        response.put("maxDiscount", voucher.getMaxDiscount());
+        response.put("isStackable", voucher.isStackable());
+
+        return ResponseEntity.ok(response);
     }
 }

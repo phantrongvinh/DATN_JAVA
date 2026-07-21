@@ -24,6 +24,7 @@ public class UserSpecification {
 
                 Predicate byEmail = cb.like(cb.lower(root.get("email")), kw);
                 Predicate byPhone = cb.like(cb.lower(root.get("phone")), kw);
+Predicate byName = cb.like(cb.lower(root.get("fullName")), kw);
 
                 // Join address
                 Subquery<Integer> addressSub = query.subquery(Integer.class);
@@ -38,6 +39,12 @@ public class UserSpecification {
 
             if (filterDTO.getIsActive() != null) {
                 predicates.add(cb.equal(root.get("isActived"), filterDTO.getIsActive()));
+            }
+
+            if (filterDTO.getIsDeleted() == null || !filterDTO.getIsDeleted()) {
+                predicates.add(cb.isNull(root.get("deletedAt")));
+            } else {
+                predicates.add(cb.isNotNull(root.get("deletedAt")));
             }
 
             // Khoảng birthDay

@@ -52,8 +52,8 @@ export const useCartStore = defineStore(
       try {
         const res = await cartAPI.fetchCart()
         items.value = res
-      } catch (error) {
-        error.value = error.data?.response?.message
+      } catch (err) {
+        error.value = err.data?.response?.message
         throw err
       } finally {
         loadding.value = false

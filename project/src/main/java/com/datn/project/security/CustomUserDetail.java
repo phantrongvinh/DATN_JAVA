@@ -1,5 +1,6 @@
 package com.datn.project.security;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,7 @@ public class CustomUserDetail implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     private boolean isActived;
+    private LocalDateTime deletedAt;
 
     public CustomUserDetail(User user) {
         this.id = user.getId();
@@ -25,6 +27,7 @@ public class CustomUserDetail implements UserDetails {
         this.authorities = user.getRoles().stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r.getName()))
                 .toList();
         this.isActived = user.isActived();
+        this.deletedAt = user.getDeletedAt();
     }
 
     @Override
@@ -52,13 +55,13 @@ public class CustomUserDetail implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonLocked() {
+    public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
+    public boolean isAccountNonLocked() {
+        return deletedAt == null;
     }
 
     @Override

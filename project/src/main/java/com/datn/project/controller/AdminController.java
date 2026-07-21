@@ -29,6 +29,7 @@ import com.datn.project.dto.TimePromotionRequest;
 import com.datn.project.dto.dashboard.DashboardResponse;
 import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
+import com.datn.project.dto.product.AdminProductFilterDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
@@ -92,15 +93,24 @@ public class AdminController {
 
     @GetMapping("/products/all")
     public ResponseEntity<?> getAllProducts(@RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) List<Integer> audienceIds,
-            @RequestParam(required = false) List<Integer> brandIds,
-            @RequestParam(required = false) List<Integer> categoryIds, @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) Integer audienceId,
+            @RequestParam(required = false) Integer brandId,
+            @RequestParam(required = false) Integer categoryId, @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean onSale,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String sortBy) {
-        ProductFilterDTO filter = new ProductFilterDTO(audienceIds, brandIds, categoryIds, search, onSale, minPrice,
-                maxPrice, sortBy);
+        AdminProductFilterDTO filter = new AdminProductFilterDTO();
+        filter.setAudienceId(audienceId);
+        filter.setBrandId(brandId);
+        filter.setCategoryId(categoryId);
+        filter.setSearch(search);
+        filter.setOnSale(onSale);
+        filter.setMinPrice(minPrice);
+        filter.setMaxPrice(maxPrice);
+        filter.setSortBy(sortBy);
+
+        System.out.println(filter); 
 
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
@@ -142,6 +152,7 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Boolean isDeleted,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String birthDayFrom,
             @RequestParam(required = false) String birthDayTo,
@@ -150,17 +161,30 @@ public class AdminController {
         UserFilterDTO filter = new UserFilterDTO();
         filter.setSearch(search);
         filter.setIsActive(isActive);
+        filter.setIsDeleted(isDeleted);
         filter.setSortBy(sortBy);
-        filter.setBirthDayFrom(birthDayFrom != null ? LocalDate.parse(birthDayFrom) : null);
-        filter.setBirthDayTo(birthDayTo != null ? LocalDate.parse(birthDayTo) : null);
-        filter.setCreatedAtFrom(createdAtFrom != null
-                ? LocalDateTime.parse(createdAtFrom + "T00:00:00")
-                : null);
-        filter.setCreatedAtTo(createdAtTo != null
-                ? LocalDateTime.parse(createdAtTo + "T23:59:59")
-                : null);
+        filter.setBirthDayFrom(
+                (birthDayFrom != null && !birthDayFrom.isBlank()) ? LocalDate.parse(birthDayFrom) : null);
+        filter.setBirthDayTo(
+                (birthDayTo != null && !birthDayTo.isBlank()) ? LocalDate.parse(birthDayTo) : null);
+        filter.setCreatedAtFrom(
+                (createdAtFrom != null && !createdAtFrom.isBlank()) ? LocalDateTime.parse(createdAtFrom) : null);
+        filter.setCreatedAtTo(
+                (createdAtTo != null && !createdAtTo.isBlank()) ? LocalDateTime.parse(createdAtTo) : null);
 
         return ResponseEntity.ok(userService.getAllUsers(filter, page, size));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> softDelete(@PathVariable Integer id) {
+        userService.softDelete(id);
+        return ResponseEntity.ok(Map.of("message", "Đã xóa khách hàng"));
+    }
+
+    @PatchMapping("/users/{id}/restore")
+    public ResponseEntity<?> restore(@PathVariable Integer id) {
+        userService.restore(id);
+        return ResponseEntity.ok(Map.of("message", "Đã khôi phục khách hàng"));
     }
 
     // @GetMapping("/users/{id}")
@@ -291,7 +315,7 @@ public class AdminController {
     }
 
     // phần voucher
-    @GetMapping
+    @GetMapping("/vouchers")
     public Page<VoucherResponse> getAll(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -303,27 +327,27 @@ public class AdminController {
         return voucherService.fetchAll(page, size, search, discountType, isActive, isStackable, isPersonal);
     }
 
-    @PostMapping
+    @PostMapping("/vouchers")
     public VoucherResponse create(@RequestBody VoucherRequest req) {
         return voucherService.create(req);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/vouchers/{id}")
     public VoucherResponse update(@PathVariable Integer id, @RequestBody VoucherRequest req) {
         return voucherService.update(id, req);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/vouchers/{id}")
     public void delete(@PathVariable Integer id) {
         voucherService.delete(id);
     }
 
-    @GetMapping("/birthday/preview")
+    @GetMapping("/vouchers/birthday/preview")
     public BirthdayPreviewResponse previewBirthday() {
         return voucherService.previewBirthdayVouchers();
     }
 
-    @PostMapping("/birthday/generate")
+    @PostMapping("/vouchers/birthday/generate")
     public Map<String, Object> generateBirthday() {
         int created = voucherService.generateBirthdayVouchers();
         return Map.of("created", created);

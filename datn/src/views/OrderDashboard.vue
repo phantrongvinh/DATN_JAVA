@@ -1,122 +1,102 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { Search } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RotateCcw, Search } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import '@vuepic/vue-datepicker/dist/main.css'
 
 import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
 import OrderModal from '@/components/admin/OrderModal.vue'
 import { useNotificationStore } from '@/stores/useNotificationStore'
+import { useDebounce } from '@/composables/useDebounce'
 
 const orderStore = useOrderStore()
+// const paymentMethodStore = usePaymentMethodStore()
 const notificationStore = useNotificationStore()
 
 const { orders, currentPage, totalPages, totalElements, size } = storeToRefs(orderStore)
+// const { paymentMethods } = storeToRefs(paymentMethodStore)
 
-// ==============================
-// Filter
-// ==============================
-
-const keyword = ref('')
-const statusFilter = ref('ALL')
-
-// ==============================
 // Status
-// ==============================
-
 const STATUS_OPTIONS = [
-  {
-    value: 'PENDING',
-    label: 'Chờ thanh toán',
-  },
-  {
-    value: 'CONFIRMED',
-    label: 'Đã xác nhận',
-  },
-  {
-    value: 'SHIPPING',
-    label: 'Đang giao',
-  },
-  {
-    value: 'DELIVERED',
-    label: 'Hoàn thành',
-  },
-  {
-    value: 'CANCELLED',
-    label: 'Đã hủy',
-  },
-]
-
-const STATUS_FILTER = [
-  {
-    value: 'ALL',
-    label: 'Tất cả',
-  },
-  ...STATUS_OPTIONS,
+  { value: 'PENDING', label: 'Chờ thanh toán' },
+  { value: 'CONFIRMED', label: 'Đã xác nhận' },
+  { value: 'SHIPPING', label: 'Đang giao' },
+  { value: 'DELIVERED', label: 'Hoàn thành' },
+  { value: 'CANCELLED', label: 'Đã hủy' },
 ]
 
 const PAYMENT_STATUS = {
-  PENDING: {
-    label: 'Chưa thanh toán',
-    tone: 'bg-yellow-100 text-yellow-700',
-  },
-
-  PAID: {
-    label: 'Đã thanh toán',
-    tone: 'bg-green-100 text-green-700',
-  },
-
-  REFUNDED: {
-    label: 'Đã hoàn tiền',
-    tone: 'bg-purple-100 text-purple-700',
-  },
-  UNPAID: {
-    label: 'Hủy giao dịch',
-    tone: 'bg-red-100 text-red-700',
-  },
+  PENDING: { label: 'Chưa thanh toán', tone: 'bg-yellow-100 text-yellow-700' },
+  PAID: { label: 'Đã thanh toán', tone: 'bg-green-100 text-green-700' },
+  REFUNDED: { label: 'Đã hoàn tiền', tone: 'bg-purple-100 text-purple-700' },
+  UNPAID: { label: 'Hủy giao dịch', tone: 'bg-red-100 text-red-700' },
 }
 
-// ==============================
-// Search
-// ==============================
-
-const filteredOrders = computed(() => {
-  return orders.value.filter((order) => {
-    const matchStatus = statusFilter.value === 'ALL' || order.status === statusFilter.value
-
-    const keywordLower = keyword.value.toLowerCase()
-
-    const matchKeyword =
-      keyword.value === '' ||
-      order.trackingCode?.toLowerCase().includes(keywordLower) ||
-      order.receiverName?.toLowerCase().includes(keywordLower)
-
-    return matchStatus && matchKeyword
-  })
+// Filter
+const filter = ref({
+  search: '',
+  status: '',
+  paymentStatus: null,
+  paymentMethodId: '',
+  dateFrom: '',
+  dateTo: '',
 })
 
-// ==============================
-// API
-// ==============================
+const buildParams = (page = 1) => ({
+  page,
+  size: size.value,
+  ...filter.value,
+  dateFrom: filter.value.dateFrom ? `${filter.value.dateFrom}T00:00:00` : null,
+  dateTo: filter.value.dateTo ? `${filter.value.dateTo}T23:59:59` : null,
+})
 
+const applyFilter = async () => {
+  await orderStore.fetchAllOrder(buildParams(1))
+}
+
+// Search debounce
+const debouncedSearch = useDebounce(
+  computed(() => filter.value.search),
+  500,
+)
+watch(debouncedSearch, applyFilter)
+
+// filter
+watch(
+  () => [
+    filter.value.status,
+    filter.value.paymentStatus,
+    filter.value.paymentMethodId,
+    filter.value.dateFrom,
+    filter.value.dateTo,
+  ],
+  applyFilter,
+)
+
+const resetFilter = () => {
+  filter.value = {
+    search: '',
+    status: '',
+    paymentStatus: null,
+    paymentMethodId: '',
+    dateFrom: '',
+    dateTo: '',
+  }
+  notificationStore.notify('Đặt lại bộ lọc', 'success')
+}
+
+// API
 onMounted(async () => {
-  await orderStore.fetchAllOrder({
-    page: 1,
-    size: 5,
-  })
+  await Promise.all([
+    orderStore.fetchAllOrder({ page: 1, size: 5 }),
+    // paymentMethodStore.fetchPaymentMethods(),
+  ])
+  console.log(orders.value)
 })
 
 const changePage = async (page) => {
   if (page < 1 || page > totalPages.value) return
-
-  await orderStore.fetchAllOrder({
-    page,
-    size: size.value,
-
-    ...filter.value,
-  })
+  await orderStore.fetchAllOrder(buildParams(page))
 }
 
 const updateOrderStatus = async (id, status) => {
@@ -126,56 +106,11 @@ const updateOrderStatus = async (id, status) => {
   } catch (err) {
     notificationStore.notify(err.response?.data?.message, 'error')
   } finally {
-    await orderStore.fetchAllOrder({
-      page: currentPage.value,
-      size: size.value,
-      ...filter.value,
-    })
+    await orderStore.fetchAllOrder(buildParams(currentPage.value))
   }
 }
-// handle filter
-const filter = ref({
-  search: '',
-  status: '',
-  paymentStatus: null,
-  paymentMethodId: '',
-  dateFrom: null,
-  dateTo: null,
-})
 
-const handleFilter = async () => {
-  const params = {
-    page: 1,
-    size: size.value,
-
-    ...filter.value,
-
-    dateFrom: filter.value.dateFrom ? ulti.formatLocalDateTime(filter.value.dateFrom) : null,
-
-    dateTo: filter.value.dateTo ? ulti.formatLocalDateTime(filter.value.dateTo) : null,
-  }
-
-  notificationStore.notify('Sử dụng bộ lọc', 'success')
-
-  await orderStore.fetchAllOrder(params)
-}
-
-const resetFilter = async () => {
-  filter.value = {
-    search: '',
-    status: '',
-    paymentStatus: null,
-    paymentMethodId: '',
-    dateFrom: null,
-    dateTo: null,
-  }
-  notificationStore.notify('Đặt lại bộ lọc', 'success')
-
-  await handleFilter()
-}
-
-// handle detail order
-
+// Detail modal
 const show = ref(false)
 const selectOrder = ref(null)
 
@@ -193,82 +128,76 @@ const handleOpenDetail = (o) => {
     <main class="p-6">
       <div class="border border-border bg-background">
         <!-- Header -->
-        <div class="flex flex-wrap items-center gap-3 border-b border-border p-4">
-          <div class="border-b border-border p-4 space-y-4">
-            <!-- Search -->
-            <div class="relative">
-              <Search
-                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              />
+        <div class="space-y-4 border-b border-border p-4">
+          <!-- Search -->
+          <div class="relative">
+            <Search
+              class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              v-model="filter.search"
+              placeholder="Tên khách hàng, SĐT hoặc mã đơn..."
+              class="w-full rounded border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none"
+            />
+          </div>
 
-              <input
-                v-model="filter.search"
-                placeholder="Tên khách hàng, SĐT hoặc mã đơn..."
-                class="w-full rounded border border-border bg-background py-2 pl-10 pr-3 text-sm outline-none"
-              />
-            </div>
+          <!-- Filter -->
+          <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+            <select
+              v-model="filter.status"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ thanh toán</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="SHIPPING">Đang giao</option>
+              <option value="DELIVERED">Hoàn thành</option>
+              <option value="CANCELLED">Đã hủy</option>
+            </select>
 
-            <!-- Filter -->
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-              <!-- Order Status -->
-              <select v-model="filter.status" class="rounded border border-border p-2">
-                <option value="">Tất cả trạng thái</option>
-                <option value="PENDING">Chờ thanh toán</option>
-                <option value="CONFIRMED">Đã xác nhận</option>
-                <option value="SHIPPING">Đang giao</option>
-                <option value="DELIVERED">Hoàn thành</option>
-                <option value="CANCELLED">Đã hủy</option>
-              </select>
+            <select
+              v-model="filter.paymentStatus"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option :value="null">Thanh toán</option>
+              <option value="PENDING">Chưa thanh toán</option>
+              <option value="PAID">Đã thanh toán</option>
+              <option value="REFUNDED">Đã hoàn tiền</option>
+            </select>
 
-              <!-- Payment Status -->
-              <select v-model="filter.paymentStatus" class="rounded border border-border p-2">
-                <option :value="null">Thanh toán</option>
-                <option value="PENDING">Chưa thanh toán</option>
-                <option value="PAID">Đã thanh toán</option>
-                <option value="REFUNDED">Đã hoàn tiền</option>
-              </select>
+            <select
+              v-model="filter.paymentMethodId"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            >
+              <option value="">Phương thức</option>
+              <option v-for="item in paymentMethods" :key="item.id" :value="item.id">
+                {{ item.name }}
+              </option>
+            </select>
 
-              <!-- Payment Method -->
-              <select v-model="filter.paymentMethodId" class="rounded border border-border p-2">
-                <option value="">Phương thức</option>
+            <input
+              v-model="filter.dateFrom"
+              type="date"
+              placeholder="Từ ngày"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            />
 
-                <option v-for="item in paymentMethods" :key="item.id" :value="item.id">
-                  {{ item.name }}
-                </option>
-              </select>
+            <input
+              v-model="filter.dateTo"
+              type="date"
+              placeholder="Đến ngày"
+              class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
+            />
 
-              <!-- From -->
-              <VueDatePicker
-                v-model="filter.dateFrom"
-                auto-apply
-                :enable-time-picker="false"
-                placeholder="Từ ngày"
-              />
+            <div class="flex gap-2">
+              <button
+                @click="resetFilter"
+                class="w-full flex items-center justify-center gap-2 border border-border px-3 py-2 text-sm hover:bg-secondary"
+              >
+                <RotateCcw class="h-4 w-4" />
 
-              <!-- To -->
-              <VueDatePicker
-                v-model="filter.dateTo"
-                auto-apply
-                :enable-time-picker="false"
-                placeholder="Đến ngày"
-              />
-
-              <!-- Button -->
-              <div class="flex gap-2">
-                <button
-                  @click="handleFilter"
-                  class="flex-1 rounded bg-black px-4 py-2 text-white hover:bg-black/90"
-                >
-                  Lọc
-                </button>
-
-                <button
-                  @click="resetFilter"
-                  class="rounded border border-border px-4 py-2 hover:bg-secondary"
-                >
-                  Đặt lại
-                </button>
-              </div>
+                Đặt lại
+              </button>
             </div>
           </div>
         </div>
@@ -281,24 +210,18 @@ const handleOpenDetail = (o) => {
                 class="border-b border-border bg-secondary/40 text-left text-[11px] uppercase tracking-widest text-muted-foreground"
               >
                 <th class="px-4 py-3">Mã đơn</th>
-
                 <th>Khách hàng</th>
-
                 <th>Ngày</th>
-
                 <th>Sản phẩm</th>
-
                 <th>Tổng tiền</th>
-
                 <th>Thanh toán</th>
-
                 <th>Trạng thái</th>
               </tr>
             </thead>
 
             <tbody>
               <tr
-                v-for="order in filteredOrders"
+                v-for="order in orders"
                 :key="order.id"
                 class="border-b border-border hover:bg-secondary/20"
               >
@@ -307,26 +230,15 @@ const handleOpenDetail = (o) => {
                 </td>
 
                 <td>
-                  <p class="font-medium">
-                    {{ order.receiverName }}
-                  </p>
-
-                  <p class="text-xs text-muted-foreground">
-                    {{ order.receiverPhone }}
-                  </p>
+                  <p class="font-medium">{{ order.receiverName }}</p>
+                  <p class="text-xs text-muted-foreground">{{ order.receiverPhone }}</p>
                 </td>
 
-                <td>
-                  {{ ulti.formatDate(order.createdAt) }}
-                </td>
+                <td>{{ ulti.formatDate(order.createdAt) }}</td>
 
-                <td>
-                  {{ order.items?.reduce((sum, item) => sum + item.quantity, 0) }}
-                </td>
+                <td>{{ order.items?.reduce((sum, item) => sum + item.quantity, 0) }}</td>
 
-                <td class="font-medium">
-                  {{ ulti.formatVND(order.finalPrice) }}
-                </td>
+                <td class="font-medium">{{ ulti.formatVND(order.finalPrice) }}</td>
 
                 <td>
                   <span
@@ -350,7 +262,7 @@ const handleOpenDetail = (o) => {
                 </td>
               </tr>
 
-              <tr v-if="filteredOrders.length === 0">
+              <tr v-if="orders && orders.length === 0">
                 <td colspan="7" class="p-8 text-center text-muted-foreground">
                   Không có đơn hàng.
                 </td>
@@ -364,19 +276,8 @@ const handleOpenDetail = (o) => {
           class="flex flex-col gap-4 border-t border-border px-6 py-4 md:flex-row md:items-center md:justify-between"
         >
           <div class="text-sm text-gray-500">
-            Hiển thị
-
-            {{ (currentPage - 1) * size + 1 }}
-
-            -
-
-            {{ Math.min(currentPage * size, totalElements) }}
-
-            /
-
-            {{ totalElements }}
-
-            Đơn hàng
+            Hiển thị {{ (currentPage - 1) * size + 1 }} -
+            {{ Math.min(currentPage * size, totalElements) }} / {{ totalElements }} Đơn hàng
           </div>
 
           <div class="flex flex-wrap items-center gap-2">

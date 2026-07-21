@@ -61,7 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const res = await authAPI.register(data)
-      message.value = res
+      message.value = res.message
     } catch (err) {
       error.value = err.response?.data?.message
       throw err
