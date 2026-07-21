@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.datn.project.dto.voucher.BirthdayPreviewResponse;
@@ -28,6 +30,7 @@ import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
 import com.datn.project.repository.IUserRepository;
 import com.datn.project.repository.IVoucherRepository;
+import com.datn.project.security.CustomUserDetail;
 import com.datn.project.specification.VoucherSpecification;
 
 import jakarta.transaction.Transactional;
@@ -48,6 +51,17 @@ public class VoucherService implements IVoucherService {
             "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
     };
 
+    private Integer getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetail customUserDetail = (CustomUserDetail) authentication.getPrincipal();
+
+        String email = customUserDetail.getUsername();
+
+        User user = userRepository.findByEmailWithRoles(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        return user.getId();
+    }
+
     @Override
     public Voucher validateVoucher(String code, BigDecimal orderTotal) throws BadRequestException {
         Voucher voucher = voucherRepository.findByCode(code)
@@ -57,6 +71,15 @@ public class VoucherService implements IVoucherService {
 
         if (!voucher.isActive())
             throw new BadRequestException("Mã giảm giá không còn hiệu lực");
+
+        if (voucher.getUser() != null) {
+            if (getCurrentUserId() == null) {
+                throw new BadRequestException("Mã giảm giá này chỉ dành cho tài khoản đã đăng nhập");
+            }
+            if (voucher.getUser().getId() != getCurrentUserId()) {
+                throw new BadRequestException("Mã giảm giá không tồn tại");
+            }
+        }
         if (voucher.getStartDate() != null && now.isBefore(voucher.getStartDate()))
             throw new BadRequestException("Mã giảm giá chưa đến thời gian sử dụng");
         if (voucher.getEndDate() != null && now.isAfter(voucher.getEndDate()))
@@ -111,7 +134,6 @@ public class VoucherService implements IVoucherService {
     }
 
     // phần fetch thông tin, tạo voucher, tự động gửi voucher cá nhân
-
     @Override
     public Page<VoucherResponse> fetchAll(int page, int size, String search,
             DiscountType discountType, Boolean isActive, Boolean isStackable, Boolean isPersonal) {

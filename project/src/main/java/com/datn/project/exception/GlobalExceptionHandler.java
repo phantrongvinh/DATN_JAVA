@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -55,6 +56,15 @@ public class GlobalExceptionHandler {
                                                 "message", "Mã đăng nhập đã hết hạng, vui lòng đăng nhập lại"));
         }
 
+        @ExceptionHandler(LockedException.class)
+        public ResponseEntity<?> handleLocked(LockedException ex) {
+                return ResponseEntity.status(403)
+                                .body(Map.of(
+                                                "message",
+                                                "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ bộ phận hỗ trợ để được kích hoạt lại.",
+                                                "reason", "ACCOUNT_DISABLED"));
+        }
+
         @ExceptionHandler(DisabledException.class)
         public ResponseEntity<?> handleDisabled(
                         DisabledException ex) {
@@ -65,8 +75,8 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<?> handleNotFound(RuntimeException re) {
-                return ResponseEntity.status(404).body(Map.of("message", re.getMessage()));
+        public ResponseEntity<?> handleRuntime(RuntimeException e) {
+                return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
 
         @ExceptionHandler(BadRequestException.class)

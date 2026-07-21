@@ -102,9 +102,45 @@ const fetchAlluser = async (params) => {
   return res.data
 }
 
+const deleteUser = async (id) => {
+  const res = await axiosClient.delete(`${url}/users/${id}`)
+  return res.data
+}
+
+const restoreUser = async (id) => {
+  const res = await axiosClient.patch(`${url}/users/${id}/restore`)
+  return res.data
+}
+
 // dashboard
 const fetchDashboard = async (params) => {
   const res = await axiosClient.get(`${url}/dashboard`, { params: params })
+  return res.data
+}
+
+// voucher
+const getAllVocuher = async (param) => {
+  const res = await axiosClient.get(`${url}/vouchers`, { params: param })
+  return res.data
+}
+
+const creatVoucher = async (form) => {
+  const res = await axiosClient.post(`${url}/vouchers`, form)
+  return res.data
+}
+
+const editVoucher = async (id, form) => {
+  const res = await axiosClient.put(`${url}/vouchers/${id}`, form)
+  return res.data
+}
+
+const birthdayReviewResponse = async () => {
+  const res = await axiosClient.get(`${url}/vouchers/birthday/preview`)
+  return res.data
+}
+
+const generatVoucherBirthday = async () => {
+  const res = await axiosClient.post(`${url}/vouchers/birthday/generate`)
   return res.data
 }
 
@@ -125,7 +161,14 @@ const adminAPI = {
   fetchAllOrders,
   updateStatusOrder,
   fetchAlluser,
+  deleteUser,
+  restoreUser,
   fetchDashboard,
+  getAllVocuher,
+  creatVoucher,
+  editVoucher,
+  birthdayReviewResponse,
+  generatVoucherBirthday,
 }
 
 export default adminAPI

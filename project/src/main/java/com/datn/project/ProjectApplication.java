@@ -9,6 +9,7 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 public class ProjectApplication {
 
 	public static void main(String[] args) {
+		System.setProperty("mail.mime.charset", "UTF-8");
 		SpringApplication.run(ProjectApplication.class, args);
 	}
 

@@ -12,6 +12,7 @@ import {
   Palette,
   Tag,
   Clock,
+  Tickets,
 } from 'lucide-vue-next'
 
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -57,12 +58,11 @@ const navs = [
     label: 'Người dùng',
     icon: Users,
   },
-  // {
-  //   // to: '/admin/blog',
-  //   to: '/',
-  //   label: 'Bài viết',
-  //   icon: FileText,
-  // },
+  {
+    to: '/admin/voucher',
+    label: 'Voucher',
+    icon: Tickets,
+  },
   {
     to: '/admin/landing',
     label: 'Trang chủ',

@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.dto.PromotionResponse;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
+import com.datn.project.dto.product.AdminProductFilterDTO;
 import com.datn.project.dto.product.ProductDetailDTO;
 import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductHomeView;
@@ -238,7 +239,7 @@ public class ProductService implements IProductService {
 
         // Lấy tất cả product có filter và page để quản lý ở admin
         @Override
-        public ResponseEntity<?> getAllProducts(int page, int size, ProductFilterDTO filterDTO) {
+        public ResponseEntity<?> getAllProducts(int page, int size, AdminProductFilterDTO filterDTO) {
                 Sort sort = switch (filterDTO.getSortBy() == null ? "" : filterDTO.getSortBy()) {
                         case "price_asc" -> Sort.by("basePrice").ascending();
                         case "price_desc" -> Sort.by("basePrice").descending();

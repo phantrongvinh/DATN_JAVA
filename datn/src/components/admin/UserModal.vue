@@ -80,10 +80,18 @@
               </div>
 
               <div>
-                <label class="mb-2 block text-sm font-medium"> Trạng thái </label>
-
+                <label class="mb-2 block text-sm font-medium">Trạng thái tài khoản</label>
                 <input
-                  :value="user?.actived ? 'Hoạt động' : 'Đã khóa'"
+                  :value="user?.deletedAt ? 'Đã vô hiệu hóa' : 'Đang hoạt động'"
+                  disabled
+                  class="w-full rounded border border-border bg-secondary px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium">Xác thực email</label>
+                <input
+                  :value="user?.actived ? 'Đã xác thực' : 'Chưa xác thực'"
                   disabled
                   class="w-full rounded border border-border bg-secondary px-3 py-2"
                 />
@@ -168,15 +176,6 @@
                     </p>
                   </div>
                 </div>
-
-                <div class="mt-5 flex justify-end">
-                  <button
-                    class="rounded border border-border px-4 py-2 text-sm hover:bg-secondary"
-                    @click="$emit('view-order', order.id)"
-                  >
-                    Xem chi tiết
-                  </button>
-                </div>
               </div>
             </div>
           </section>
@@ -187,19 +186,19 @@
         <div class="flex items-center justify-between border-t border-border px-6 py-4">
           <div>
             <button
-              v-if="user?.actived"
+              v-if="!user?.deletedAt"
               class="rounded bg-red-500 px-5 py-2 text-sm text-white hover:bg-red-600"
-              @click="toggleActive(false)"
+              @click="emit('disable')"
             >
-              Khóa tài khoản
+              Vô hiệu hóa tài khoản
             </button>
 
             <button
               v-else
               class="rounded bg-green-600 px-5 py-2 text-sm text-white hover:bg-green-700"
-              @click="toggleActive(true)"
+              @click="emit('restore')"
             >
-              Mở khóa tài khoản
+              Kích hoạt lại tài khoản
             </button>
           </div>
 
@@ -231,7 +230,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:show'])
+const emit = defineEmits(['update:show', 'disable', 'restore'])
 
 const closeModal = () => {
   emit('update:show', false)
