@@ -19,11 +19,6 @@ const menuItems = [
     label: 'Yêu thích',
     path: '/profile/wishlist',
   },
-  {
-    icon: MapPin,
-    label: 'Địa chỉ giao hàng',
-    path: '/profile/addresses',
-  },
 ]
 
 const route = useRoute()

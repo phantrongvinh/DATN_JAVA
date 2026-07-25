@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.project.dto.product.ProductSummaryDTO;
-import com.datn.project.entity.User;
-import com.datn.project.repository.IUserRepository;
 import com.datn.project.security.CustomUserDetail;
 import com.datn.project.service.IWishlistService;
 
@@ -24,18 +22,10 @@ public class WishlistController {
     @Autowired
     private IWishlistService wishlistService;
 
-    @Autowired
-    private IUserRepository userRepository;
-
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetail customUserDetail = (CustomUserDetail) authentication.getPrincipal();
-
-        String email = customUserDetail.getUsername();
-
-        User user = userRepository.findByEmailWithRoles(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
-        return user.getId();
+        return customUserDetail.getUserID();
     }
 
     @GetMapping("/ids")

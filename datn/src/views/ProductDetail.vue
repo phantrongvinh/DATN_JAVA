@@ -10,6 +10,7 @@ import { useNotificationStore } from '@/stores/useNotificationStore'
 import ProductCard from '@/components/site/ProductCard.vue'
 import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-next'
 import { useCartStore } from '@/stores/useCartStore'
+import { useWishlistStore } from '@/stores/useWishlistStore'
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -175,6 +176,16 @@ const handleAddToCart = async () => {
     'success',
   )
 }
+
+// handle add wishlist
+const { isInWishlist, toggle: toggleWishlist } = useWishlistStore()
+const isWished = computed(() => (product.value ? isInWishlist(product.value.id) : false))
+
+const handleToggleWishlist = async () => {
+  if (!product.value) return
+  const added = await toggleWishlist(product.value.id)
+  notification.notify(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích', 'success')
+}
 </script>
 
 <template>
@@ -319,10 +330,16 @@ const handleAddToCart = async () => {
             <span v-else>Thêm vào giỏ</span>
           </button>
           <button
-            class="border border-border p-3 transition-colors hover:border-foreground"
+            @click="handleToggleWishlist"
+            class="border p-3 transition-colors"
+            :class="isWished ? 'border-gold bg-gold/10' : 'border-border hover:border-foreground'"
             aria-label="Yêu thích"
           >
-            <Heart class="h-5 w-5" strokeWidth="{1.5}" />
+            <Heart
+              class="h-5 w-5 transition-colors"
+              :class="isWished ? 'fill-gold text-gold' : ''"
+              stroke-width="1.5"
+            />
           </button>
         </div>
 

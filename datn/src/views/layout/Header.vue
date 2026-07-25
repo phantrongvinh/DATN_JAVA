@@ -26,7 +26,7 @@ import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useSiteSettingsStore } from '@/stores/useSiteSettingsStore'
 import { useCart } from '@/composables/useCart'
-// import { useWishlist } from '@/composables/useWishlist'
+import { useWishlistStore } from '@/stores/useWishlistStore'
 // import NotificationBell from './NotificationBell.vue'
 
 const router = useRouter()
@@ -35,17 +35,19 @@ const route = useRoute()
 const audienceStore = useAudienceStore()
 const authStore = useAuthStore()
 const siteSettingsStore = useSiteSettingsStore()
+const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
-  await audienceStore.fetchAudiences()
+  await Promise.allSettled[(audienceStore.fetchAudiences(), wishlistStore.fetchIds())]
 })
 
 const { audiences } = storeToRefs(audienceStore)
 const { user, isAuthenticated, isAdmin } = storeToRefs(authStore)
 const { landing } = storeToRefs(siteSettingsStore)
 
+const { ids } = storeToRefs(wishlistStore)
+
 const { items } = useCart()
-// const { ids: wishIds } = useWishlist()
 
 const cartCount = computed(() => items.value?.reduce((sum, i) => sum + i.quantity, 0) ?? 0)
 
@@ -182,20 +184,20 @@ const handleLogout = () => {
         </RouterLink>
 
         <!-- Wishlist -->
-        <!-- <RouterLink
-          to="/account/wishlist"
+        <RouterLink
+          to="/profile/wishlist"
           aria-label="Yêu thích"
           class="relative hidden rounded-full p-2 transition-colors hover:bg-white/10 sm:inline-flex"
         >
           <Heart class="h-[18px] w-[18px]" />
           <span
-            v-if="wishIds.length > 0"
+            v-if="ids.length > 0"
             class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium"
             :style="{ background: t.headerAccent, color: t.headerBg }"
           >
-            {{ wishIds.length }}
+            {{ ids.length }}
           </span>
-        </RouterLink> -->
+        </RouterLink>
 
         <!-- Cart -->
         <RouterLink

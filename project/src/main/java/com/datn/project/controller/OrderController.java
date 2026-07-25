@@ -35,12 +35,7 @@ public class OrderController {
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetail customUserDetail = (CustomUserDetail) authentication.getPrincipal();
-
-        String email = customUserDetail.getUsername();
-
-        User user = userRepository.findByEmailWithRoles(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
-        return user.getId();
+        return customUserDetail.getUserID();
     }
 
     @PostMapping

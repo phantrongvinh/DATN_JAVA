@@ -1,44 +1,40 @@
 import authAPI from '@/api/authAPI'
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useCartStore } from './useCartStore'
 import { useNotificationStore } from './useNotificationStore'
+import { useWishlistStore } from './useWishlistStore'
 
 export const useAuthStore = defineStore('auth', () => {
-  // states
   const token = ref(localStorage.getItem('token') || null)
   const user = ref(null)
   const loadding = ref(false)
   const error = ref(null)
   const resend = ref(false)
   const message = ref('')
+  const isCheckingAuth = ref(false)
 
   const isAdmin = computed(() => user.value?.roles?.some((r) => r === 'ADMIN') ?? false)
-
   const isAuthenticated = computed(() => !!token.value)
 
   const cartStore = useCartStore()
-
+  const wishlistStore = useWishlistStore()
   const notification = useNotificationStore()
 
-  // actions
   async function login(data) {
     loadding.value = true
     error.value = null
-
     try {
       const res = await authAPI.login(data)
-
       token.value = res.token
       resend.value = false
-
       localStorage.setItem('token', res.token)
 
       await me()
-
       await cartStore.mergeCartToServer()
       cartStore.clearLocal()
       await cartStore.fetchCart()
+      await wishlistStore.fetchIds()
     } catch (err) {
       error.value = err.response?.data?.message
       if (error.value === 'Tài khoản chưa được kích hoạt, hãy gửi lại mã kích hoạt') {
@@ -51,9 +47,37 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function me() {
-    if (isAuthenticated.value) {
+    if (!isAuthenticated.value) return
+    try {
       user.value = await authAPI.me()
+    } catch (err) {
+      forceLogout()
     }
+  }
+
+  async function checkAuth() {
+    if (!token.value) {
+      user.value = null
+      return false
+    }
+
+    isCheckingAuth.value = true
+    try {
+      user.value = await authAPI.me()
+      await wishlistStore.fetchIds()
+      return true
+    } catch (err) {
+      forceLogout()
+      return false
+    } finally {
+      isCheckingAuth.value = false
+    }
+  }
+
+  function forceLogout() {
+    user.value = null
+    token.value = null
+    localStorage.removeItem('token')
   }
 
   async function register(data) {
@@ -74,13 +98,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await authAPI.logout()
       notification.notify('Đã đăng xuất', 'success')
-    } catch (error) {
-      error.value = error
-      return { success: false, errorMessages: error.message }
+    } catch (err) {
+      error.value = err
+      return { success: false, errorMessages: err.message }
     } finally {
-      user.value = null
-      token.value = null
-      localStorage.removeItem('token')
+      forceLogout()
     }
   }
 
@@ -91,9 +113,9 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await authAPI.resend(email)
       message.value = res.message
       resend.value = ''
-    } catch (error) {
-      error.value = error
-      return { success: false, errorMessages: error.message }
+    } catch (err) {
+      error.value = err
+      return { success: false, errorMessages: err.message }
     } finally {
       loadding.value = false
     }
@@ -104,7 +126,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const res = await authAPI.forgotPassword(email)
-
       message.value = res
       resend.value = false
     } catch (err) {
@@ -120,10 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const res = await authAPI.resetPassword(token, password)
-      console.log(res)
-
       message.value = res
-
       resend.value = false
     } catch (err) {
       error.value = err.response?.data?.message
@@ -132,6 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
       loadding.value = false
     }
   }
+
   function clearMessages() {
     error.value = null
     message.value = null
@@ -139,17 +158,21 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user,
+    token,
     isAdmin,
     loadding,
     error,
+    resend,
+    message,
+    isCheckingAuth,
+    isAuthenticated,
     login,
     logout,
-    isAuthenticated,
-    resend,
-    resendMail,
-    message,
-    register,
     me,
+    checkAuth,
+    forceLogout,
+    resendMail,
+    register,
     forgotPassword,
     resetPassword,
     clearMessages,

@@ -100,6 +100,9 @@ public class SecurityConfig {
                             // ─── Promotion/ Voucher ──────────────────────────
                             .requestMatchers("/api/v1/vouchers/**").authenticated()
 
+                            // ─── Wishlist ────────────────────────────────────
+                            .requestMatchers("/api/v1/wishlist/**").authenticated()
+
                             // ─── Payment ─────────────────────────────────────
                             .requestMatchers("/api/v1/payment/**").permitAll()
 
