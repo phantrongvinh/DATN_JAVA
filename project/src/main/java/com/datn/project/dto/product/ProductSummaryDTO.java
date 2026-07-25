@@ -2,6 +2,8 @@ package com.datn.project.dto.product;
 
 import java.math.BigDecimal;
 
+import com.datn.project.dto.PromotionResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +18,6 @@ public class ProductSummaryDTO {
     private String name;
     private String image;
     private BigDecimal price;
+    private BigDecimal discountPrice;
+    private PromotionResponse promotion;
 }

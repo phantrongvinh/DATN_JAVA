@@ -21,7 +21,6 @@ const loadOrder = async () => {
 
 onMounted(async () => {
   await loadOrder()
-  console.log(myOrders.value)
 })
 
 watch(

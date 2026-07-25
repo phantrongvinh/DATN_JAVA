@@ -102,6 +102,11 @@ const router = createRouter({
               name: 'my-orders',
               component: () => import('../views/MyOrderPage.vue'),
             },
+            {
+              path: 'wishlist',
+              name: 'wishlist',
+              component: () => import('../views/Wishlist.vue'),
+            },
           ],
         },
         {
