@@ -28,7 +28,6 @@ export const useWishlistStore = defineStore('wishlist', () => {
     error.value = null
     try {
       ids.value = await wishlistAPI.getIds()
-      console.log(ids.value)
     } catch (err) {
       error.value = err.response?.data?.message
       return { success: false, errorMessages: err.message }

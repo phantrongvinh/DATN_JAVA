@@ -1,11 +1,13 @@
 package com.datn.project.service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 
 import com.datn.project.dto.voucher.BirthdayPreviewResponse;
+import com.datn.project.dto.voucher.VoucherPublicResponse;
 import com.datn.project.dto.voucher.VoucherRequest;
 import com.datn.project.dto.voucher.VoucherResponse;
 import com.datn.project.entity.DiscountType;
@@ -33,4 +35,6 @@ public interface IVoucherService {
     BirthdayPreviewResponse previewBirthdayVouchers();
     
     int generateBirthdayVouchers();
+
+    List<VoucherPublicResponse> getPublicVouchers();
 }

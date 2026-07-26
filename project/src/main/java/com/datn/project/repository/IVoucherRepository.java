@@ -1,5 +1,6 @@
 package com.datn.project.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,6 @@ public interface IVoucherRepository extends JpaRepository<Voucher, Integer>, Jpa
     Optional<Voucher> findByCode(String code);
 
     boolean existsByCode(String code);
+
+    List<Voucher> findByUserIsNullOrderByStartDateDesc();
 }

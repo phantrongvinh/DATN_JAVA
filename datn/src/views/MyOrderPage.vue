@@ -99,7 +99,7 @@ const handleRepay = async (order) => {
 <template>
   <div class="border border-border">
     <!-- Header -->
-    <div class="border-b border-border p-6">
+    <div class="border-b border-border bg-secondary/20 p-6 py-7">
       <h2 class="font-display text-2xl">Đơn hàng của tôi</h2>
 
       <p class="mt-1 text-sm text-muted-foreground">Theo dõi trạng thái các đơn hàng gần đây</p>

@@ -1,4 +1,5 @@
 import adminAPI from '@/api/adminAPI'
+import voucherAPI from '@/api/voucherAPI'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -22,6 +23,8 @@ export const useVoucherStore = defineStore('voucher', () => {
 
   const birthdayPreview = ref(null)
   const birthdayLoading = ref(false)
+
+  const publicVouchers = ref([])
 
   const fetchAll = async ({
     newPage = page.value,
@@ -133,6 +136,20 @@ export const useVoucherStore = defineStore('voucher', () => {
     }
   }
 
+  const fetchPublicVouchers = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await voucherAPI.fetchPublicVoucher()
+
+      publicVouchers.value = res
+    } catch (err) {
+      error.value = err.response?.data?.message
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
@@ -150,6 +167,7 @@ export const useVoucherStore = defineStore('voucher', () => {
     personalFilter,
     birthdayPreview,
     birthdayLoading,
+    publicVouchers,
     fetchAll,
     resetFilters,
     createVoucher,
@@ -157,5 +175,6 @@ export const useVoucherStore = defineStore('voucher', () => {
     // deleteVoucher,
     fetchBirthdayPreview,
     generateBirthdayVouchers,
+    fetchPublicVouchers,
   }
 })

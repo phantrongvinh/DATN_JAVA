@@ -40,4 +40,9 @@ public class VoucherController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/public")
+    public ResponseEntity<?> getPublicVouchers() {
+        return ResponseEntity.ok(voucherService.getPublicVouchers());
+    }
 }

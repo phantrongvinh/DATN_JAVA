@@ -12,7 +12,6 @@ const notificationStore = useNotificationStore()
 
 onMounted(async () => {
   await wishlistStore.fetchWishlist()
-  console.log(wishlists.value)
 })
 
 const handleRemove = async (productId) => {

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import com.datn.project.dto.voucher.BirthdayPreviewResponse;
 import com.datn.project.dto.voucher.UserBirthdayDTO;
+import com.datn.project.dto.voucher.VoucherPublicResponse;
 import com.datn.project.dto.voucher.VoucherRequest;
 import com.datn.project.dto.voucher.VoucherResponse;
 import com.datn.project.entity.DiscountType;
@@ -285,5 +287,47 @@ public class VoucherService implements IVoucherService {
                 .userId(v.getUser() != null ? v.getUser().getId() : null)
                 .userEmail(v.getUser() != null ? v.getUser().getEmail() : null)
                 .build();
+    }
+
+    // fetch public voucher
+    @Override
+    public List<VoucherPublicResponse> getPublicVouchers() {
+        List<Voucher> vouchers = voucherRepository.findByUserIsNullOrderByStartDateDesc();
+        LocalDateTime now = LocalDateTime.now();
+
+        return vouchers.stream()
+                .map(v -> {
+                    String reason = resolveDisabledReason(v, now);
+                    return VoucherPublicResponse.builder()
+                            .code(v.getCode())
+                            .description(v.getDescription())
+                            .discountType(v.getDiscountType().name())
+                            .discountValue(v.getDiscountValue())
+                            .minOrderValue(v.getMinOrderValue())
+                            .maxDiscount(v.getMaxDiscount())
+                            .quantity(v.getQuantity())
+                            .usedCount(v.getUsedCount())
+                            .startDate(v.getStartDate())
+                            .endDate(v.getEndDate())
+                            .isStackable(v.isStackable())
+                            .disabled(reason != null)
+                            .disabledReason(reason)
+                            .build();
+                })
+                // Voucher dùng được xếp lên đầu, hết hạn/hết lượt xuống cuối
+                .sorted(Comparator.comparing(VoucherPublicResponse::isDisabled))
+                .toList();
+    }
+
+    private String resolveDisabledReason(Voucher v, LocalDateTime now) {
+        if (!v.isActive())
+            return "Đã ngừng áp dụng";
+        if (v.getStartDate() != null && now.isBefore(v.getStartDate()))
+            return "Chưa đến thời gian sử dụng";
+        if (v.getEndDate() != null && now.isAfter(v.getEndDate()))
+            return "Đã hết hạn";
+        if (v.getQuantity() != null && v.getUsedCount() >= v.getQuantity())
+            return "Đã hết lượt sử dụng";
+        return null;
     }
 }

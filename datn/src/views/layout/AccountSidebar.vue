@@ -19,6 +19,11 @@ const menuItems = [
     label: 'Yêu thích',
     path: '/profile/wishlist',
   },
+  {
+    icon: Heart,
+    label: 'Vouchers',
+    path: '/profile/vouchers',
+  },
 ]
 
 const route = useRoute()
