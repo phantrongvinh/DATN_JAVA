@@ -86,16 +86,16 @@ CREATE TABLE users(
     `password`			VARCHAR(500) NOT NULL,
     phone				VARCHAR(15) ,
     birth_day           TIMESTAMP ,
-     -- 'local' hoặc 'google'
     provider      		VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
  
-    -- false cho đến khi kích hoạt qua email
     is_actived       	BOOLEAN NOT NULL DEFAULT FALSE,
     
     created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     deleted_at			TIMESTAMP NULL
 );
+
+ALTER TABLE users ADD COLUMN loyalty_points INT NOT NULL DEFAULT 0;
 
 CREATE TABLE addresses(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
@@ -567,15 +567,15 @@ INSERT INTO product_images (product_id, image_url, is_primary) VALUES
 -- Product 10
 (10, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046776/products/nu0o3oasdhz9gxo2jaej.png', 1);
 
-INSERT INTO users (full_name, email, password, phone, birth_day, provider, is_actived, created_at)
+INSERT INTO users (full_name, email, password, provider, is_actived, created_at)
 VALUES 
-('Nguyen Van A', 'vana@gmail.com', '$2a$10$wq1x9x9x9x9x9x9x9x9x9uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0901234567', '2000-01-01', 'LOCAL', TRUE, NOW()),
+('Nguyen Van A', 'vana@gmail.com', '$2a$10$wq1x9x9x9x9x9x9x9x9x9uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW()),
 
-('Tran Thi B', 'thib@gmail.com', '$2a$10$k9b8c7d6e5f4g3h2j1k0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0912345678', '1999-05-20', 'LOCAL', TRUE, NOW()),
+('Tran Thi B', 'thib@gmail.com', '$2a$10$k9b8c7d6e5f4g3h2j1k0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW()),
 
-('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'GOOGLE', TRUE, NOW()),
+('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'GOOGLE', TRUE, NOW()),
 
-('Vinh', '1phantrongvinh98@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', '0923456789', '2001-12-15', 'LOCAL', TRUE, NOW());
+('Vinh', '1phantrongvinh98@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW());
 
 INSERT INTO addresses (address, is_primary, user_id)
 VALUES 
@@ -644,10 +644,7 @@ INSERT INTO payment_methods (name) VALUES
 ('COD'),
 ('VNPAY');
 
--- =========================
 -- ORDERS
--- =========================
-
 INSERT INTO orders
 (
     user_id,

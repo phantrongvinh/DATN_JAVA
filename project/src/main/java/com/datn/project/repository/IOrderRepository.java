@@ -16,6 +16,7 @@ import com.datn.project.entity.Order;
 public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpecificationExecutor<Order> {
     List<Order> findByUserIdOrderByCreatedAtDesc(Integer userId);
 
+    // query fetch đơn hàng chi tiết
     @Query("""
                 SELECT o FROM Order o
                 LEFT JOIN FETCH o.orderDetails od
@@ -29,6 +30,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     Optional<Order> findByIdWithDetails(@Param("id") Integer id);
 
+    // query thống kê danh thu theo năm từng tháng
     @Query("""
                 SELECT MONTH(o.createdAt), YEAR(o.createdAt),
                        COALESCE(SUM(o.finalPrice), 0),
@@ -42,6 +44,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     List<Object[]> findMonthlyRevenue(@Param("year") Integer year);
 
+    // query thống kê só lượng order theo tháng theo trạng thái
     @Query("""
                 SELECT MONTH(o.createdAt), YEAR(o.createdAt),
                        COUNT(o.id),
@@ -56,6 +59,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     List<Object[]> findMonthlyOrders(@Param("year") Integer year);
 
+    // query thống kê doanh thu theo tháng
     @Query("""
                 SELECT COALESCE(SUM(o.finalPrice), 0)
                 FROM Order o
@@ -66,6 +70,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     BigDecimal findRevenueByMonth(@Param("month") Integer month, @Param("year") Integer year);
 
+    // query thống kê số lượng đơn hàng theo tháng
     @Query("""
                 SELECT COUNT(o.id)
                 FROM Order o
@@ -74,6 +79,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     Integer findOrderCountByMonth(@Param("month") Integer month, @Param("year") Integer year);
 
+    // query thống kê doanh thu hôm nay
     @Query("""
                 SELECT COALESCE(SUM(o.finalPrice), 0)
                 FROM Order o
@@ -82,6 +88,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     BigDecimal findRevenueToday();
 
+    // query thống kê đơn hàng theo trạng thái
     @Query("""
                 SELECT o.status, COUNT(o.id)
                 FROM Order o
@@ -90,6 +97,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     List<Object[]> findOrderStatusToday();
 
+    // query thống kê 5 đơn hàng mới nhất hôm nay
     @Query("""
                 SELECT o FROM Order o
                 LEFT JOIN FETCH o.user
@@ -99,6 +107,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     List<Order> findTop5Today(Pageable pageable);
 
+    // query thống kê số đơn đã hoàn thành theo user id
     @Query("""
                 SELECT o.user.id, o.id, o.finalPrice, o.status, o.createdAt
                 FROM Order o
@@ -108,7 +117,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     List<Object[]> findDeliveredOrdersByUserIds(@Param("userIds") List<Integer> userIds);
 
-    // range
+    // query thống kê doanh thu theo khoảng thời gian
     @Query("""
                 SELECT COALESCE(SUM(o.finalPrice), 0)
                 FROM Order o
@@ -117,6 +126,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
             """)
     BigDecimal findRevenueByRange(LocalDateTime start, LocalDateTime end);
 
+    // query thống kê số đơn theo khoảng thời gian
     @Query("""
                 SELECT COUNT(o)
                 FROM Order o
@@ -124,5 +134,9 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 AND o.status <> 'CANCELLED'
             """)
     Integer findOrderCountByRange(LocalDateTime start, LocalDateTime end);
+
+    // query đếm số đơn hàng không tính đơn đã hủy
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId AND o.status <> 'CANCELLED'")
+    Integer countByUserIdExcludingCancelled(Integer userId);
 
 }

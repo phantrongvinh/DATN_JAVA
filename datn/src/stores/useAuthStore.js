@@ -151,6 +151,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function updateProfile(form) {
+    loadding.value = true
+    error.value = null
+    try {
+      const res = await authAPI.updateProfile(form)
+      message.value = res
+      await me()
+    } catch (err) {
+      error.value = err.response?.data?.message
+      return { success: false, errorMessages: err.message }
+    } finally {
+      loadding.value = false
+    }
+  }
+
   function clearMessages() {
     error.value = null
     message.value = null
@@ -176,5 +191,6 @@ export const useAuthStore = defineStore('auth', () => {
     forgotPassword,
     resetPassword,
     clearMessages,
+    updateProfile,
   }
 })

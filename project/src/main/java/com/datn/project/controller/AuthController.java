@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.datn.project.dto.auth.LoginRequest;
 import com.datn.project.dto.auth.RegisterRequest;
 import com.datn.project.dto.auth.ResendMailRequest;
+import com.datn.project.dto.auth.UpdateProfileRequest;
 import com.datn.project.service.IAuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -85,13 +87,18 @@ public class AuthController {
         return ResponseEntity.ok(authService.me()).getBody();
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(authService.updateProfile(request)).getBody();
+    }
+
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body){
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
         return ResponseEntity.ok(authService.forgotPassword(body.get("email"))).getBody();
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body){
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
         System.out.println(body);
         return ResponseEntity.ok(authService.resetPassword(body.get("token"), body.get("password"))).getBody();
     }
