@@ -40,6 +40,11 @@ const resetPassword = async (token, password) => {
   return res.data
 }
 
+const updateProfile = async (form) => {
+  const res = await axiosClient.put(`${url}/profile`, form)
+  return res.data
+}
+
 const authAPI = {
   register,
   login,
@@ -48,6 +53,7 @@ const authAPI = {
   me,
   forgotPassword,
   resetPassword,
+  updateProfile,
 }
 
 export default authAPI

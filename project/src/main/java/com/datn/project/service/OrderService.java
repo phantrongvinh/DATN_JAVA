@@ -1,6 +1,7 @@
 package com.datn.project.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -32,7 +33,6 @@ import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentMethod;
 import com.datn.project.entity.PaymentStatus;
-import com.datn.project.entity.ProductImage;
 import com.datn.project.entity.ProductVariant;
 import com.datn.project.entity.Promotion;
 import com.datn.project.entity.TimePromotion;
@@ -411,18 +411,18 @@ public class OrderService implements IOrderService {
                         response.setId(o.getId());
                         response.setCreatedAt(o.getCreatedAt());
                         response.setItems(o.getOrderDetails().stream().map(i -> OrderDetailResponse.builder()
-                                .productVariantId(i.getProductVariant().getId())
-                                .productName(i.getProductName())
-                                .color(i.getColor())
-                                .sizeName(i.getSizeName())
-                                .quantity(i.getQuantity())
-                                .originalPrice(i.getProductVariant().getPrice())
-                                .price(i.getPrice())
-                                .promotionName(
-                                                i.getPromotion() != null
-                                                                ? i.getPromotion().getName()
-                                                                : null)
-                                .build()).toList());
+                                        .productVariantId(i.getProductVariant().getId())
+                                        .productName(i.getProductName())
+                                        .color(i.getColor())
+                                        .sizeName(i.getSizeName())
+                                        .quantity(i.getQuantity())
+                                        .originalPrice(i.getProductVariant().getPrice())
+                                        .price(i.getPrice())
+                                        .promotionName(
+                                                        i.getPromotion() != null
+                                                                        ? i.getPromotion().getName()
+                                                                        : null)
+                                        .build()).toList());
 
                         response.setPaymentStatus(o.getPaymentStatus().name());
                         response.setPrice(o.getFinalPrice());
@@ -437,8 +437,8 @@ public class OrderService implements IOrderService {
         @Override
         public void updateOrderStatus(Integer orderId, OrderStatus newStatus) {
                 Order order = findById(orderId);
+                OrderStatus oldStatus = order.getStatus();
 
-                // Validate chuyển trạng thái hợp lệ
                 validateStatusTransition(order.getStatus(), newStatus);
 
                 order.setStatus(newStatus);
@@ -448,6 +448,15 @@ public class OrderService implements IOrderService {
                 }
 
                 orderRepository.save(order);
+
+                if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED) {
+                        User user = order.getUser();
+                        int earnedPoints = order.getFinalPrice()
+                                        .divide(BigDecimal.valueOf(10_000), RoundingMode.DOWN)
+                                        .intValue();
+                        user.setLoyaltyPoints(user.getLoyaltyPoints() + earnedPoints);
+                        userRepository.save(user);
+                }
         }
 
         @Override

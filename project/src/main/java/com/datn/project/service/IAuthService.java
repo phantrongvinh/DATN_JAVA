@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.datn.project.dto.auth.LoginRequest;
 import com.datn.project.dto.auth.RegisterRequest;
-import com.datn.project.entity.User;
+import com.datn.project.dto.auth.UpdateProfileRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -16,13 +16,13 @@ public interface IAuthService {
 
     ResponseEntity<?> logout(HttpServletRequest request);
 
-    // void sendVerificationEmail(User user, String token);
-
     void activate(String token);
 
     void resendActivation(String email);
 
     ResponseEntity<?> me();
+
+    ResponseEntity<?> updateProfile(UpdateProfileRequest request) ;
 
     ResponseEntity<?> forgotPassword(String email);
 

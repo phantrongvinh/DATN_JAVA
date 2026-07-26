@@ -77,4 +77,7 @@ public class User implements Serializable {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Order> orders;
+
+    @Column(name = "loyalty_points", nullable = false)
+    private Integer loyaltyPoints = 0;
 }
