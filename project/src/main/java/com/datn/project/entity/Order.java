@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,6 +17,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -50,8 +53,18 @@ public class Order implements Serializable {
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "time_promotion_id")
+    private TimePromotion timePromotion;
+
     @Column(name = "discount_amount")
     private BigDecimal discountAmount;
+
+    @Column(name = "time_discount")
+    private BigDecimal timeDiscount;
+
+    @Column(name = "shipping_fee")
+    private BigDecimal shippingFee;
 
     @Column(name = "final_price")
     private BigDecimal finalPrice;
@@ -69,12 +82,49 @@ public class Order implements Serializable {
     @JoinColumn(name = "payment_method_id")
     private PaymentMethod paymentMethod;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetails;
+
+    @Column(name = "payment_status")
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    @Column(name = "payment_transaction_id")
+    private String paymentTransactionId;
+
+    @Column(name = "tracking_code")
+    private String trackingCode;
+
+    @Column(name = "payment_txn_ref")
+    private String paymentTxnRef;
+
+    @Column(name = "shipping_detail")
+    private String shippingDetail;
+
+    @Column(name = "to_district_id")
+    private Integer toDistrictId;
+
+    @Column(name = "to_ward_code")
+    private String toWardCode;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        status = OrderStatus.PENDING;
+        paymentStatus = PaymentStatus.PENDING;
+        timeDiscount = timeDiscount == null ? BigDecimal.ZERO : timeDiscount;
+        discountAmount = discountAmount == null ? BigDecimal.ZERO : discountAmount;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

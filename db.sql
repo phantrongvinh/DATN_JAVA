@@ -84,21 +84,33 @@ CREATE TABLE users(
     full_name 			NVARCHAR(100) NOT NULL,
     email				VARCHAR(255) NOT NULL UNIQUE,
     `password`			VARCHAR(500) NOT NULL,
-    phone				VARCHAR(15) NOT NULL,
-    birth_day           TIMESTAMP NOT NULL,
-     -- 'local' hoặc 'google'
+    phone				VARCHAR(15) ,
+    birth_day           TIMESTAMP ,
     provider      		VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
  
-    -- false cho đến khi kích hoạt qua email
     is_actived       	BOOLEAN NOT NULL DEFAULT FALSE,
     
-    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    deleted_at			TIMESTAMP NULL
 );
+
+ALTER TABLE users ADD COLUMN loyalty_points INT NOT NULL DEFAULT 0;
 
 CREATE TABLE addresses(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
     address				TEXT NOT NULL,
+    is_primary			BOOLEAN NOT NULL DEFAULT FALSE,
     user_id				INT NOT NULL,
+ 
+	receiver_name  	VARCHAR(100) NULL,
+	receiver_phone 	VARCHAR(15) NULL,
+	province_name  	VARCHAR(100) NULL,
+	district_id    	INT NULL,
+	district_name  	VARCHAR(100) NULL,
+	ward_code      	VARCHAR(20) NULL,
+	ward_name      	VARCHAR(100) NULL,
+	detail         	TEXT NULL,
     CONSTRAINT FK_AD_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -135,6 +147,19 @@ CREATE TABLE product_reviews(
     CONSTRAINT FK_PR_P FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+ALTER TABLE product_reviews ADD COLUMN is_visible BOOLEAN NOT NULL DEFAULT TRUE;
+
+CREATE TABLE wishlist(
+	user_id				INT NOT NULL,
+    
+    product_id			INT NOT NULL,
+    
+    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT FK_WL_U FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT FK_WL_P FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
 CREATE TABLE vouchers(
 	id 					INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -146,20 +171,23 @@ CREATE TABLE vouchers(
     
     discount_value		DECIMAL(10,2) NOT NULL,
     
-    min_order_value DECIMAL(10,2) DEFAULT 0,
+    min_order_value 	DECIMAL(10,2) DEFAULT 0,
 
-    max_discount DECIMAL(10,2),
+    max_discount 		DECIMAL(10,2),
 
-    quantity INT DEFAULT 0,
+    quantity 			INT DEFAULT 0,
 
-    used_count INT DEFAULT 0,
+    used_count 			INT DEFAULT 0,
 
-    start_date TIMESTAMP,
-    end_date TIMESTAMP,
+    start_date 			TIMESTAMP,
+    end_date 			TIMESTAMP,
 
-    is_active BOOLEAN DEFAULT TRUE,
+    is_active			BOOLEAN DEFAULT TRUE,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at 			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+	user_id 			INT NULL,
+	CONSTRAINT FK_V_U FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE payment_methods(
@@ -168,32 +196,40 @@ CREATE TABLE payment_methods(
 );
 
 CREATE TABLE orders(
-	id 					INT AUTO_INCREMENT PRIMARY KEY,
-    user_id 			INT NOT NULL,
-    total_price			DECIMAL(10,2),
-	` status` 			ENUM(
+	id 						INT AUTO_INCREMENT PRIMARY KEY,
+    user_id 				INT NOT NULL,
+    total_price				DECIMAL(10,2),
+	`status` 				ENUM(
 							'PENDING',
 							'CONFIRMED',
 							'SHIPPING',
 							'DELIVERED',
 							'CANCELLED'
 							)
-						DEFAULT 'PENDING',
+							DEFAULT 'PENDING',
     
-    voucher_id			INT,
-    discount_amount		DECIMAL(10,2) DEFAULT 0,
-    final_price			DECIMAL(10,2),
+    voucher_id				INT,
+    discount_amount			DECIMAL(10,2) DEFAULT 0,
+    shipping_fee			DECIMAL(10,2),
+    final_price				DECIMAL(10,2),
     
-    shipping_address	TEXT NOT NULL,
-    reciever_name       VARCHAR(100) NOT NULL,
-    reviever_phone      VARCHAR(15) NOT NULL,
+    shipping_address		TEXT NOT NULL,
+    reciever_name       	VARCHAR(100) NOT NULL,
+    reviever_phone      	VARCHAR(15) NOT NULL,
 
-    payment_method_id	INT NOT NULL,
-    created_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at			TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-						ON UPDATE CURRENT_TIMESTAMP,
+    payment_method_id		INT NOT NULL,
+    created_at				TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at				TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+							ON UPDATE CURRENT_TIMESTAMP,
+                        
+	payment_txn_ref			VARCHAR(500),
 	
-    
+	payment_status       	ENUM('PENDING','PAID','FAILED','REFUNDED','UNPAID') DEFAULT 'PENDING',
+    payment_transaction_id 	VARCHAR(255) NULL,
+	tracking_code 			VARCHAR(255) NULL,
+    shipping_detail 		VARCHAR(500) NULL,
+    to_district_id  		INT NULL,
+    to_ward_code    		VARCHAR(20) NULL,
     
     CONSTRAINT FK_O_U FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT FK_O_V FOREIGN KEY (voucher_id) REFERENCES vouchers(id),
@@ -254,8 +290,49 @@ CREATE TABLE password_reset_tokens(
     id 					INT AUTO_INCREMENT PRIMARY KEY,
     token				VARCHAR(500) NOT NULL,     
     expiry_date			TIMESTAMP NOT NULL,
-    email				VARCHAR(255) NOT NULL UNIQUE,
-)
+    email				VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE promotions (
+    id              	INT AUTO_INCREMENT PRIMARY KEY,
+    `name`           	VARCHAR(255) NOT NULL,
+    discount_type   	ENUM('PERCENT', 'FIXED') NOT NULL,
+    discount_value  	DECIMAL(10,2) NOT NULL,
+    start_at        	TIMESTAMP NOT NULL,
+    end_at          	TIMESTAMP NOT NULL,
+    created_at      	TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE promotion_products (
+    promotion_id    	INT NOT NULL,
+    product_id      	INT NOT NULL,
+    PRIMARY KEY (promotion_id, product_id),
+    CONSTRAINT FK_PP_PR FOREIGN KEY (promotion_id) REFERENCES promotions(id),
+    CONSTRAINT FK_PP_P  FOREIGN KEY (product_id)   REFERENCES products(id)
+);
+
+CREATE TABLE time_promotions (
+    id              	INT AUTO_INCREMENT PRIMARY KEY,
+    name            	VARCHAR(255) NOT NULL,
+    discount_type   	ENUM('PERCENT', 'FIXED') NOT NULL,
+    discount_value  	DECIMAL(10,2) NOT NULL,
+    start_time      	TIME NOT NULL,  -- 09:00:00
+    end_time        	TIME NOT NULL,  -- 11:00:00
+    is_active       	BIT DEFAULT 1,
+    created_at      	TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE site_settings (
+    id      			INT AUTO_INCREMENT PRIMARY KEY,
+    `data`    			JSON NOT NULL,
+    updated_at 			TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default
+INSERT INTO site_settings (id, data) VALUES (1, '{}')
+ON DUPLICATE KEY UPDATE id = id;
+
+ALTER TABLE vouchers ADD COLUMN is_stackable BOOLEAN DEFAULT FALSE;
 
 INSERT INTO roles(`name`) values("USER"),("ADMIN");
 
@@ -410,18 +487,6 @@ INSERT INTO products (
     1
 );
 
-INSERT INTO product_images (product_id, image_url,is_primary) VALUES
-(1, 'products/nike-mercurial-vapor-16-academy-tf.jpg', 1),
-(2, 'products/adidas-predator-league-tf.jpg', 1),
-(3, 'products/puma-future-7-match-it.jpg', 1),
-(4, 'products/nike-tiempo-legend-10-kids-tf.jpg', 1),
-(5, 'products/adidas-x-crazyfast-women-tf.jpg', 1),
-(6, 'products/ao-real-madrid-2025.jpg', 1),
-(7, 'products/ao-manchester-city-women.jpg', 1),
-(8, 'products/balo-nike-academy.jpg', 1),
-(9, 'products/adidas-ucl-league-ball.jpg', 1),
-(10, 'products/puma-ultra-goalkeeper-gloves.jpg', 1);
-
 INSERT INTO product_variants (
     product_id,
     color,
@@ -442,7 +507,7 @@ INSERT INTO product_variants (
 
 -- Puma Future
 (3, 'Black', 4, 7, 2190000, 'PM-FUT-IT-41-BK'),
-(3, 'Black', 5, 5, 2190000, 'PM-FUT-IT-42-BK'),
+(3, 'Black', 5, 5, 2190000, 'PM-FUT-IT-42-BK'),-- 
 
 -- Nike Tiempo Kids
 (4, 'Orange', 1, 10, 1790000, 'NK-KID-TF-38-OR'),
@@ -470,4 +535,227 @@ INSERT INTO product_variants (
 -- Goalkeeper Gloves
 (10, 'Green', 8, 8, 1490000, 'PM-GK-M-GR'),
 (10, 'Green', 9, 6, 1490000, 'PM-GK-L-GR');
+
+INSERT INTO product_images (product_id, image_url, is_primary) VALUES
+-- Product 1
+(1, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783045885/products/hmhqzdwmrvgmm2mm9pkh.png', 1),
+
+-- Product 2
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046965/products/l1chftowmh8o7z4cxueh.png', 1),
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046967/products/l0xee6h6asbghaatwrv4.avif', 0),
+(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046969/products/cwaosnrvbyzjgf8zofnk.avif', 0),
+
+-- Product 3
+(3, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046668/products/bv7zb6oeu1ju7zvcsaoy.png', 1),
+
+-- Product 4
+(4, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046704/products/li5stlatfzskixdfcpvr.png', 1),
+
+-- Product 5
+(5, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046720/products/a96gfokgfb088fzss4bb.png', 1),
+
+-- Product 6
+(6, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046732/products/hi9zv1zxb8enqm8iolcv.png', 1),
+
+-- Product 7
+(7, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046743/products/egprwqfnidkovkhi9szn.png', 1),
+
+-- Product 8
+(8, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046754/products/d9ltehxpyi9pcgkejhnh.png', 1),
+
+-- Product 9
+(9, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046765/products/rly3h8rcdjvmgwpatfmw.png', 1),
+
+-- Product 10
+(10, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046776/products/nu0o3oasdhz9gxo2jaej.png', 1);
+
+INSERT INTO users (full_name, email, password, provider, is_actived, created_at)
+VALUES 
+('Nguyen Van A', 'vana@gmail.com', '$2a$10$wq1x9x9x9x9x9x9x9x9x9uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW()),
+
+('Tran Thi B', 'thib@gmail.com', '$2a$10$k9b8c7d6e5f4g3h2j1k0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW()),
+
+('Le Van C', 'vanc@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'GOOGLE', TRUE, NOW()),
+
+('Vinh', '1phantrongvinh98@gmail.com', '$2a$10$z1x2c3v4b5n6m7a8s9d0uOeJ9u9u9u9u9u9u9u9u9u9u9u', 'LOCAL', TRUE, NOW());
+
+INSERT INTO addresses (address, is_primary, user_id)
+VALUES 
+('123 Nguyen Trai, Q1, HCM', TRUE, 1),
+('45 Le Loi, Q3, HCM', FALSE, 1),
+
+('88 Tran Hung Dao, Q5, HCM', TRUE, 2),
+
+('12 Pasteur, Da Nang', TRUE, 3);
+
+INSERT INTO user_roles (user_id, role_id)
+VALUES 
+(1, 1), 
+(2, 1),
+(3, 1),
+(4, 2);
+-- Thêm time_promotion_id và time_discount vào orders
+ALTER TABLE orders
+    ADD COLUMN time_promotion_id INT NULL,
+    ADD COLUMN time_discount     DECIMAL(10,2) DEFAULT 0,
+    ADD CONSTRAINT FK_O_TP FOREIGN KEY (time_promotion_id) REFERENCES time_promotions(id);
+
+-- Thêm promotion_id vào order_details để lưu product promotion đã apply
+ALTER TABLE order_details
+    ADD COLUMN promotion_id INT NULL,
+    ADD CONSTRAINT FK_OD_PR FOREIGN KEY (promotion_id) REFERENCES promotions(id);
+    
+INSERT INTO promotions (name, discount_type, discount_value, start_at, end_at) VALUES
+('Flash Sale Hè 2026', 'PERCENT', 20.00, '2026-06-01 00:00:00', '2026-12-31 23:59:59'),
+('Khuyến Mãi Tháng 5',  'FIXED',  50000.00, '2026-05-01 00:00:00', '2026-05-31 23:59:59');
+
+-- ─── Promotion Products ───────────────────────────────────────────────────────
+-- Promotion 1 (còn hạn) → product 1, 2, 3, 5, 7, 9
+-- INSERT INTO promotion_products (promotion_id, product_id) VALUES
+-- (1, 1), (1, 2), (1, 3), (1, 5), (1, 7), (1, 9);
+
+-- Promotion 2 (hết hạn) → product 4, 6, 8, 10
+-- INSERT INTO promotion_products (promotion_id, product_id) VALUES
+-- (2, 4), (2, 6), (2, 8), (2, 10);
+
+-- product 1, 3, 6 không có promotion nào → null (không insert)
+
+-- ─── Time Promotions ─────────────────────────────────────────────────────────
+
+INSERT INTO time_promotions (name, discount_type, discount_value, start_time, end_time, is_active) VALUES
+('Khung Giờ Vàng Sáng 9-10h', 'PERCENT', 15.00, '09:00:00', '10:00:00', 1),
+('Khung Giờ Vàng Chiều 4-6h',  'FIXED',  300000.00, '16:00:00', '18:00:00', 1);
+
+INSERT INTO vouchers (code, description, discount_type, discount_value, min_order_value, max_discount, quantity, used_count, start_date, end_date, is_active, is_stackable) VALUES
+
+-- Giảm % có giới hạn max
+('SUMMER20',    'Giảm 20% tối đa 100.000đ',         'PERCENT', 20.00,  200000.00, 100000.00, 100, 0,  '2026-06-01 00:00:00', '2026-08-31 23:59:59', TRUE,TRUE),
+('WELCOME10',   'Giảm 10% cho đơn từ 500.000đ',      'PERCENT', 10.00,  500000.00, 50000.00,  50,  0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE),
+
+-- Giảm tiền cố định
+('FREESHIP',    'Giảm 50.000đ phí ship',              'FIXED',   50000.00,  0.00,   NULL,      200, 0,  '2026-01-01 00:00:00', '2026-12-31 23:59:59', TRUE,TRUE),
+('SAVE100K',    'Giảm 100.000đ cho đơn từ 1.000.000', 'FIXED',  100000.00, 1000000.00, NULL,   50,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE),
+
+-- Hết hạn
+('EXPIRED50',   'Giảm 50% (đã hết hạn)',              'PERCENT', 50.00,  100000.00, 200000.00, 100, 80, '2026-01-01 00:00:00', '2026-05-31 23:59:59', FALSE,TRUE),
+
+-- Hết lượt
+('SOLDOUT',     'Giảm 200.000đ (đã hết lượt)',        'FIXED',  200000.00, 500000.00, NULL,    10,  10, '2026-06-01 00:00:00', '2026-12-31 23:59:59', TRUE,FALSE);
+
+INSERT INTO payment_methods (name) VALUES
+('COD'),
+('VNPAY');
+
+-- ORDERS
+INSERT INTO orders
+(
+    user_id,
+    total_price,
+    status,
+    voucher_id,
+    discount_amount,
+    final_price,
+    shipping_address,
+    reciever_name,
+    reviever_phone,
+    payment_method_id,
+    payment_status,
+    payment_txn_ref,
+    payment_transaction_id,
+    tracking_code,
+    created_at,
+    updated_at
+)
+VALUES
+
+-- 2025
+(1,2490000,'DELIVERED',NULL,0,2490000,'Q1 HCM','Nguyen Van A','0901234567',1,'PAID',NULL,NULL,'GHN0001','2025-01-10','2025-01-12'),
+
+(2,4680000,'DELIVERED',4,100000,4580000,'Q5 HCM','Tran Thi B','0912345678',2,'PAID','TXN001','VNP001','GHN0002','2025-02-14','2025-02-16'),
+
+(3,1890000,'CANCELLED',NULL,0,1890000,'Da Nang','Le Van C','0923456789',1,'UNPAID',NULL,NULL,NULL,'2025-03-06','2025-03-06'),
+
+(1,4980000,'DELIVERED',1,100000,4880000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN002','VNP002','GHN0003','2025-05-22','2025-05-24'),
+
+(2,1290000,'DELIVERED',NULL,0,1290000,'Q5 HCM','Tran Thi B','0912345678',1,'PAID',NULL,NULL,'GHN0004','2025-08-11','2025-08-13'),
+
+(3,1490000,'SHIPPING',NULL,0,1490000,'Da Nang','Le Van C','0923456789',1,'PENDING',NULL,NULL,'GHN0005','2025-11-20','2025-11-20'),
+
+-- 2026
+(1,2490000,'DELIVERED',NULL,0,2490000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN003','VNP003','GHN0006','2026-01-15','2026-01-17'),
+
+(2,3780000,'DELIVERED',2,50000,3730000,'Q5 HCM','Tran Thi B','0912345678',1,'PAID',NULL,NULL,'GHN0007','2026-02-09','2026-02-11'),
+
+(3,2790000,'DELIVERED',NULL,0,2790000,'Da Nang','Le Van C','0923456789',2,'PAID','TXN004','VNP004','GHN0008','2026-03-21','2026-03-22'),
+
+(1,4380000,'DELIVERED',4,100000,4280000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN005','VNP005','GHN0009','2026-04-10','2026-04-12'),
+
+(2,1890000,'CONFIRMED',NULL,0,1890000,'Q5 HCM','Tran Thi B','0912345678',1,'PENDING',NULL,NULL,NULL,'2026-05-06','2026-05-06'),
+
+(3,5580000,'DELIVERED',1,100000,5480000,'Da Nang','Le Van C','0923456789',2,'PAID','TXN006','VNP006','GHN0010','2026-06-03','2026-06-05'),
+
+(1,2490000,'PENDING',NULL,0,2490000,'Q1 HCM','Nguyen Van A','0901234567',1,'PENDING',NULL,NULL,NULL,'2026-06-25','2026-06-25'),
+
+(2,4980000,'DELIVERED',NULL,0,4980000,'Q5 HCM','Tran Thi B','0912345678',2,'PAID','TXN007','VNP007','GHN0011','2026-07-02','2026-07-04'),
+
+(3,1490000,'DELIVERED',NULL,0,1490000,'Da Nang','Le Van C','0923456789',1,'PAID',NULL,NULL,'GHN0012','2026-07-08','2026-07-09'),
+
+(1,3180000,'SHIPPING',NULL,0,3180000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN008','VNP008','GHN0013','2026-08-14','2026-08-14'),
+
+(2,2590000,'DELIVERED',NULL,0,2590000,'Q5 HCM','Tran Thi B','0912345678',1,'PAID',NULL,NULL,'GHN0014','2026-09-09','2026-09-10'),
+
+(3,3780000,'DELIVERED',1,100000,3680000,'Da Nang','Le Van C','0923456789',2,'PAID','TXN009','VNP009','GHN0015','2026-10-05','2026-10-07'),
+
+(1,1890000,'CONFIRMED',NULL,0,1890000,'Q1 HCM','Nguyen Van A','0901234567',1,'PENDING',NULL,NULL,NULL,'2026-11-18','2026-11-18'),
+
+(2,4080000,'PENDING',NULL,0,4080000,'Q5 HCM','Tran Thi B','0912345678',2,'PENDING',NULL,NULL,NULL,'2026-12-01','2026-12-01');INSERT INTO order_details
+(order_id,product_variant_id,quantity,product_name,color,size_name,price)
+VALUES
+
+(1,1,1,'Nike Mercurial Vapor 16 Academy TF','Blue','40',2490000),
+
+(2,4,1,'Adidas Predator League TF','White','41',2790000),
+(2,18,1,'Adidas UCL League','White','Free Size',1290000),
+
+(3,12,1,'Áo CLB Real Madrid 2025','White','M',1890000),
+
+(4,1,2,'Nike Mercurial Vapor 16 Academy TF','Blue','40',2490000),
+
+(5,18,1,'Adidas UCL League','White','Free Size',1290000),
+
+(6,19,1,'Găng Tay Thủ Môn Puma Ultra','Green','M',1490000),
+
+(7,2,1,'Nike Mercurial Vapor 16 Academy TF','Blue','41',2490000),
+
+(8,12,2,'Áo CLB Real Madrid 2025','White','M',1890000),
+
+(9,4,1,'Adidas Predator League TF','White','41',2790000),
+
+(10,4,1,'Adidas Predator League TF','White','41',2790000),
+(10,6,1,'Puma Future 7 Match IT','Black','41',2190000),
+
+(11,13,1,'Áo CLB Real Madrid 2025','White','L',1890000),
+
+(12,1,1,'Nike Mercurial Vapor 16 Academy TF','Blue','40',2490000),
+(12,4,1,'Adidas Predator League TF','White','41',2790000),
+
+(13,2,1,'Nike Mercurial Vapor 16 Academy TF','Blue','41',2490000),
+
+(14,1,2,'Nike Mercurial Vapor 16 Academy TF','Blue','40',2490000),
+
+(15,20,1,'Găng Tay Thủ Môn Puma Ultra','Green','L',1490000),
+
+(16,6,1,'Puma Future 7 Match IT','Black','41',2190000),
+(16,18,1,'Adidas UCL League','White','Free Size',1290000),
+
+(17,10,1,'Adidas X Crazyfast Women TF','Pink','40',2590000),
+
+(18,4,1,'Adidas Predator League TF','White','41',2790000),
+(18,12,1,'Áo CLB Real Madrid 2025','White','M',1890000),
+
+(19,12,1,'Áo CLB Real Madrid 2025','White','M',1890000),
+
+(20,4,1,'Adidas Predator League TF','White','41',2790000),
+(20,15,1,'Áo Manchester City Women','Blue','S',1690000);
+
 

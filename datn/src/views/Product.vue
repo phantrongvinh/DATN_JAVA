@@ -1,252 +1,439 @@
-<template>
-  <div class="container-fluid">
-    <div class="fs-2 fw-bold my-5 px-4">
-      {{ label }}
-    </div>
-    <div class="px-4">
-      <div class="d-flex justify-content-center gap-3">
-        <div class="w-25 h-100">
-          <div class="fs-3 fw-semibold">Filter</div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Audience</div>
-            <div class="mt-2 fs-5">
-              <div class="d-flex flex-wrap">
-                <div class="mb-3 form-check w-50" v-for="a in audiences">
-                  <input
-                    type="checkbox"
-                    name="audience"
-                    :id="a.name.toLowerCase()"
-                    class="form-check-input"
-                    :value="a.name.toLowerCase()"
-                    v-model="selectedAudience"
-                  />
-                  <label :for="a.name.toLowerCase()" class="form-check-label">{{ a.name }}</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Brand</div>
-            <div class="mt-2 fs-5">
-              <div class="d-flex flex-wrap">
-                <div class="mb-3 form-check w-50" v-for="b in brands">
-                  <input
-                    type="checkbox"
-                    name="brand"
-                    :id="b.name.toLowerCase()"
-                    class="form-check-input"
-                    :value="b.name.toLowerCase()"
-                    v-model="selectedBrand"
-                  />
-                  <label :for="b.name.toLowerCase()" class="form-check-label">{{ b.name }}</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mt-3">
-            <div class="fs-5 fw-semibold">Category</div>
-            <div class="mt-2 fs-5">
-              <select
-                class="form-select"
-                aria-label="Default select example"
-                v-model="selectedCategory"
-              >
-                <option :value="undefined">All Categories</option>
-
-                <option v-for="c in categories" :key="c.id" :value="c.id">
-                  {{ c.name }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="w-75 h-100 ps-3 border-start">
-          <div class="row g-4">
-            <!-- Có products -->
-            <template v-if="filterList.length > 0">
-              <div class="col-lg-4" v-for="f in filterList" :key="f.id">
-                <RouterLink
-                  :to="{
-                    name: 'productDetail',
-                    query: {
-                      ...(f.productVariant && f.productVariant.length > 0
-                        ? { productVariantId: f.productVariant[0].id }
-                        : { productId: f.id }),
-                    },
-                  }"
-                  class="text-decoration-none"
-                >
-                  <div class="card border-0 h-100">
-                    <img
-                      :src="url + '/' + f.img"
-                      class="card-img-top object-fit-contain"
-                      style="height: 400px; background-color: #e4e4e4"
-                      alt=""
-                    />
-                    <div class="card-body d-flex flex-column ps-0">
-                      <h5 class="card-title fw-bold">{{ f.name }}</h5>
-                      <p class="card-text text-muted">{{ f.category }} - {{ f.brand }}</p>
-
-                      <!-- Có product variant -->
-                      <template v-if="f.productVariant && f.productVariant.length > 0">
-                        <p class="fw-bold">
-                          {{ (f.productVariant[0].price ?? f.basePrice).toLocaleString('vi-VN') }} đ
-                        </p>
-                      </template>
-
-                      <!-- Không có variant -->
-                      <template v-else>
-                        <p class="fw-bold">{{ f.basePrice.toLocaleString('vi-VN') }} đ</p>
-                      </template>
-                    </div>
-                  </div>
-                </RouterLink>
-              </div>
-            </template>
-
-            <!-- Không có product -->
-            <div v-else class="col-12 text-center py-5">
-              <p class="text-muted fs-14">Không tìm thấy sản phẩm nào</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { X } from 'lucide-vue-next'
+
+import ProductCard from '@/components/site/ProductCard.vue'
+import FilterGroup from '@/components/site/FilterGroup.vue'
+import FilterCheck from '@/components/site/FilterCheck.vue'
+import { useProductStore } from '@/stores/useProductStore'
+import { storeToRefs } from 'pinia'
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useBrandStore } from '@/stores/useBrandStore'
 import { useCategoryStore } from '@/stores/useCategoryStore'
-import { useProductStore } from '@/stores/useProductStore'
-import ulti from '@/ulti/ulti'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useDebounce } from '@/composables/useDebounce'
 
-// lấy param từ route
 const route = useRoute()
 const router = useRouter()
 
-const audience = computed(() => route.query.audience)
-const brand = computed(() => route.query.brand)
-const product = computed(() => route.query.product)
-const name = computed(() => route.query.name)
-
-// fetch data
-
 const productStore = useProductStore()
-const brandStore = useBrandStore()
 const audienceStore = useAudienceStore()
+const brandStore = useBrandStore()
 const categoryStore = useCategoryStore()
 
 const { brands } = storeToRefs(brandStore)
 const { audiences } = storeToRefs(audienceStore)
 const { categories } = storeToRefs(categoryStore)
-console.log(categories)
-
-onMounted(async () => {
-  await productStore.fetchFilterProducts({ audience: audience.value, brand: brand.value })
-})
 
 onMounted(async () => {
   await categoryStore.fetchCategory()
 })
 
+const { filterProducts, totalPages, totalElements } = storeToRefs(productStore)
+
+const toNumberArray = (val) => {
+  if (!val) return []
+  return Array.isArray(val) ? val.map(Number) : [Number(val)]
+}
+
+// ─── Debounce search ─────────────────────────────────
+const searchInput = ref(route.query.search ?? '')
+const searchDebounced = useDebounce(searchInput, 500)
+
+watch(searchDebounced, (newVal) => {
+  router.push({
+    query: {
+      ...route.query,
+      search: newVal || undefined,
+      page: 1, // reset về trang 1 khi search
+    },
+  })
+})
+
+// ─── Pagination ──────────────────────────────────────
+const currentPage = computed({
+  get() {
+    return Number(route.query.page ?? 1)
+  },
+  set(value) {
+    router.push({
+      query: { ...route.query, page: value },
+    })
+  },
+})
+
 watch(
   () => route.query,
   async (query) => {
-    await productStore.fetchFilterProducts(query)
+    const params = {
+      brandIds: toNumberArray(query.brandIds),
+      categoryIds: toNumberArray(query.categoryIds),
+      audienceIds: toNumberArray(query.audienceIds),
+      search: query.search || null,
+      onSale: query.onSale === 'true' ? true : null,
+      minPrice: query.minPrice ? Number(query.minPrice) : null,
+      maxPrice: query.maxPrice ? Number(query.maxPrice) : null,
+      sortBy: query.sortBy ?? 'newest',
+      page: Number(query.page ?? 1) - 1,
+      size: 12,
+    }
+    await productStore.fetchFilterProducts(params)
   },
   { immediate: true },
 )
 
-const label = computed(() => {
-  const audience = route.query.audience
-  const brand = route.query.brand
-
-  if (!audience && !brand) {
-    return 'Clothing'
-  }
-
-  // Ưu tiên audience
-  if (audience) {
-    const audiences = Array.isArray(audience) ? audience : [audience]
-
-    if (audiences.length === 1) {
-      return `${ulti.formatLabel(audiences[0])}'s Clothing`
-    }
-
-    return 'Clothing'
-  }
-
-  // Không có audience thì xét brand
-  const brands = Array.isArray(brand) ? brand : [brand]
-
-  if (brands.length === 1) {
-    return `${ulti.formatLabel(brands[0])}'s Clothing`
-  }
-
-  return 'Clothing'
-})
-
-const filterList = computed(() => productStore.filterProducts)
-
-const selectedAudience = computed({
-  get() {
-    const audience = route.query.audience
-
-    if (!audience) return []
-
-    return Array.isArray(audience) ? audience : [audience]
-  },
-
-  set(value) {
-    router.push({
-      query: {
-        ...route.query,
-        audience: value.length ? value : undefined,
-      },
-    })
-  },
-})
-
+// handle check brand
 const selectedBrand = computed({
   get() {
-    const brand = route.query.brand
-
-    if (!brand) return []
-
-    return Array.isArray(brand) ? brand : [brand]
+    const brandIds = route.query.brandIds
+    if (!brandIds) return []
+    return (Array.isArray(brandIds) ? brandIds : [brandIds]).map(Number)
   },
-
   set(value) {
     router.push({
       query: {
         ...route.query,
-        brand: value.length ? value : undefined,
+        brandIds: value.length ? value : undefined,
       },
     })
   },
 })
 
+const toggleBrand = (id) => {
+  const current = new Set(selectedBrand.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedBrand.value = [...current]
+}
+
+// handle check category
 const selectedCategory = computed({
   get() {
-    return route.query.category ?? undefined
+    const categoryIds = route.query.categoryIds
+    if (!categoryIds) return []
+    return (Array.isArray(categoryIds) ? categoryIds : [categoryIds]).map(Number)
   },
-
   set(value) {
     router.push({
       query: {
         ...route.query,
-        category: value || undefined,
+        categoryIds: value.length ? value : undefined,
       },
     })
   },
 })
 
-// url
+const toggleCategory = (id) => {
+  const current = new Set(selectedCategory.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedCategory.value = [...current]
+}
 
-const url = 'http://localhost:8080/uploads/images'
+// handle check audience
+const selectedAudience = computed({
+  get() {
+    const audienceIds = route.query.audienceIds
+    if (!audienceIds) return []
+    return (Array.isArray(audienceIds) ? audienceIds : [audienceIds]).map(Number)
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        audienceIds: value.length ? value : undefined,
+      },
+    })
+  },
+})
+
+const toggleAudience = (id) => {
+  const current = new Set(selectedAudience.value)
+  if (current.has(id)) {
+    current.delete(id)
+  } else {
+    current.add(id)
+  }
+  selectedAudience.value = [...current]
+}
+const audienceLabel = (name) => {
+  const map = {
+    Men: 'Nam',
+    Women: 'Nữ',
+    Kids: 'Trẻ em',
+  }
+  return map[name] ?? 'Phi giới tính'
+}
+
+// handle price
+const PRICE_RANGES = [
+  { label: 'Dưới 500K', min: 0, max: 500000 },
+  { label: '500K – 1.5tr', min: 500000, max: 1500000 },
+  { label: '1.5tr – 3tr', min: 1500000, max: 3000000 },
+  { label: '3tr – 5tr', min: 3000000, max: 5000000 },
+  { label: 'Trên 5tr', min: 5000000, max: null },
+]
+
+const selectedPrice = computed({
+  get() {
+    return {
+      min: route.query.minPrice ? Number(route.query.minPrice) : null,
+      max: route.query.maxPrice ? Number(route.query.maxPrice) : null,
+    }
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        minPrice: value.min ?? undefined,
+        maxPrice: value.max ?? undefined,
+      },
+    })
+  },
+})
+
+// handle sale
+const selectedOnSale = computed({
+  get() {
+    return route.query.onSale === 'true'
+  },
+  set(value) {
+    router.push({
+      query: {
+        ...route.query,
+        onSale: value ? 'true' : undefined,
+      },
+    })
+  },
+})
+
+// handle sort
+const selectedSort = computed({
+  get() {
+    return route.query.sortBy ?? 'newest'
+  },
+  set(value) {
+    router.push({
+      query: { ...route.query, sortBy: value, page: 1 },
+    })
+  },
+})
+
+const togglePrice = (price) => {
+  // Click lại range đang chọn thì bỏ chọn
+  if (selectedPrice.value.min === price.min && selectedPrice.value.max === price.max) {
+    selectedPrice.value = { min: null, max: null }
+  } else {
+    selectedPrice.value = { min: price.min, max: price.max }
+  }
+}
+
+// handle active filter
+const activeFilters = computed(() => {
+  const filters = []
+
+  // Brand
+  const brandIds = toNumberArray(route.query.brandIds)
+  brandIds.forEach((id) => {
+    const brand = brands.value.find((b) => b.id === id)
+    if (brand) {
+      filters.push({
+        label: brand.name,
+        clear: () => {
+          selectedBrand.value = selectedBrand.value.filter((b) => b !== id)
+        },
+      })
+    }
+  })
+  // Category
+  const categoryIds = toNumberArray(route.query.categoryIds)
+  categoryIds.forEach((id) => {
+    const category = categories.value.find((c) => c.id === id)
+    if (category) {
+      filters.push({
+        label: category.name,
+        clear: () => {
+          selectedCategory.value = selectedCategory.value.filter((c) => c !== id)
+        },
+      })
+    }
+  })
+
+  // Audience
+  const audienceIds = toNumberArray(route.query.audienceIds)
+  audienceIds.forEach((id) => {
+    const audience = audiences.value.find((a) => a.id === id)
+    if (audience) {
+      filters.push({
+        label: audienceLabel(audience.name),
+        clear: () => {
+          selectedAudience.value = selectedAudience.value.filter((a) => a !== id)
+        },
+      })
+    }
+  })
+
+  return filters
+})
 </script>
+
+<template>
+  <!-- Header -->
+  <div class="border-b border-border">
+    <div class="container-x py-12">
+      <p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+        <RouterLink to="/">Trang chủ</RouterLink> / Sản phẩm
+      </p>
+
+      <h1 class="mt-3 font-display text-4xl md:text-5xl">
+        Toàn bộ <span class="italic text-gold">bộ sưu tập</span>
+      </h1>
+    </div>
+  </div>
+
+  <div class="container-x grid gap-10 py-12 md:grid-cols-[260px_1fr]">
+    <!-- Sidebar -->
+    <aside class="self-start space-y-8 rounded-xl border border-border p-6">
+      <FilterGroup title="Thương hiệu">
+        <FilterCheck
+          v-for="brand in brands"
+          :key="brand.id"
+          :label="brand.name"
+          :value="brand.id"
+          :checked="selectedBrand.includes(brand.id)"
+          @change="toggleBrand(brand.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Danh mục">
+        <FilterCheck
+          v-for="category in categories"
+          :key="category.id"
+          :label="category.name"
+          :value="category.id"
+          :checked="selectedCategory.includes(category.id)"
+          @change="toggleCategory(category.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Đối tượng">
+        <FilterCheck
+          v-for="audience in audiences"
+          :key="audience.id"
+          :label="audienceLabel(audience.name)"
+          :value="audience.id"
+          :checked="selectedAudience.includes(audience.id)"
+          @change="toggleAudience(audience.id)"
+        />
+      </FilterGroup>
+
+      <FilterGroup title="Khoảng giá">
+        <FilterCheck
+          label="Đang giảm giá"
+          :checked="selectedOnSale"
+          @change="selectedOnSale = !selectedOnSale"
+        />
+        <FilterCheck
+          v-for="price in PRICE_RANGES"
+          :key="price.label"
+          :label="price.label"
+          :checked="selectedPrice.min === price.min && selectedPrice.max === price.max"
+          @change="togglePrice(price)"
+        />
+      </FilterGroup>
+    </aside>
+
+    <!-- Product -->
+    <div>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <input
+          v-model="searchInput"
+          type="text"
+          placeholder="Tìm kiếm sản phẩm..."
+          class="rounded border border-border px-3 py-1.5 text-sm outline-none focus:border-black"
+        />
+        <p class="text-sm text-muted-foreground">
+          {{ filterProducts && filterProducts.length > 0 ? filterProducts.length : '0' }}
+          sản phẩm
+        </p>
+
+        <div className="flex items-center gap-2 text-sm">
+          <label className="text-muted-foreground">Sắp xếp:</label>
+          <select
+            class="border-b border-foreground bg-transparent py-1 pr-4 outline-none"
+            v-model="selectedSort"
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+            <option value="price-asc">Giá tăng dần</option>
+            <option value="price-desc">Giá giảm dần</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Active filter -->
+      <div v-if="activeFilters.length" class="mt-4 flex flex-wrap gap-2">
+        <button
+          v-for="(f, i) in activeFilters"
+          :key="i"
+          @click="f.clear()"
+          class="flex items-center gap-1 border px-3 py-1 text-xs"
+        >
+          {{ f.label }}
+          <X class="h-3 w-3" />
+        </button>
+      </div>
+
+      <!-- Grid -->
+      <div v-if="filterProducts && filterProducts.length > 0">
+        <div v-if="totalPages > 1" class="mt-10 flex items-center justify-end gap-2">
+          <button
+            class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+          >
+            ← Trước
+          </button>
+
+          <template v-for="p in totalPages" :key="p">
+            <!-- Hiển thị trang đầu, cuối, và xung quanh trang hiện tại -->
+            <button
+              v-if="p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1"
+              class="rounded border px-3 py-1.5 text-sm"
+              :class="p === currentPage ? 'bg-black text-white border-black' : 'hover:bg-gray-100'"
+              @click="currentPage = p"
+            >
+              {{ p }}
+            </button>
+
+            <!-- Dấu ... -->
+            <span v-else-if="Math.abs(p - currentPage) === 2" class="px-1 text-muted-foreground">
+              ...
+            </span>
+          </template>
+
+          <button
+            class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+            :disabled="currentPage === totalPages"
+            @click="currentPage++"
+          >
+            Sau →
+          </button>
+        </div>
+        <div class="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+          <ProductCard v-for="p in filterProducts" :key="p.id" :product="p" />
+        </div>
+      </div>
+
+      <div v-else class="py-24 text-center text-muted-foreground">
+        Không có sản phẩm phù hợp với bộ lọc.
+      </div>
+    </div>
+  </div>
+</template>

@@ -5,12 +5,15 @@ import java.util.Map;
 
 import javax.naming.AuthenticationException;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import io.jsonwebtoken.ExpiredJwtException;
 
@@ -53,6 +56,15 @@ public class GlobalExceptionHandler {
                                                 "message", "Mã đăng nhập đã hết hạng, vui lòng đăng nhập lại"));
         }
 
+        @ExceptionHandler(LockedException.class)
+        public ResponseEntity<?> handleLocked(LockedException ex) {
+                return ResponseEntity.status(403)
+                                .body(Map.of(
+                                                "message",
+                                                "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ bộ phận hỗ trợ để được kích hoạt lại.",
+                                                "reason", "ACCOUNT_DISABLED"));
+        }
+
         @ExceptionHandler(DisabledException.class)
         public ResponseEntity<?> handleDisabled(
                         DisabledException ex) {
@@ -63,7 +75,20 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<?> handleNotFound(RuntimeException re){
-                return ResponseEntity.status(404).body(Map.of("message",re.getMessage()));
+        public ResponseEntity<?> handleRuntime(RuntimeException e) {
+                return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+
+        @ExceptionHandler(BadRequestException.class)
+        public ResponseEntity<?> handleNotFound(BadRequestException be) {
+                return ResponseEntity.status(404).body(Map.of("message", be.getMessage()));
+        }
+
+        // GlobalExceptionHandler.java
+        @ExceptionHandler(MaxUploadSizeExceededException.class)
+        public ResponseEntity<?> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of("message", "File upload quá lớn. Vui lòng chọn file nhỏ hơn 10MB"));
+        }
+
 }

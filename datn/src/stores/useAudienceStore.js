@@ -17,9 +17,9 @@ export const useAudienceStore = defineStore('audience', () => {
     try {
       audiences.value = await audienceAPI.fetchAudiences()
       return { success: true }
-    } catch (error) {
-      error.value = error
-      return { success: false, errorMessages: error.message }
+    } catch (err) {
+      error.value = err
+      return { success: false, errorMessages: err.message }
     } finally {
       loading.value = false
     }

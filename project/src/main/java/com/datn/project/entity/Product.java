@@ -3,7 +3,10 @@ package com.datn.project.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -64,11 +68,14 @@ public class Product implements Serializable {
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductImage> productImages;
+    private List<ProductImage> productImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductReview> productReviews;
+    private List<ProductReview> productReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<ProductVariant> productVariants;
+    private List<ProductVariant> productVariants= new ArrayList<>();
+
+    @ManyToMany(mappedBy = "products", fetch = FetchType.LAZY)
+    private Set<Promotion> promotions = new HashSet<>();
 }

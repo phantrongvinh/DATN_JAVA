@@ -19,6 +19,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -45,14 +46,17 @@ public class User implements Serializable {
     @Column(name = "password", nullable = false, length = 500)
     private String password;
 
-    @Column(name = "phone", nullable = false, length = 15)
+    @Column(name = "phone", length = 15)
     private String phone;
 
-    @Column(name = "birth_day", nullable = false)
+    @Column(name = "birth_day")
     private LocalDate birthDay;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Column(name = "is_actived", nullable = false)
     private boolean isActived;
@@ -70,4 +74,10 @@ public class User implements Serializable {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<ProductReview> productReviews;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Order> orders;
+
+    @Column(name = "loyalty_points", nullable = false)
+    private Integer loyaltyPoints = 0;
 }

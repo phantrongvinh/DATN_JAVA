@@ -1,6 +1,7 @@
 package com.datn.project.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -37,6 +38,6 @@ public class Cart implements Serializable {
     private User user;
 
     @OneToMany(mappedBy = "cart", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> cartItems;
+    private List<CartItem> cartItems = new ArrayList<>();
 
 }

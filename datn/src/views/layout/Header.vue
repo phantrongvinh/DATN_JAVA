@@ -1,180 +1,219 @@
-<template>
-  <div class="bg-light">
-    <div class="d-flex py-1 justify-content-between align-items-center container-fluid px-5 py-2">
-      <i class="fa-regular fa-futbol fs-6"></i>
-      <div class="d-flex align-items-center">
-        <i class="fa-regular fa-user fs-6 dropdown-user cursor-pointer" v-if="isAuthenticated">
-          <div class="dropdown-menu-user mt-2 z-100 bg-white list-unstyled rounded shadow p-3">
-            <div class="d-flex justify-content-start align-items-center mb-3 h-100 mx-4">
-              <img src="/images/avatar-default.svg" alt="" class="img-fluid rounded-circle w-25" />
-              <div class="d-flex flex-column justify-content-center h-100 gap-3">
-                <div class="fw-bold fs-14">{{ user?.fullName }}</div>
-                <div class="fs-14">{{ user?.email }}</div>
-              </div>
-            </div>
-            <div class="d-flex justify-content-between mx-4">
-              <button class="btn btn-outline-primary btn-sm rounded-5 mx-2">
-                <RouterLink class="dropdown-item" to="/profile">Hồ sơ cá nhân</RouterLink>
-              </button>
-              <button class="btn btn-outline-dark rounded-5 mx-2 btn-sm">
-                <div class="dropdown-item lh-lg" @click.prevent="handleLogout">Đăng xuất</div>
-              </button>
-            </div>
-          </div>
-        </i>
-        <RouterLink to="/login" class="text-decoration-none fw-semibold fs-14 text-hover" v-else
-          >Sign in</RouterLink
-        >
-      </div>
-    </div>
-  </div>
-  <div class="sticky-top bg-white border-bottom">
-    <div class="container-fluid">
-      <nav class="px-5">
-        <div class="row py-2">
-          <div class="col-lg-4">
-            <i class="fa-solid fa-fire-flame-simple fs-2"></i>
-          </div>
-          <div class="col-lg-4">
-            <ul class="nav nav-underline justify-content-around">
-              <li class="nav-item">
-                <RouterLink to="/" class="nav-link text-decoration-none text-dark fw-semibold"
-                  >Home</RouterLink
-                >
-              </li>
-              <li
-                class="nav-item dropdown position-static"
-                v-for="audience in audienceList"
-                :key="audience.id"
-              >
-                <RouterLink
-                  :to="{
-                    name: 'product',
-                    query: { audience: audience.name.toLowerCase() },
-                  }"
-                  class="nav-link text-decoration-none text-dark fw-semibold"
-                  >{{ ulti.formatLabel(audience.name) }}</RouterLink
-                >
-                <ul
-                  class="dropdown-menu mt-2 border-0 rounded-0 start-0 end-0 d-flex justify-content-center"
-                >
-                  <div class="w-50 row my-3">
-                    <div
-                      class="col-lg-3 text-center my-2"
-                      v-for="brand in brandList"
-                      :key="brand.id"
-                    >
-                      <li>
-                        <RouterLink
-                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
-                          :to="{
-                            name: 'product',
-                            query: {
-                              audience: audience.name.toLowerCase(),
-                              brand: brand.name.toLowerCase(),
-                            },
-                          }"
-                        >
-                          {{ brand.name }}
-                        </RouterLink>
-                      </li>
-                    </div>
-                  </div>
-                </ul>
-              </li>
-              <li class="nav-item dropdown position-static">
-                <RouterLink
-                  to="/accesories"
-                  class="nav-link text-decoration-none text-dark fw-semibold"
-                  >Accessories</RouterLink
-                >
-                <ul
-                  class="dropdown-menu mt-2 border-0 rounded-0 start-0 end-0 d-flex justify-content-center"
-                >
-                  <div class="w-50 row my-3">
-                    <div
-                      class="col-lg-3 text-center my-2"
-                      v-for="accesory in accesoryList"
-                      :key="accesory.id"
-                    >
-                      <li>
-                        <RouterLink
-                          class="text-decoration-none fs-14 text-menu lh-lg fw-semibold"
-                          to="/"
-                        >
-                          {{ accesory.name }}
-                        </RouterLink>
-                      </li>
-                    </div>
-                  </div>
-                </ul>
-              </li>
-            </ul>
-          </div>
-          <div class="col-lg-4">
-            <div class="d-flex justify-content-end">
-              <form class="d-flex" role="search">
-                <input
-                  class="form-control me-2"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                />
-                <button class="btn btn-outline-dark" type="submit">Search</button>
-              </form>
-              <div class="mx-3 d-flex align-items-center">
-                <i class="fa-regular fa-heart fs-4"></i>
-              </div>
-
-              <div class="d-flex align-items-center">
-                <i class="fa-brands fa-opencart fs-4"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </div>
-  </div>
-</template>
-
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import {
+  Search,
+  ShoppingBag,
+  Heart,
+  User,
+  LogOut,
+  UserCircle2,
+  LayoutDashboard,
+  Package,
+} from 'lucide-vue-next'
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
 import { useAudienceStore } from '@/stores/useAudienceStore'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useBrandStore } from '@/stores/useBrandStore'
-import { useCategoryStore } from '@/stores/useCategoryStore'
-import ulti from '@/ulti/ulti'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useSiteSettingsStore } from '@/stores/useSiteSettingsStore'
+import { useCart } from '@/composables/useCart'
+import { useWishlistStore } from '@/stores/useWishlistStore'
+// import NotificationBell from './NotificationBell.vue'
 
 const router = useRouter()
+const route = useRoute()
 
-// stores
 const audienceStore = useAudienceStore()
-const brandStore = useBrandStore()
-const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
+const siteSettingsStore = useSiteSettingsStore()
+const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
   await audienceStore.fetchAudiences()
-  await brandStore.fetchBrand()
-  await categoryStore.fetchAccessory()
+  if (authStore.isAuthenticated) {
+    await wishlistStore.fetchIds()
+  }
 })
 
-const { audiences: audienceList } = storeToRefs(audienceStore)
-const { brands: brandList } = storeToRefs(brandStore)
-const { accessories: accesoryList } = storeToRefs(categoryStore)
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-const { user } = storeToRefs(authStore)
+const { audiences } = storeToRefs(audienceStore)
+const { user, isAuthenticated, isAdmin } = storeToRefs(authStore)
+const { landing } = storeToRefs(siteSettingsStore)
 
-// logout
+const { ids } = storeToRefs(wishlistStore)
+
+const { items } = useCart()
+
+const cartCount = computed(() => items.value?.reduce((sum, i) => sum + i.quantity, 0) ?? 0)
+
+const t = computed(() => landing.value.theme)
+
+const audienceLabel = (name) => {
+  const map = { Men: 'Nam', Women: 'Nữ', Kids: 'Trẻ em' }
+  return map[name] ?? 'Phi giới tính'
+}
+
+// scroll shadow
+const scrolled = ref(false)
+const onScroll = () => {
+  scrolled.value = window.scrollY > 8
+}
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
 const handleLogout = () => {
-  try {
-    authStore.logout()
-    router.push('/')
-    return { success: true }
-  } catch (error) {
-    return { success: false }
-  }
+  authStore.logout()
+  router.push('/')
 }
 </script>
+
+<template>
+  <header
+    class="sticky top-0 z-50 w-full border-b transition-shadow"
+    :class="{ 'shadow-sm': scrolled }"
+    :style="{
+      backgroundColor: `color-mix(in oklab, ${t?.headerBg} 92%, transparent)`,
+      color: t?.headerText,
+      borderColor: `color-mix(in oklab, ${t?.headerText} 15%, transparent)`,
+      backdropFilter: 'blur(10px)',
+    }"
+  >
+    <!-- Announcement bar -->
+    <div
+      v-if="landing?.announcement"
+      class="text-center text-[11px] uppercase tracking-[0.25em]"
+      :style="{ backgroundColor: t?.announcementBg, color: t?.announcementText }"
+    >
+      <p class="container-x py-2">{{ landing?.announcement }}</p>
+    </div>
+
+    <div class="container-x flex h-16 items-center justify-between gap-6">
+      <!-- Logo -->
+      <RouterLink to="/" class="flex items-baseline gap-1">
+        <span class="font-display text-2xl font-semibold tracking-tight">Maison</span>
+        <span class="font-display text-2xl italic" :style="{ color: t?.headerAccent }">Calcio</span>
+      </RouterLink>
+
+      <!-- Navigation -->
+      <nav class="hidden items-center gap-8 md:flex">
+        <RouterLink
+          to="/"
+          class="text-sm tracking-wide opacity-80 transition-opacity hover:opacity-100"
+          :class="{ 'font-medium opacity-100': route.path === '/' }"
+        >
+          Trang chủ
+        </RouterLink>
+
+        <RouterLink
+          v-for="audience in audiences"
+          :key="audience.id"
+          :to="{ name: 'products', query: { audienceIds: audience.id } }"
+          class="text-sm tracking-wide opacity-80 transition-opacity hover:opacity-100"
+          :class="{ 'font-medium opacity-100': route.query.audienceIds == audience.id }"
+        >
+          {{ audienceLabel(audience.name) }}
+        </RouterLink>
+      </nav>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-1">
+        <!-- <NotificationBell /> -->
+
+        <!-- User -->
+        <DropdownMenu v-if="isAuthenticated">
+          <DropdownMenuTrigger as-child>
+            <button
+              aria-label="Tài khoản"
+              class="flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-white/10"
+            >
+              <UserCircle2 class="h-5 w-5" />
+              <span class="hidden max-w-[120px] truncate sm:inline">{{ user?.fullName }}</span>
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" class="w-56">
+            <DropdownMenuLabel>
+              <div class="font-normal">
+                <p class="text-sm font-medium">{{ user?.fullName }}</p>
+                <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
+              </div>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem @click="router.push('/profile')">
+              <User class="mr-2 h-4 w-4" /> Hồ sơ cá nhân
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="router.push('/profile/orders')">
+              <Package class="mr-2 h-4 w-4" /> Đơn hàng của tôi
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="router.push('/profile/wishlist')">
+              <Heart class="mr-2 h-4 w-4" /> Yêu thích
+            </DropdownMenuItem>
+
+            <template v-if="isAdmin">
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="router.push('/admin')">
+                <LayoutDashboard class="mr-2 h-4 w-4" /> Quản trị
+              </DropdownMenuItem>
+            </template>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem @click="handleLogout">
+              <LogOut class="mr-2 h-4 w-4" /> Đăng xuất
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <RouterLink
+          v-else
+          to="/login"
+          aria-label="Đăng nhập"
+          class="rounded-full p-2 transition-colors hover:bg-white/10"
+        >
+          <User class="h-[18px] w-[18px]" />
+        </RouterLink>
+
+        <!-- Wishlist -->
+        <RouterLink
+          to="/profile/wishlist"
+          aria-label="Yêu thích"
+          class="relative hidden rounded-full p-2 transition-colors hover:bg-white/10 sm:inline-flex"
+        >
+          <Heart class="h-[18px] w-[18px]" />
+          <span
+            v-if="ids.length > 0"
+            class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium"
+            :style="{ background: t.headerAccent, color: t.headerBg }"
+          >
+            {{ ids.length }}
+          </span>
+        </RouterLink>
+
+        <!-- Cart -->
+        <RouterLink
+          to="/cart"
+          aria-label="Giỏ hàng"
+          class="relative rounded-full p-2 transition-colors hover:bg-white/10"
+        >
+          <ShoppingBag class="h-[18px] w-[18px]" />
+          <span
+            v-if="cartCount > 0"
+            class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium"
+            :style="{ background: t.headerText, color: t.headerBg }"
+          >
+            {{ cartCount }}
+          </span>
+        </RouterLink>
+      </div>
+    </div>
+  </header>
+</template>
