@@ -24,11 +24,23 @@ const fetchProductOnSale = async () => {
   return res.data
 }
 
+const fetchReviews = async (productId) => {
+  const res = await axiosClient.get(`${url}/${productId}/reviews`)
+  return res.data
+}
+
+const createReview = async (productId, form) => {
+  const res = await axiosClient.post(`${url}/${productId}/reviews`, form)
+  return res.data
+}
+
 const productAPI = {
   fetchSpotlightProducts,
   fetchFilterProducts,
   fetchProductById,
   fetchProductOnSale,
+  fetchReviews,
+  createReview,
 }
 
 export default productAPI

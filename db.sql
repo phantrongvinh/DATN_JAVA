@@ -147,6 +147,8 @@ CREATE TABLE product_reviews(
     CONSTRAINT FK_PR_P FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
+ALTER TABLE product_reviews ADD COLUMN is_visible BOOLEAN NOT NULL DEFAULT TRUE;
+
 CREATE TABLE wishlist(
 	user_id				INT NOT NULL,
     

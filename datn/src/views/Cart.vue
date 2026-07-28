@@ -6,8 +6,19 @@ import ulti from '@/ulti/ulti'
 import { useCart } from '@/composables/useCart'
 import SummaryRow from '@/components/site/SummaryRow.vue'
 import { useCheckout } from '@/composables/useCheckout'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { useCartStore } from '@/stores/useCartStore'
+import { onMounted } from 'vue'
 
 const { items, removeItem, updateQuantity } = useCart()
+const authStore = useAuthStore()
+const cartStore = useCartStore()
+
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await cartStore.fetchCart()
+  }
+})
 
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()

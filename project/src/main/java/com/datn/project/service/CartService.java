@@ -59,7 +59,13 @@ public class CartService implements ICartService {
                     return newItem;
                 });
 
-        item.setQuantity(item.getQuantity() + request.getQuantity());
+        int newQuantity = item.getQuantity() + request.getQuantity();
+
+        if (newQuantity > variant.getStock()) {
+            newQuantity = variant.getStock();
+        }
+
+        item.setQuantity(newQuantity);
         cartItemRepository.save(item);
 
         return ResponseEntity.ok("Thêm thành công");
@@ -120,8 +126,11 @@ public class CartService implements ICartService {
     @Override
     @Transactional
     public ResponseEntity<?> mergeCart(int userId, MergeCartRequest request) {
+        System.out.println("🔍 UserId: " + userId + ", Số item merge: " + request.getItems().size());
         for (CartItemRequest item : request.getItems()) {
+            System.out.println("🔍 Merging variantId=" + item.getProductVariantId() + ", quantity=" + item.getQuantity());
             addItem(userId, item);
+
         }
         return ResponseEntity.ok("Đồng bộ giỏ hàng thành công");
     }

@@ -11,6 +11,7 @@ import ProductCard from '@/components/site/ProductCard.vue'
 import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-next'
 import { useCartStore } from '@/stores/useCartStore'
 import { useWishlistStore } from '@/stores/useWishlistStore'
+import ProductReview from '@/components/ProductReview.vue'
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -384,7 +385,11 @@ const handleToggleWishlist = async () => {
       </div>
 
       <div v-if="activeTab === 'reviews'" class="mt-8 space-y-8">
-        <article class="border-b border-border pb-6">Chưa có đánh giá</article>
+        <article class="border-b border-border pb-6">
+          <div v-if="activeTab === 'reviews'" class="mt-8">
+            <ProductReview :product-id="route.params.productId" />
+          </div>
+        </article>
       </div>
     </section>
 

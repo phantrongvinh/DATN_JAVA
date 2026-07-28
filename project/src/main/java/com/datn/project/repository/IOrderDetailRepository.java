@@ -20,4 +20,13 @@ public interface IOrderDetailRepository extends JpaRepository<OrderDetail, Integ
                 ORDER BY SUM(od.quantity) DESC
             """)
     List<Object[]> findTopSellingProducts(LocalDateTime start, LocalDateTime end, Pageable pageable);
+
+    @Query("""
+                SELECT COUNT(od) > 0
+                FROM OrderDetail od
+                WHERE od.order.user.id = :userId
+                AND od.productVariant.product.id = :productId
+                AND od.order.status = 'DELIVERED'
+            """)
+    boolean existsDeliveredPurchase(Integer userId, Integer productId);
 }

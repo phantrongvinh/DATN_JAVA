@@ -2,6 +2,7 @@
 import Field from '@/components/site/Field.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useNotificationStore } from '@/stores/useNotificationStore'
+import { ArrowLeft } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useForm } from 'vee-validate'
 import { ref } from 'vue'
@@ -64,7 +65,14 @@ const handleResend = async () => {
 </script>
 
 <template>
-  <div class="container-x grid gap-12 py-16 md:grid-cols-2">
+  <div class="container-x relative grid gap-12 py-16 md:grid-cols-2">
+    <RouterLink
+      to="/"
+      class="absolute left-4 top-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground md:left-8"
+    >
+      <ArrowLeft class="h-3.5 w-3.5" />
+      Trở lại trang chủ
+    </RouterLink>
     <div class="hidden aspect-[4/5] overflow-hidden bg-secondary md:block">
       <img
         src="https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=900&q=80"

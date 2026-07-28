@@ -97,6 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     try {
       await authAPI.logout()
+      wishlistStore.ids.values = []
       notification.notify('Đã đăng xuất', 'success')
     } catch (err) {
       error.value = err
@@ -156,7 +157,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const res = await authAPI.updateProfile(form)
-      message.value = res
       await me()
     } catch (err) {
       error.value = err.response?.data?.message

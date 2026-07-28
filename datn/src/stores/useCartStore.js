@@ -70,8 +70,8 @@ export const useCartStore = defineStore(
         })
         message.value = res
         await fetchCart()
-      } catch (error) {
-        error.value = error.data?.response?.message
+      } catch (err) {
+        error.value = err.data?.response?.message
         throw err
       } finally {
         loadding.value = false
@@ -85,8 +85,8 @@ export const useCartStore = defineStore(
         const res = await cartAPI.removeItemServer(variantId)
         message.value = res
         await fetchCart()
-      } catch (error) {
-        error.value = error.data?.response?.message
+      } catch (err) {
+        error.value = err.data?.response?.message
         throw err
       } finally {
         loadding.value = false
@@ -100,8 +100,8 @@ export const useCartStore = defineStore(
         const res = await cartAPI.updateQuantityServer(variantId, quantity)
         message.value = res
         await fetchCart()
-      } catch (error) {
-        error.value = error.data?.response?.message
+      } catch (err) {
+        error.value = err.data?.response?.message
         throw err
       } finally {
         loadding.value = false
@@ -115,14 +115,18 @@ export const useCartStore = defineStore(
 
       try {
         if (items.value.length === 0) return
-        items.value = await cartAPI.mergeCartToServer(
-          items.value.map((i) => ({
-            productVariantId: i.productVariantId,
-            quantity: i.quantity,
-          })),
-        )
-      } catch (error) {
-        error.value = error.data?.response?.message
+
+        console.log('🔍 Local items trước khi merge:', JSON.parse(JSON.stringify(items.value)))
+
+        const payload = items.value.map((i) => ({
+          productVariantId: i.productVariantId,
+          quantity: i.quantity,
+        }))
+
+        console.log('🔍 Payload gửi lên server:', payload)
+        items.value = await cartAPI.mergeCartToServer(payload)
+      } catch (err) {
+        error.value = err.data?.response?.message
         throw err
       } finally {
         loadding.value = false

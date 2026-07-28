@@ -30,7 +30,6 @@ import com.datn.project.dto.dashboard.DashboardResponse;
 import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.AdminProductFilterDTO;
-import com.datn.project.dto.product.ProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
 import com.datn.project.dto.user.UserFilterDTO;
 import com.datn.project.dto.voucher.BirthdayPreviewResponse;
@@ -44,6 +43,7 @@ import com.datn.project.repository.ISiteSettingRepository;
 import com.datn.project.repository.ITimePromotionRepository;
 import com.datn.project.service.IDashboardService;
 import com.datn.project.service.IOrderService;
+import com.datn.project.service.IProductReviewService;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
 import com.datn.project.service.ITimePromotionService;
@@ -85,6 +85,9 @@ public class AdminController {
     @Autowired
     private IVoucherService voucherService;
 
+    @Autowired
+    private IProductReviewService reviewService;
+
     // phần products
     @GetMapping("/products/top5")
     public ResponseEntity<?> getTop5Product() {
@@ -110,7 +113,7 @@ public class AdminController {
         filter.setMaxPrice(maxPrice);
         filter.setSortBy(sortBy);
 
-        System.out.println(filter); 
+        System.out.println(filter);
 
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
@@ -351,5 +354,12 @@ public class AdminController {
     public Map<String, Object> generateBirthday() {
         int created = voucherService.generateBirthdayVouchers();
         return Map.of("created", created);
+    }
+
+    // review
+    @DeleteMapping("/reviews/{userId}/{productId}")
+    public ResponseEntity<?> hideReview(@PathVariable Integer userId, @PathVariable Integer productId) {
+        reviewService.hideReview(userId, productId);
+        return ResponseEntity.ok(Map.of("message", "Đã ẩn đánh giá"));
     }
 }

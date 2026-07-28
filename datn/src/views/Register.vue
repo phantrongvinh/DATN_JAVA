@@ -5,6 +5,7 @@ import * as yup from 'yup'
 import Field from '@/components/site/Field.vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
+import { ArrowLeft } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -54,11 +55,18 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="container-x grid gap-12 py-16 md:grid-cols-2">
+  <div class="container-x relative grid gap-12 py-16 md:grid-cols-2">
+    <RouterLink
+      to="/"
+      class="absolute left-4 top-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground md:left-8"
+    >
+      <ArrowLeft class="h-3.5 w-3.5" />
+      Trở lại trang chủ
+    </RouterLink>
     <!-- Image -->
     <div class="hidden aspect-[4/5] overflow-hidden bg-secondary md:block">
       <img
-        src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=900&q=80"
+        src="https://plus.unsplash.com/premium_photo-1661868926397-0083f0503c07?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
         class="h-full w-full object-cover"
         alt=""
       />

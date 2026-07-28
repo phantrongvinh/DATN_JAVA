@@ -45,4 +45,7 @@ public class ProductReview implements Serializable {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "is_visible", nullable = false)
+    private boolean isVisible = true;
 }

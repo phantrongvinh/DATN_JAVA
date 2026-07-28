@@ -38,7 +38,10 @@ const siteSettingsStore = useSiteSettingsStore()
 const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
-  await Promise.allSettled[(audienceStore.fetchAudiences(), wishlistStore.fetchIds())]
+  await audienceStore.fetchAudiences()
+  if (authStore.isAuthenticated) {
+    await wishlistStore.fetchIds()
+  }
 })
 
 const { audiences } = storeToRefs(audienceStore)
@@ -122,10 +125,6 @@ const handleLogout = () => {
 
       <!-- Actions -->
       <div class="flex items-center gap-1">
-        <button aria-label="Tìm kiếm" class="rounded-full p-2 transition-colors hover:bg-white/10">
-          <Search class="h-[18px] w-[18px]" />
-        </button>
-
         <!-- <NotificationBell /> -->
 
         <!-- User -->
