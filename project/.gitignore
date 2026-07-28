@@ -34,3 +34,7 @@ build/
 application-secret.properties
 application-oauth2.properties
 application-mail.properties
+application-vnpay.properties
+application-ghn.properties
+application-cloudinary.properties
+
