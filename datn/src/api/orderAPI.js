@@ -3,8 +3,6 @@ import axiosClient from './axiosClient'
 const url = '/orders'
 
 const placeOrder = async (data) => {
-  console.log(data)
-
   const res = await axiosClient.post(`${url}`, data)
   return res.data
 }

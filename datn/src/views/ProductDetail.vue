@@ -12,6 +12,7 @@ import { Heart, Minus, Plus, RotateCcw, ShieldCheck, Truck } from 'lucide-vue-ne
 import { useCartStore } from '@/stores/useCartStore'
 import { useWishlistStore } from '@/stores/useWishlistStore'
 import ProductReview from '@/components/ProductReview.vue'
+import AuthPopover from '@/components/AuthPopover.vue'
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -187,6 +188,11 @@ const handleToggleWishlist = async () => {
   const added = await toggleWishlist(product.value.id)
   notification.notify(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích', 'success')
 }
+
+const buttonClasses = computed(
+  () =>
+    `border p-3 transition-colors ${isWished.value ? 'border-gold bg-gold/10' : 'border-border hover:border-foreground'}`,
+)
 </script>
 
 <template>
@@ -330,18 +336,21 @@ const handleToggleWishlist = async () => {
             <span v-else-if="qty > selectedVariant.stock">Vượt quá tồn kho</span>
             <span v-else>Thêm vào giỏ</span>
           </button>
-          <button
-            @click="handleToggleWishlist"
-            class="border p-3 transition-colors"
+          <AuthPopover
+            guest-message="Đăng nhập để lưu sản phẩm yêu thích"
+            align="right"
+            :button-class="buttonClasses"
             :class="isWished ? 'border-gold bg-gold/10' : 'border-border hover:border-foreground'"
-            aria-label="Yêu thích"
+            @click-authenticated="handleToggleWishlist"
           >
-            <Heart
-              class="h-5 w-5 transition-colors"
-              :class="isWished ? 'fill-gold text-gold' : ''"
-              stroke-width="1.5"
-            />
-          </button>
+            <template #icon>
+              <Heart
+                class="h-5 w-5 transition-colors"
+                :class="isWished ? 'fill-gold text-gold' : ''"
+                stroke-width="1.5"
+              />
+            </template>
+          </AuthPopover>
         </div>
 
         <!-- USPs  -->

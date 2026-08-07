@@ -77,6 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
   function forceLogout() {
     user.value = null
     token.value = null
+    wishlistStore.clear()
     localStorage.removeItem('token')
   }
 
@@ -171,6 +172,11 @@ export const useAuthStore = defineStore('auth', () => {
     message.value = null
   }
 
+  const clear = () => {
+    ids.value = []
+    wishlists.value = []
+  }
+
   return {
     user,
     token,
@@ -192,5 +198,6 @@ export const useAuthStore = defineStore('auth', () => {
     resetPassword,
     clearMessages,
     updateProfile,
+    clear,
   }
 })
