@@ -113,8 +113,6 @@ public class AdminController {
         filter.setMaxPrice(maxPrice);
         filter.setSortBy(sortBy);
 
-        System.out.println(filter);
-
         return ResponseEntity.ok(productService.getAllProducts(page, size, filter)).getBody();
     }
 

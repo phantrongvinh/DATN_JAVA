@@ -38,4 +38,7 @@ public class ProductImage implements Serializable {
 
     @Column(name = "is_primary")
     private Boolean isPrimary;
+
+    @Column(name = "public_id")
+    private String publicId;
 }
