@@ -48,6 +48,7 @@ CREATE TABLE product_images(
     product_id 			INT NOT NULL,
     image_url			VARCHAR(255) NOT NULL,
     is_primary			BIT DEFAULT 0,
+    public_id 			VARCHAR(255),
     
     CONSTRAINT FK_PI FOREIGN KEY (product_id) REFERENCES products(id)
 );
@@ -542,8 +543,6 @@ INSERT INTO product_images (product_id, image_url, is_primary) VALUES
 
 -- Product 2
 (2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046965/products/l1chftowmh8o7z4cxueh.png', 1),
-(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046967/products/l0xee6h6asbghaatwrv4.avif', 0),
-(2, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046969/products/cwaosnrvbyzjgf8zofnk.avif', 0),
 
 -- Product 3
 (3, 'https://res.cloudinary.com/dlshvwdqm/image/upload/v1783046668/products/bv7zb6oeu1ju7zvcsaoy.png', 1),
@@ -700,15 +699,9 @@ VALUES
 
 (3,1490000,'DELIVERED',NULL,0,1490000,'Da Nang','Le Van C','0923456789',1,'PAID',NULL,NULL,'GHN0012','2026-07-08','2026-07-09'),
 
-(1,3180000,'SHIPPING',NULL,0,3180000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN008','VNP008','GHN0013','2026-08-14','2026-08-14'),
+(1,3180000,'SHIPPING',NULL,0,3180000,'Q1 HCM','Nguyen Van A','0901234567',2,'PAID','TXN008','VNP008','GHN0013','2026-08-14','2026-08-14');
 
-(2,2590000,'DELIVERED',NULL,0,2590000,'Q5 HCM','Tran Thi B','0912345678',1,'PAID',NULL,NULL,'GHN0014','2026-09-09','2026-09-10'),
-
-(3,3780000,'DELIVERED',1,100000,3680000,'Da Nang','Le Van C','0923456789',2,'PAID','TXN009','VNP009','GHN0015','2026-10-05','2026-10-07'),
-
-(1,1890000,'CONFIRMED',NULL,0,1890000,'Q1 HCM','Nguyen Van A','0901234567',1,'PENDING',NULL,NULL,NULL,'2026-11-18','2026-11-18'),
-
-(2,4080000,'PENDING',NULL,0,4080000,'Q5 HCM','Tran Thi B','0912345678',2,'PENDING',NULL,NULL,NULL,'2026-12-01','2026-12-01');INSERT INTO order_details
+INSERT INTO order_details
 (order_id,product_variant_id,quantity,product_name,color,size_name,price)
 VALUES
 
@@ -746,16 +739,5 @@ VALUES
 (15,20,1,'Găng Tay Thủ Môn Puma Ultra','Green','L',1490000),
 
 (16,6,1,'Puma Future 7 Match IT','Black','41',2190000),
-(16,18,1,'Adidas UCL League','White','Free Size',1290000),
-
-(17,10,1,'Adidas X Crazyfast Women TF','Pink','40',2590000),
-
-(18,4,1,'Adidas Predator League TF','White','41',2790000),
-(18,12,1,'Áo CLB Real Madrid 2025','White','M',1890000),
-
-(19,12,1,'Áo CLB Real Madrid 2025','White','M',1890000),
-
-(20,4,1,'Adidas Predator League TF','White','41',2790000),
-(20,15,1,'Áo Manchester City Women','Blue','S',1690000);
-
+(16,18,1,'Adidas UCL League','White','Free Size',1290000);
 

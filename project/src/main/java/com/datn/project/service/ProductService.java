@@ -377,7 +377,6 @@ public class ProductService implements IProductService {
         // ─── Helper: update variants ──────────────────────────
         private void updateVariants(Product product, List<ProductVariantRequest> requests) {
                 if (requests == null || requests.isEmpty()) {
-                        // ✅ Xóa hết variants nếu list rỗng
                         productVariantRepository.deleteByProductId(product.getId());
                         return;
                 }
@@ -397,7 +396,6 @@ public class ProductService implements IProductService {
                 });
 
                 productVariantRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
-                // ✅ Bỏ check !keepIds.isEmpty()
         }
 
         private void setVariantFields(ProductVariant variant, Product product, ProductVariantRequest req) {
@@ -416,10 +414,10 @@ public class ProductService implements IProductService {
                 if (requests == null || requests.isEmpty())
                         return;
 
-                List<String> uploadedUrls = new ArrayList<>();
+                List<Map<String, String>> uploaded = new ArrayList<>();
                 if (files != null && !files.isEmpty()) {
-                        uploadedUrls = files.stream()
-                                        .map(cloudinaryService::uploadImage)
+                        uploaded = files.stream()
+                                        .map(cloudinaryService::uploadImageWithPublicId)
                                         .toList();
                 }
 
@@ -428,11 +426,11 @@ public class ProductService implements IProductService {
                         ProductImage image = new ProductImage();
                         image.setProduct(product);
 
-                        // Ảnh cũ có sẵn imageUrl (trường hợp đặc biệt)
                         if (req.getImageUrl() != null) {
                                 image.setImageUrl(req.getImageUrl());
-                        } else if (i < uploadedUrls.size()) {
-                                image.setImageUrl(uploadedUrls.get(i));
+                        } else if (i < uploaded.size()) {
+                                image.setImageUrl(uploaded.get(i).get("url"));
+                                image.setPublicId(uploaded.get(i).get("publicId"));
                         }
 
                         image.setIsPrimary(Boolean.TRUE.equals(req.getIsPrimary()));
@@ -443,7 +441,9 @@ public class ProductService implements IProductService {
         // ─── Helper: update images ────────────────────────────
         private void updateImages(Product product, List<ProductImageRequest> requests, List<MultipartFile> files) {
                 if (requests == null || requests.isEmpty()) {
-                        // ✅ Xóa hết images nếu list rỗng
+                        // Xóa Cloudinary trước khi xóa DB record
+                        List<ProductImage> toDelete = productImageRepository.findByProductId(product.getId());
+                        toDelete.forEach(img -> cloudinaryService.deleteImage(img.getPublicId()));
                         productImageRepository.deleteByProductId(product.getId());
                         return;
                 }
@@ -451,10 +451,10 @@ public class ProductService implements IProductService {
                 List<Integer> keepIds = new ArrayList<>();
                 int newFileIndex = 0;
 
-                List<String> uploadedUrls = new ArrayList<>();
+                List<Map<String, String>> uploaded = new ArrayList<>();
                 if (files != null && !files.isEmpty()) {
-                        uploadedUrls = files.stream()
-                                        .map(cloudinaryService::uploadImage)
+                        uploaded = files.stream()
+                                        .map(cloudinaryService::uploadImageWithPublicId)
                                         .toList();
                 }
 
@@ -462,15 +462,15 @@ public class ProductService implements IProductService {
                         ProductImage image;
 
                         if (req.getId() != null) {
-                                // Ảnh cũ → giữ lại
                                 image = productImageRepository.findById(req.getId())
                                                 .orElseThrow(() -> new RuntimeException("Image không tồn tại"));
                         } else {
-                                // Ảnh mới → upload Cloudinary
                                 image = new ProductImage();
                                 image.setProduct(product);
-                                if (newFileIndex < uploadedUrls.size()) {
-                                        image.setImageUrl(uploadedUrls.get(newFileIndex++));
+                                if (newFileIndex < uploaded.size()) {
+                                        image.setImageUrl(uploaded.get(newFileIndex).get("url"));
+                                        image.setPublicId(uploaded.get(newFileIndex).get("publicId"));
+                                        newFileIndex++;
                                 }
                         }
 
@@ -479,7 +479,11 @@ public class ProductService implements IProductService {
                         keepIds.add(saved.getId());
                 }
 
-                // ✅ Bỏ check isEmpty
+                // Xóa Cloudinary cho những ảnh bị loại bỏ, TRƯỚC khi xóa DB
+                List<ProductImage> toRemove = productImageRepository.findByProductIdAndIdNotIn(product.getId(),
+                                keepIds);
+                toRemove.forEach(img -> cloudinaryService.deleteImage(img.getPublicId()));
+
                 productImageRepository.deleteByProductIdAndIdNotIn(product.getId(), keepIds);
         }
 

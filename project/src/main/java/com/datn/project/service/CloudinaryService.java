@@ -16,15 +16,24 @@ public class CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
-    public String uploadImage(MultipartFile file) {
+    public void deleteImage(String publicId) {
+        if (publicId == null || publicId.isBlank())
+            return;
         try {
-            Map result = cloudinary.uploader().upload(
-                file.getBytes(),
-                ObjectUtils.asMap("folder", "products")
-            );
-            return (String) result.get("secure_url");
-        } catch (IOException e) {
-            throw new RuntimeException("Upload ảnh thất bại: " + e.getMessage());
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (Exception e) {
+            System.err.println("Không xóa được ảnh trên Cloudinary: " + publicId);
+        }
+    }
+
+    public Map<String, String> uploadImageWithPublicId(MultipartFile file) {
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            return Map.of(
+                    "url", (String) uploadResult.get("secure_url"),
+                    "publicId", (String) uploadResult.get("public_id"));
+        } catch (Exception e) {
+            throw new RuntimeException("Upload ảnh thất bại", e);
         }
     }
 }
