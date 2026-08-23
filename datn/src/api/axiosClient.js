@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosClient = axios.create({
-  baseURL: 'https://sports-ecommerce-production.up.railway.app/api/v1',
+  baseURL: import.meta.env.VITE_API_URL,
   responseType: 'json',
   paramsSerializer: {
     indexes: null,
