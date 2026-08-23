@@ -274,7 +274,7 @@ public class AuthService implements IAuthService {
 
     // hàm gửi mail kích hoạt tài khoản
     private void sendVerificationEmail(User user, String token) {
-        String link = "http://localhost:8080/api/v1/auth/activate?token=" + token;
+        String link = "https://sports-ecommerce-production.up.railway.app/api/v1/auth/activate?token=" + token;
 
         mailService.sendActivationEmail(user, link);
     }
@@ -364,7 +364,7 @@ public class AuthService implements IAuthService {
 
     // hàm gửi mail token param reset password
     private void sendResetPassword(User user, String token) {
-        String link = "http://localhost:5173/reset-password?token=" + token;
+        String link = "https://sports-ecommerce-nine.vercel.app/reset-password?token=" + token;
         mailService.sendResetPasswordEmail(user, link);
     }
 
