@@ -29,7 +29,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private IUserRepository userRepository;
 
     private static final String FRONTEND_URL =
-            "http://localhost:5173/oauth2/callback";
+            "https://sports-ecommerce-nine.vercel.app/oauth2/callback";
 
     @Override
     public void onAuthenticationSuccess(
