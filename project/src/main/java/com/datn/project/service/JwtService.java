@@ -65,11 +65,11 @@ public class JwtService {
     public boolean isTokenExpired(String token) {
         try {
             Claims claims = extractAllClaims(token);
-            return !claims.getExpiration().before(new Date());
+            return claims.getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
-            return false;
+            return true;
         } catch (JwtException e) {
-            return false;
+            return true;
         }
     }
 
