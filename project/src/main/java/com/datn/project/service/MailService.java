@@ -2,34 +2,21 @@ package com.datn.project.service;
 
 import java.time.format.DateTimeFormatter;
 
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-
 @Service
-@RequiredArgsConstructor
 public class MailService {
 
-  private final JavaMailSender mailSender;
+  @Autowired
+  private BrevoMailService brevoMailService;
 
   public void sendMessageEmail(String to, String subject, String body) {
-    SimpleMailMessage message = new SimpleMailMessage();
-
-    message.setTo(to);
-
-    message.setSubject(subject);
-
-    message.setText(body);
-
-    mailSender.send(message);
+    String html = "<pre style=\"font-family: Georgia, serif; white-space: pre-wrap;\">" + body + "</pre>";
+    brevoMailService.send(to, subject, html);
   }
 
   public void sendActivationEmail(User user, String activationLink) {
@@ -82,7 +69,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), activationLink);
 
-    send(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
+    brevoMailService.send(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
   }
 
   public void sendResetPasswordEmail(User user, String resetLink) {
@@ -135,20 +122,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), resetLink);
 
-    send(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
-  }
-
-  private void send(String to, String subject, String html) {
-    try {
-      MimeMessage message = mailSender.createMimeMessage();
-      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-      helper.setTo(to);
-      helper.setSubject(subject);
-      helper.setText(html, true);
-      mailSender.send(message);
-    } catch (MessagingException e) {
-      throw new RuntimeException("Gửi email thất bại cho " + to, e);
-    }
+    brevoMailService.send(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
   }
 
   public void sendBirthdayVoucherEmail(User user, Voucher voucher, String monthLabel) {
@@ -206,15 +180,6 @@ public class MailService {
             """
         .formatted(monthLabel, user.getFullName(), voucher.getCode(), discountText, expiresAt);
 
-    try {
-      MimeMessage message = mailSender.createMimeMessage();
-      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-      helper.setTo(user.getEmail());
-      helper.setSubject("🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio");
-      helper.setText(html, true);
-      mailSender.send(message);
-    } catch (MessagingException e) {
-      throw new RuntimeException("Gửi email thất bại cho " + user.getEmail(), e);
-    }
+    brevoMailService.send(user.getEmail(), "🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio", html);
   }
 }
