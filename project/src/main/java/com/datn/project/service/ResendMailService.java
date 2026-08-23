@@ -14,10 +14,10 @@ public class ResendMailService {
     private final OkHttpClient client = new OkHttpClient();
     private static final String RESEND_API_URL = "https://api.resend.com/emails";
 
-    @Value("${resend.api-key}")
+    @Value("${resend-api-key}")
     private String apiKey;
 
-    @Value("${resend.sender-email}")
+    @Value("${resend-sender-email}")
     private String senderEmail; 
 
     public void send(String to, String subject, String htmlContent) {
