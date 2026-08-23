@@ -35,4 +35,9 @@ public interface IProductImageRepository extends JpaRepository<ProductImage, Int
                 ORDER BY pi.product.id ASC, pi.isPrimary DESC, pi.id ASC
             """)
     List<Object[]> findImagesByProductIds(List<Integer> productIds);
+
+    List<ProductImage> findByProductIdAndIdNotIn(
+            Integer productId,
+            List<Integer> keepIds
+    );
 }

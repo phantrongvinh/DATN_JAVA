@@ -27,6 +27,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useSiteSettingsStore } from '@/stores/useSiteSettingsStore'
 import { useCart } from '@/composables/useCart'
 import { useWishlistStore } from '@/stores/useWishlistStore'
+import AuthPopover from '@/components/AuthPopover.vue'
 // import NotificationBell from './NotificationBell.vue'
 
 const router = useRouter()
@@ -128,77 +129,76 @@ const handleLogout = () => {
         <!-- <NotificationBell /> -->
 
         <!-- User -->
-        <DropdownMenu v-if="isAuthenticated">
-          <DropdownMenuTrigger as-child>
-            <button
-              aria-label="Tài khoản"
-              class="flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-white/10"
+        <AuthPopover guest-message="Đăng nhập để xem thông tin tài khoản">
+          <template #icon>
+            <UserCircle2 class="h-5 w-5" />
+            <span class="hidden max-w-[120px] truncate sm:inline">{{ user?.fullName }}</span>
+          </template>
+
+          <template #dropdown>
+            <div class="p-3">
+              <p class="text-sm font-medium">{{ user?.fullName }}</p>
+              <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
+            </div>
+            <hr class="border-border" />
+
+            <RouterLink
+              to="/profile"
+              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
             >
-              <UserCircle2 class="h-5 w-5" />
-              <span class="hidden max-w-[120px] truncate sm:inline">{{ user?.fullName }}</span>
-            </button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent align="end" class="w-56">
-            <DropdownMenuLabel>
-              <div class="font-normal">
-                <p class="text-sm font-medium">{{ user?.fullName }}</p>
-                <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
-              </div>
-            </DropdownMenuLabel>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem @click="router.push('/profile')">
               <User class="mr-2 h-4 w-4" /> Hồ sơ cá nhân
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="router.push('/profile/orders')">
+            </RouterLink>
+            <RouterLink
+              to="/profile/orders"
+              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+            >
               <Package class="mr-2 h-4 w-4" /> Đơn hàng của tôi
-            </DropdownMenuItem>
-            <DropdownMenuItem @click="router.push('/profile/wishlist')">
+            </RouterLink>
+            <RouterLink
+              to="/profile/wishlist"
+              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+            >
               <Heart class="mr-2 h-4 w-4" /> Yêu thích
-            </DropdownMenuItem>
+            </RouterLink>
 
             <template v-if="isAdmin">
-              <DropdownMenuSeparator />
-              <DropdownMenuItem @click="router.push('/admin')">
+              <hr class="border-border" />
+              <RouterLink
+                to="/admin"
+                class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+              >
                 <LayoutDashboard class="mr-2 h-4 w-4" /> Quản trị
-              </DropdownMenuItem>
+              </RouterLink>
             </template>
 
-            <DropdownMenuSeparator />
-            <DropdownMenuItem @click="handleLogout">
+            <hr class="border-border" />
+            <button
+              @click="handleLogout"
+              class="flex w-full items-center px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50"
+            >
               <LogOut class="mr-2 h-4 w-4" /> Đăng xuất
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <RouterLink
-          v-else
-          to="/login"
-          aria-label="Đăng nhập"
-          class="rounded-full p-2 transition-colors hover:bg-white/10"
-        >
-          <User class="h-[18px] w-[18px]" />
-        </RouterLink>
+            </button>
+          </template>
+        </AuthPopover>
 
         <!-- Wishlist -->
-        <RouterLink
-          to="/profile/wishlist"
-          aria-label="Yêu thích"
-          class="relative hidden rounded-full p-2 transition-colors hover:bg-white/10 sm:inline-flex"
+        <AuthPopover
+          guest-message="Đăng nhập để lưu sản phẩm yêu thích"
+          @click-authenticated="router.push('/profile/wishlist')"
         >
-          <Heart class="h-[18px] w-[18px]" />
-          <span
-            v-if="ids.length > 0"
-            class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium"
-            :style="{ background: t.headerAccent, color: t.headerBg }"
-          >
-            {{ ids.length }}
-          </span>
-        </RouterLink>
+          <template #icon>
+            <Heart class="hidden h-[18px] w-[18px] sm:inline-flex" />
+            <span
+              v-if="isAuthenticated && ids.length > 0"
+              class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium"
+              :style="{ background: t.headerAccent, color: t.headerBg }"
+            >
+              {{ ids.length }}
+            </span>
+          </template>
+        </AuthPopover>
 
-        <!-- Cart -->
+        <!-- Cart — giữ nguyên, không đổi -->
         <RouterLink
           to="/cart"
           aria-label="Giỏ hàng"
