@@ -17,7 +17,7 @@ public class CorsConfig {
                         .allowedOrigins(
                                 "http://localhost:3000",
                                 "http://localhost:5173",
-                                "https://sports-ecommerce-nine.vercel.app/"
+                                "https://sports-ecommerce-nine.vercel.app"
                         )
                         .allowedMethods(
                                 "GET",
