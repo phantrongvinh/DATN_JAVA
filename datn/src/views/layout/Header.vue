@@ -136,48 +136,50 @@ const handleLogout = () => {
           </template>
 
           <template #dropdown>
-            <div class="p-3">
-              <p class="text-sm font-medium">{{ user?.fullName }}</p>
-              <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
-            </div>
-            <hr class="border-border" />
-
-            <RouterLink
-              to="/profile"
-              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
-            >
-              <User class="mr-2 h-4 w-4" /> Hồ sơ cá nhân
-            </RouterLink>
-            <RouterLink
-              to="/profile/orders"
-              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
-            >
-              <Package class="mr-2 h-4 w-4" /> Đơn hàng của tôi
-            </RouterLink>
-            <RouterLink
-              to="/profile/wishlist"
-              class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
-            >
-              <Heart class="mr-2 h-4 w-4" /> Yêu thích
-            </RouterLink>
-
-            <template v-if="isAdmin">
+            <div class="" :style="{ color: t?.subHeaderText }">
+              <div class="p-3">
+                <p class="text-sm font-medium">{{ user?.fullName }}</p>
+                <p class="truncate text-xs text-muted-foreground">{{ user?.email }}</p>
+              </div>
               <hr class="border-border" />
+
               <RouterLink
-                to="/admin"
+                to="/profile"
                 class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
               >
-                <LayoutDashboard class="mr-2 h-4 w-4" /> Quản trị
+                <User class="mr-2 h-4 w-4" /> Hồ sơ cá nhân
               </RouterLink>
-            </template>
+              <RouterLink
+                to="/profile/orders"
+                class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+              >
+                <Package class="mr-2 h-4 w-4" /> Đơn hàng của tôi
+              </RouterLink>
+              <RouterLink
+                to="/profile/wishlist"
+                class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+              >
+                <Heart class="mr-2 h-4 w-4" /> Yêu thích
+              </RouterLink>
 
-            <hr class="border-border" />
-            <button
-              @click="handleLogout"
-              class="flex w-full items-center px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50"
-            >
-              <LogOut class="mr-2 h-4 w-4" /> Đăng xuất
-            </button>
+              <template v-if="isAdmin">
+                <hr class="border-border" />
+                <RouterLink
+                  to="/admin"
+                  class="flex items-center px-3 py-2.5 text-sm hover:bg-secondary"
+                >
+                  <LayoutDashboard class="mr-2 h-4 w-4" /> Quản trị
+                </RouterLink>
+              </template>
+
+              <hr class="border-border" />
+              <button
+                @click="handleLogout"
+                class="flex w-full items-center px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-50"
+              >
+                <LogOut class="mr-2 h-4 w-4" /> Đăng xuất
+              </button>
+            </div>
           </template>
         </AuthPopover>
 

@@ -7,6 +7,7 @@ const STORAGE_KEY = 'site-settings'
 const DEFAULT_THEME = {
   headerBg: '#0a0a0a',
   headerText: '#f5f5f0',
+  subHeaderText: '#0a0a0a',
   headerAccent: '#c9a961',
   footerBg: '#0a0a0a',
   footerText: '#f5f5f0',
@@ -30,6 +31,7 @@ export const SEASONAL_PRESETS = [
     colors: {
       headerBg: '#0b1d3a',
       headerText: '#f5f0e6',
+      subHeaderText: '#0b1d3a',
       headerAccent: '#c9a34e',
       footerBg: '#0b1d3a',
       footerText: '#e8e2d3',
@@ -45,6 +47,7 @@ export const SEASONAL_PRESETS = [
     colors: {
       headerBg: '#020617',
       headerText: '#e6edff',
+      subHeaderText: '#020617',
       headerAccent: '#7ac8ff',
       footerBg: '#020617',
       footerText: '#c7d2fe',
@@ -60,11 +63,12 @@ export const SEASONAL_PRESETS = [
     colors: {
       headerBg: '#fff8ec',
       headerText: '#7c2d12',
-      headerAccent: '#f97316',
+      subHeaderText: '#fff8ec',
+      headerAccent: '#c2410c',
       footerBg: '#7c2d12',
       footerText: '#fed7aa',
       announcementBg: '#f97316',
-      announcementText: '#ffffff',
+      announcementText: '#431407',
     },
   },
   {
@@ -75,6 +79,7 @@ export const SEASONAL_PRESETS = [
     colors: {
       headerBg: '#1a0505',
       headerText: '#fee2e2',
+      subHeaderText: '#1a0505',
       headerAccent: '#f87171',
       footerBg: '#1a0505',
       footerText: '#fecaca',
@@ -90,6 +95,7 @@ export const SEASONAL_PRESETS = [
     colors: {
       headerBg: '#022c22',
       headerText: '#d1fae5',
+      subHeaderText: '#022c22',
       headerAccent: '#34d399',
       footerBg: '#022c22',
       footerText: '#a7f3d0',

@@ -13,7 +13,7 @@ const props = defineProps({
   buttonClass: {
     type: String,
     default:
-      'flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-white/10',
+      'flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-[color-mix(in_oklab,currentColor_10%,transparent)]',
   },
 })
 
