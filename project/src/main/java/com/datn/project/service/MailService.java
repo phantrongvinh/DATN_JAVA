@@ -12,11 +12,11 @@ import com.datn.project.entity.Voucher;
 public class MailService {
 
   @Autowired
-  private ResendMailService resendMailService;
+  private BrevoMailService brevoMailService;
 
   public void sendMessageEmail(String to, String subject, String body) {
     String html = "<pre style=\"font-family: Georgia, serif; white-space: pre-wrap;\">" + body + "</pre>";
-    resendMailService.send(to, subject, html);
+    brevoMailService.send(to, subject, html);
   }
 
   public void sendActivationEmail(User user, String activationLink) {
@@ -69,7 +69,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), activationLink);
 
-    resendMailService.send(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
+    brevoMailService.send(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
   }
 
   public void sendResetPasswordEmail(User user, String resetLink) {
@@ -122,7 +122,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), resetLink);
 
-    resendMailService.send(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
+    brevoMailService.send(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
   }
 
   public void sendBirthdayVoucherEmail(User user, Voucher voucher, String monthLabel) {
@@ -180,6 +180,6 @@ public class MailService {
             """
         .formatted(monthLabel, user.getFullName(), voucher.getCode(), discountText, expiresAt);
 
-    resendMailService.send(user.getEmail(), "🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio", html);
+    brevoMailService.send(user.getEmail(), "🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio", html);
   }
 }

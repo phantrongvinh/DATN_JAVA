@@ -447,6 +447,10 @@ public class OrderService implements IOrderService {
                         order.setPaymentStatus(PaymentStatus.PAID);
                 }
 
+                if (order.getStatus() == OrderStatus.CANCELLED && order.getPaymentMethod().getId() == 2 && order.getPaymentStatus() == PaymentStatus.PAID) {
+                        order.setPaymentStatus(PaymentStatus.REFUNDED);
+                }
+
                 orderRepository.save(order);
 
                 if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED) {

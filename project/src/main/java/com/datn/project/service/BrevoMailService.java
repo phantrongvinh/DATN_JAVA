@@ -9,36 +9,46 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 @Service
-public class ResendMailService {
+public class BrevoMailService {
 
     private final OkHttpClient client = new OkHttpClient();
-    private static final String RESEND_API_URL = "https://api.resend.com/emails";
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-    @Value("${resend-api-key}")
+    @Value("${brevo-api-key}")
     private String apiKey;
 
-    @Value("${resend-sender-email}")
-    private String senderEmail; 
+    @Value("${brevo-sender-email}")
+    private String senderEmail;
+
+    @Value("${brevo-sender-name}")
+    private String senderName;
 
     public void send(String to, String subject, String htmlContent) {
         JSONObject body = new JSONObject();
-        body.put("from", senderEmail);
+
+        JSONObject sender = new JSONObject();
+        sender.put("name", senderName);
+        sender.put("email", senderEmail);
+        body.put("sender", sender);
 
         JSONArray toArray = new JSONArray();
-        toArray.put(to);
+        JSONObject recipient = new JSONObject();
+        recipient.put("email", to);
+        toArray.put(recipient);
         body.put("to", toArray);
 
         body.put("subject", subject);
-        body.put("html", htmlContent);
+        body.put("htmlContent", htmlContent);
 
         RequestBody requestBody = RequestBody.create(
                 body.toString(), MediaType.parse("application/json"));
 
         Request request = new Request.Builder()
-                .url(RESEND_API_URL)
+                .url(BREVO_API_URL)
                 .post(requestBody)
-                .addHeader("Authorization", "Bearer " + apiKey)
+                .addHeader("api-key", apiKey)
                 .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
