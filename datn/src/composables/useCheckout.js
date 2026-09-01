@@ -86,7 +86,10 @@ export function useCheckout() {
   // load time promotion
   const loadTimePromotion = async () => {
     try {
-      timePromotion.value = await timePromotionAPI.fetchActiveTimePromotion()
+      const res = await timePromotionAPI.fetchActiveTimePromotion()
+      console.log(res)
+
+      timePromotion.value = res
     } catch {
       timePromotion.value = null
     }

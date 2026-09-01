@@ -13,7 +13,7 @@ const props = defineProps({
   buttonClass: {
     type: String,
     default:
-      'flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-white/10',
+      'flex items-center gap-2 rounded-full px-2 py-1.5 text-sm transition-colors hover:bg-[color-mix(in_oklab,currentColor_10%,transparent)]',
   },
 })
 
@@ -66,7 +66,7 @@ const handleButtonClick = () => {
           </div>
 
           <div v-else class="p-4">
-            <p class="font-medium text-[#1a0505]">{{ guestTitle }}</p>
+            <p class="font-medium text-[#000]">{{ guestTitle }}</p>
             <p class="mt-1 text-xs text-muted-foreground">{{ guestMessage }}</p>
             <RouterLink
               :to="redirectTo"

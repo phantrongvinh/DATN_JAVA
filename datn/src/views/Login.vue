@@ -48,7 +48,9 @@ const onSubmit = handleSubmit(async (values) => {
 
 // Hàm dùng để handle event login bằng google
 const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:8080/oauth2/authorization/google'
+  const url = 'https://sports-ecommerce-production.up.railway.app/oauth2/authorization/google'
+  // console.log(url)
+  window.location.href = url
 }
 
 // Handle resend email
