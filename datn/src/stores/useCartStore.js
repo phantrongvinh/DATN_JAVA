@@ -116,14 +116,11 @@ export const useCartStore = defineStore(
       try {
         if (items.value.length === 0) return
 
-        console.log('🔍 Local items trước khi merge:', JSON.parse(JSON.stringify(items.value)))
-
         const payload = items.value.map((i) => ({
           productVariantId: i.productVariantId,
           quantity: i.quantity,
         }))
 
-        console.log('🔍 Payload gửi lên server:', payload)
         items.value = await cartAPI.mergeCartToServer(payload)
       } catch (err) {
         error.value = err.data?.response?.message

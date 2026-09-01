@@ -38,3 +38,5 @@ application-vnpay.properties
 application-ghn.properties
 application-cloudinary.properties
 application-openAI.properties
+application-db.properties
+

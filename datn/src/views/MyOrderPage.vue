@@ -94,6 +94,13 @@ const handleRepay = async (order) => {
     console.log('Thanh toán lại thất bại', error)
   }
 }
+
+const canRequestReturn = (order) => {
+  if (order.status !== 'DELIVERED' || !order.deliveredAt) return false
+  const deadline = new Date(order.deliveredAt)
+  deadline.setDate(deadline.getDate() + 7)
+  return new Date() < deadline
+}
 </script>
 
 <template>
@@ -174,6 +181,13 @@ const handleRepay = async (order) => {
 
           <!-- Action -->
           <div class="mt-4 flex justify-end gap-2">
+            <button
+              v-if="canRequestReturn"
+              @click="showReturnModal = true"
+              class="rounded border border-yellow-600 px-3 py-2 text-xs font-medium text-yellow-600 transition hover:bg-yellow-600 hover:text-white cursor-pointer"
+            >
+              Yêu cầu trả hàng
+            </button>
             <button
               v-if="canPay(order)"
               @click="handleRepay(order)"

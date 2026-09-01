@@ -237,6 +237,8 @@ CREATE TABLE orders(
     CONSTRAINT FK_O_P FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id)
 );
 
+ALTER TABLE orders ADD COLUMN ghn_order_code VARCHAR(50);
+
 CREATE TABLE order_details(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -255,6 +257,8 @@ CREATE TABLE order_details(
     CONSTRAINT FK_OD_O FOREIGN KEY (order_id) REFERENCES orders(id),
     CONSTRAINT FK_OD_PV FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
 );
+
+ALTER TABLE order_details ADD COLUMN points_awarded BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE carts(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
@@ -327,6 +331,18 @@ CREATE TABLE site_settings (
     id      			INT AUTO_INCREMENT PRIMARY KEY,
     `data`    			JSON NOT NULL,
     updated_at 			TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE return_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    reason TEXT NOT NULL,
+    images TEXT,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED') DEFAULT 'PENDING',
+    admin_note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    CONSTRAINT FK_RR_ORDER FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
 -- Insert default

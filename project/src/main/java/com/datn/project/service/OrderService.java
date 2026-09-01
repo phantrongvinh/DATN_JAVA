@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.sql.Date;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -443,20 +444,24 @@ public class OrderService implements IOrderService {
 
                 order.setStatus(newStatus);
 
-                if (order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1) {
-                        order.setPaymentStatus(PaymentStatus.PAID);
+                if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED) {
+                        order.setDeliveredAt(LocalDateTime.now());
+
+                        if (order.getPaymentMethod().getId() == 1) {
+                                order.setPaymentStatus(PaymentStatus.PAID);
+                        }
+                }
+
+                // if (order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1) {
+                //         order.setPaymentStatus(PaymentStatus.PAID);
+                // }
+
+                if (order.getStatus() == OrderStatus.CANCELLED && order.getPaymentMethod().getId() == 2
+                                && order.getPaymentStatus() == PaymentStatus.PAID) {
+                        order.setPaymentStatus(PaymentStatus.REFUNDED);
                 }
 
                 orderRepository.save(order);
-
-                if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED) {
-                        User user = order.getUser();
-                        int earnedPoints = order.getFinalPrice()
-                                        .divide(BigDecimal.valueOf(10_000), RoundingMode.DOWN)
-                                        .intValue();
-                        user.setLoyaltyPoints(user.getLoyaltyPoints() + earnedPoints);
-                        userRepository.save(user);
-                }
         }
 
         @Override

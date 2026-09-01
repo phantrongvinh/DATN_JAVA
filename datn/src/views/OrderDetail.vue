@@ -64,8 +64,6 @@ const STATUS_LABEL = {
 const currentStepIndex = computed(() =>
   STATUS_STEPS.findIndex((s) => s.key === order.value?.status),
 )
-
-console.log(order.value)
 </script>
 
 <template>
@@ -203,6 +201,15 @@ console.log(order.value)
 
                 <div class="font-display text-lg">
                   {{ ulti.formatVND(item.price) }}
+                </div>
+                <div
+                  v-if="order.status === 'DELIVERED' && !item.reviewed"
+                  class="flex items-center justify-between border border-gold/30 bg-gold/5 p-3 text-sm"
+                >
+                  <span>Đánh giá sản phẩm để nhận {{ estimatedPoints }} điểm tích lũy</span>
+                  <button @click="openReviewModal(item)" class="text-gold underline">
+                    Đánh giá ngay
+                  </button>
                 </div>
               </li>
             </ul>

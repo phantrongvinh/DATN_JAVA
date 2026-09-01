@@ -113,6 +113,12 @@ public class Order implements Serializable {
     @Column(name = "to_ward_code")
     private String toWardCode;
 
+    @Column(name = "ghn_order_code")
+    private String ghnOrderCode;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

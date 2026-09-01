@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -46,6 +47,7 @@ import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductReviewService;
 import com.datn.project.service.IProductService;
 import com.datn.project.service.IPromotionService;
+import com.datn.project.service.IReturnRequestService;
 import com.datn.project.service.ITimePromotionService;
 import com.datn.project.service.IUserService;
 import com.datn.project.service.IVoucherService;
@@ -87,6 +89,9 @@ public class AdminController {
 
     @Autowired
     private IProductReviewService reviewService;
+
+    @Autowired
+    private IReturnRequestService returnService;
 
     // phần products
     @GetMapping("/products/top5")
@@ -256,9 +261,20 @@ public class AdminController {
             @PathVariable Integer orderId,
             @RequestParam String status) {
         OrderStatus orderStatus = status != null ? OrderStatus.valueOf(status.toUpperCase()) : null;
-
+        if (orderStatus == OrderStatus.DELIVERED) {
+            throw new RuntimeException("Trạng thái 'Đã giao' chỉ được cập nhật tự động từ đơn vị vận chuyển");
+        }
         orderService.updateOrderStatus(orderId, orderStatus);
         return ResponseEntity.ok("Cập nhật trạng thái thành công");
+    }
+
+    @PatchMapping("/returns/{id}")
+    public ResponseEntity<?> resolveReturn(
+            @PathVariable Integer id,
+            @RequestParam boolean approved,
+            @RequestParam(required = false) String adminNote) {
+        returnService.resolveReturn(id, approved, adminNote);
+        return ResponseEntity.ok(Map.of("message", "Đã xử lý yêu cầu trả hàng"));
     }
 
     @GetMapping("/orders")

@@ -68,6 +68,8 @@ export const useProductStore = defineStore('product', () => {
     try {
       const res = await productAPI.fetchFilterProducts(data)
 
+      console.log(res)
+
       filterProducts.value = res.content
       totalPages.value = res.totalPages
       totalElements.value = res.totalElements

@@ -1,5 +1,7 @@
 package com.datn.project.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.datn.project.dto.preview.CreateReviewRequest;
 import com.datn.project.dto.preview.ReviewResponse;
 import com.datn.project.dto.preview.ReviewSummaryResponse;
+import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.Product;
 import com.datn.project.entity.ProductReview;
 import com.datn.project.entity.ProductReviewId;
@@ -75,6 +78,25 @@ public class ProductReviewService implements IProductReviewService {
         review.setVisible(true);
 
         reviewRepository.save(review);
+
+        List<OrderDetail> eligibleDetails = orderDetailRepository
+                .findUnrewardedDeliveredDetails(userId, productId);
+
+        int totalEarned = 0;
+        for (OrderDetail detail : eligibleDetails) {
+            int earned = detail.getPrice()
+                    .multiply(BigDecimal.valueOf(detail.getQuantity()))
+                    .divide(BigDecimal.valueOf(10_000), RoundingMode.DOWN)
+                    .intValue();
+            totalEarned += earned;
+            detail.setPointsAwarded(true);
+            orderDetailRepository.save(detail);
+        }
+
+        if (totalEarned > 0) {
+            user.setLoyaltyPoints(user.getLoyaltyPoints() + totalEarned);
+            userRepository.save(user);
+        }
     }
 
     @Override

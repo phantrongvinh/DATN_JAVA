@@ -4,6 +4,7 @@ const url = '/categories'
 
 const fetchCategory = async () => {
   const res = await axiosClient.get(`${url}`)
+
   return res.data
 }
 

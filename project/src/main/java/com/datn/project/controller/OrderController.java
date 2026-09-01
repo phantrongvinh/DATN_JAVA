@@ -11,12 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datn.project.dto.order.OrderRequest;
-import com.datn.project.entity.OrderStatus;
-import com.datn.project.entity.User;
 import com.datn.project.repository.IUserRepository;
 import com.datn.project.security.CustomUserDetail;
 import com.datn.project.service.IOrderService;

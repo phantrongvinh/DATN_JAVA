@@ -22,7 +22,7 @@ const props = defineProps<{
 
 <template>
   <RouterLink :to="'/productDetail/' + props.product.id" class="group block">
-    <div class="relative aspect-[4/5] overflow-hidden bg-secondary">
+    <div class="relative aspect-[4/5] overflow-hidden border">
       <img
         :src="props.product.image"
         loading="lazy"

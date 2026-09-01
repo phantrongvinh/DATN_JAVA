@@ -29,4 +29,13 @@ public interface IOrderDetailRepository extends JpaRepository<OrderDetail, Integ
                 AND od.order.status = 'DELIVERED'
             """)
     boolean existsDeliveredPurchase(Integer userId, Integer productId);
+
+    @Query("""
+                SELECT od FROM OrderDetail od
+                WHERE od.order.user.id = :userId
+                AND od.productVariant.product.id = :productId
+                AND od.order.status = 'DELIVERED'
+                AND od.pointsAwarded = false
+            """)
+    List<OrderDetail> findUnrewardedDeliveredDetails(Integer userId, Integer productId);
 }

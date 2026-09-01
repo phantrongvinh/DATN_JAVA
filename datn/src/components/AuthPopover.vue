@@ -66,7 +66,7 @@ const handleButtonClick = () => {
           </div>
 
           <div v-else class="p-4">
-            <p class="font-medium">{{ guestTitle }}</p>
+            <p class="font-medium text-[#1a0505]">{{ guestTitle }}</p>
             <p class="mt-1 text-xs text-muted-foreground">{{ guestMessage }}</p>
             <RouterLink
               :to="redirectTo"

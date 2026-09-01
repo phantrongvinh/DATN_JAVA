@@ -56,4 +56,7 @@ public class OrderDetail implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
+
+    @Column(name = "points_awarded", nullable = false)
+    private boolean pointsAwarded = false;
 }
