@@ -4,7 +4,6 @@ const url = '/time-promotions'
 
 const fetchActiveTimePromotion = async () => {
   const res = await axiosClient.get(`${url}/active`)
-  console.log(res.data)
 
   return res.data
 }

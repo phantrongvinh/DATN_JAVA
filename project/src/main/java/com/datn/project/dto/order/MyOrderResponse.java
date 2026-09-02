@@ -21,4 +21,5 @@ public class MyOrderResponse {
     private LocalDateTime createdAt;
     private String paymentMethod;
     private BigDecimal shippingFee;
+    private LocalDateTime deliveredAt;
 }

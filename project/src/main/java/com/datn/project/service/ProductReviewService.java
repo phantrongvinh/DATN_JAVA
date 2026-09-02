@@ -38,6 +38,8 @@ public class ProductReviewService implements IProductReviewService {
     private ModerationService moderationService;
     @Autowired
     private ProfanityFilterService profanityFilterService;
+    @Autowired
+    private LoyaltyPointService loyaltyPointService;
 
     @Override
     public void createReview(Integer userId, Integer productId, CreateReviewRequest request) {
@@ -79,24 +81,7 @@ public class ProductReviewService implements IProductReviewService {
 
         reviewRepository.save(review);
 
-        List<OrderDetail> eligibleDetails = orderDetailRepository
-                .findUnrewardedDeliveredDetails(userId, productId);
-
-        int totalEarned = 0;
-        for (OrderDetail detail : eligibleDetails) {
-            int earned = detail.getPrice()
-                    .multiply(BigDecimal.valueOf(detail.getQuantity()))
-                    .divide(BigDecimal.valueOf(10_000), RoundingMode.DOWN)
-                    .intValue();
-            totalEarned += earned;
-            detail.setPointsAwarded(true);
-            orderDetailRepository.save(detail);
-        }
-
-        if (totalEarned > 0) {
-            user.setLoyaltyPoints(user.getLoyaltyPoints() + totalEarned);
-            userRepository.save(user);
-        }
+        loyaltyPointService.awardForReview(user, productId);
     }
 
     @Override

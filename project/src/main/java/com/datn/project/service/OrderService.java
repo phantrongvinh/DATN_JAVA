@@ -39,6 +39,7 @@ import com.datn.project.entity.Promotion;
 import com.datn.project.entity.TimePromotion;
 import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
+import com.datn.project.repository.IOrderDetailRepository;
 import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IPaymentMethodRepository;
 import com.datn.project.repository.IProductVariantRepository;
@@ -79,6 +80,20 @@ public class OrderService implements IOrderService {
 
         @Autowired
         private VNPayService vnPayService;
+
+        @Autowired
+        private LoyaltyPointService loyaltyPointService;
+
+        @Autowired
+        private IOrderDetailRepository orderDetailRepository;
+
+        private static final Map<OrderStatus, OrderStatus> NEXT_STATUS = Map.of(
+                        OrderStatus.PENDING, OrderStatus.CONFIRMED,
+                        OrderStatus.CONFIRMED, OrderStatus.SHIPPING);
+
+        private static final Map<OrderStatus, String> NEXT_STATUS_LABEL = Map.of(
+                        OrderStatus.CONFIRMED, "Xác nhận đơn",
+                        OrderStatus.SHIPPING, "Chuyển sang đang giao");
 
         @Transactional
         @Override
@@ -206,8 +221,8 @@ public class OrderService implements IOrderService {
                 Order savedOrder = orderRepository.save(order);
 
                 // ─── 6. Xử lý theo payment method ────────────────────
-                if (request.getPaymentMethodId() == 1) {
-                        savedOrder.setPaymentStatus(PaymentStatus.PENDING);
+                if (request.getPaymentMethodId() == 2) {
+                        savedOrder.setPaymentStatus(PaymentStatus.PAID);
                         savedOrder.setStatus(OrderStatus.CONFIRMED);
                         orderRepository.save(savedOrder);
                         ghnService.createShipment(savedOrder.getId());
@@ -430,6 +445,7 @@ public class OrderService implements IOrderService {
                         response.setStatus(o.getStatus().name());
                         response.setTrackingCode(o.getTrackingCode());
                         response.setPaymentMethod(o.getPaymentMethod().getName());
+                        response.setDeliveredAt(o.getDeliveredAt());
                         return response;
                 }).toList();
                 return ResponseEntity.ok(responses);
@@ -446,14 +462,16 @@ public class OrderService implements IOrderService {
 
                 if (newStatus == OrderStatus.DELIVERED && oldStatus != OrderStatus.DELIVERED) {
                         order.setDeliveredAt(LocalDateTime.now());
-
                         if (order.getPaymentMethod().getId() == 1) {
                                 order.setPaymentStatus(PaymentStatus.PAID);
                         }
+                        List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
+                        loyaltyPointService.awardForDeliveredOrder(order.getUser(), details);
                 }
 
-                // if (order.getStatus() == OrderStatus.DELIVERED && order.getPaymentMethod().getId() == 1) {
-                //         order.setPaymentStatus(PaymentStatus.PAID);
+                // if (order.getStatus() == OrderStatus.DELIVERED &&
+                // order.getPaymentMethod().getId() == 1) {
+                // order.setPaymentStatus(PaymentStatus.PAID);
                 // }
 
                 if (order.getStatus() == OrderStatus.CANCELLED && order.getPaymentMethod().getId() == 2
@@ -464,11 +482,29 @@ public class OrderService implements IOrderService {
                 orderRepository.save(order);
         }
 
+        @Transactional
+        @Override
+        public void advanceStatus(int orderId) {
+                Order order = findById(orderId);
+                OrderStatus next = NEXT_STATUS.get(order.getStatus());
+                if (next == null) {
+                        throw new RuntimeException("Đơn hàng không thể chuyển trạng thái thủ công ở bước này");
+                }
+                updateOrderStatus(orderId, next);
+        }
+
+        @Override
+        public String getNextStatusLabel(OrderStatus current) {
+                OrderStatus next = NEXT_STATUS.get(current);
+                return next != null ? NEXT_STATUS_LABEL.get(next) : null;
+        }
+
         @Override
         public void validateStatusTransition(OrderStatus current, OrderStatus next) {
                 Map<OrderStatus, List<OrderStatus>> allowed = Map.of(
                                 OrderStatus.PENDING, List.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
-                                OrderStatus.CONFIRMED, List.of(OrderStatus.SHIPPING, OrderStatus.CANCELLED),
+                                OrderStatus.CONFIRMED, List.of(OrderStatus.PICKED, OrderStatus.CANCELLED),
+                                OrderStatus.PICKED, List.of(OrderStatus.SHIPPING, OrderStatus.CANCELLED),
                                 OrderStatus.SHIPPING, List.of(OrderStatus.DELIVERED),
                                 OrderStatus.DELIVERED, List.of(),
                                 OrderStatus.CANCELLED, List.of());
@@ -512,5 +548,23 @@ public class OrderService implements IOrderService {
                                 "size", size,
                                 "totalElements", orderIds.getTotalElements(),
                                 "totalPages", orderIds.getTotalPages()));
+        }
+
+        @Transactional
+        @Override
+        public void confirmOrder(Integer orderId) {
+
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Không tìm thấy đơn hàng"));
+
+                if (order.getStatus() != OrderStatus.PENDING) {
+                        throw new RuntimeException(
+                                        "Chỉ có thể xác nhận đơn đang PENDING");
+                }
+
+                order.setStatus(OrderStatus.CONFIRMED);
+
+                orderRepository.save(order);
         }
 }

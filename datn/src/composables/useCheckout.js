@@ -5,6 +5,7 @@ import timePromotionAPI from '@/api/timePromotion'
 import voucherAPI from '@/api/voucherAPI'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCartStore } from '@/stores/useCartStore'
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -21,23 +22,30 @@ export function useCheckout() {
   const loading = ref(false)
   const error = ref(null)
   const timeLeft = ref(null)
-  const shippingFee = ref(null)
+  const shippingFee = ref(0)
+
+  const { selectedIds } = storeToRefs(cartStore)
+
+  const checkoutItems = computed(() =>
+    cartStore.items.filter((i) => selectedIds.value.includes(i.productVariantId)),
+  )
 
   // subtotal — price trong cart đã là discountedPrice sau product promotion
   const subtotal = computed(() => {
-    if (voucher.value && !voucher.value.isStackable) {
-      console.log(cartStore.items)
+    return checkoutItems.value.reduce((sum, i) => {
+      let price = i.price
 
-      return cartStore.items.reduce((sum, i) => {
-        const price =
-          i.originalPrice && i.originalPrice !== i.price
-            ? i.originalPrice // có promotion → dùng giá gốc
-            : i.price // không có promotion → giá bình thường
-        return sum + price * i.quantity
-      }, 0)
-    }
-    // stackable hoặc không có voucher → dùng discountedPrice
-    return cartStore.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      if (
+        voucher.value &&
+        !voucher.value.isStackable &&
+        i.originalPrice != null &&
+        i.originalPrice !== i.price
+      ) {
+        price = i.originalPrice
+      }
+
+      return sum + price * i.quantity
+    }, 0)
   })
 
   // voucher discount (preview)
@@ -87,7 +95,6 @@ export function useCheckout() {
   const loadTimePromotion = async () => {
     try {
       const res = await timePromotionAPI.fetchActiveTimePromotion()
-      console.log(res)
 
       timePromotion.value = res
     } catch {
@@ -141,7 +148,7 @@ export function useCheckout() {
 
     try {
       const payload = {
-        items: cartStore.items.map((i) => ({
+        items: checkoutItems.value.map((i) => ({
           variantId: i.productVariantId,
           quantity: i.quantity,
         })),
@@ -156,6 +163,7 @@ export function useCheckout() {
 
       const res = await orderAPI.placeOrder(payload)
       const orderId = res
+      sessionStorage.removeItem('checkoutSelectedIds')
 
       if (form.paymentMethodId === 1) {
         if (authStore.isAuthenticated) {
@@ -173,7 +181,6 @@ export function useCheckout() {
         window.location.href = vnpayRes.paymentUrl
         return
       }
-
       router.push(`/orders/${orderId}`)
     } catch (err) {
       error.value = err.response?.data?.message ?? 'Đặt hàng thất bại'
@@ -204,6 +211,7 @@ export function useCheckout() {
   onUnmounted(() => clearInterval(timer))
 
   return {
+    checkoutItems,
     subtotal,
     voucherDiscount,
     timeDiscount,

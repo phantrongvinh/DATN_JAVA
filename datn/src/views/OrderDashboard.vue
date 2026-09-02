@@ -18,12 +18,36 @@ const { orders, currentPage, totalPages, totalElements, size } = storeToRefs(ord
 
 // Status
 const STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Chờ thanh toán' },
-  { value: 'CONFIRMED', label: 'Đã xác nhận' },
-  { value: 'SHIPPING', label: 'Đang giao' },
-  { value: 'DELIVERED', label: 'Hoàn thành' },
-  { value: 'CANCELLED', label: 'Đã hủy' },
+  {
+    value: 'PENDING',
+    label: 'Chờ xác nhận',
+    tone: 'bg-yellow-100 text-yellow-700',
+  },
+  {
+    value: 'CONFIRMED',
+    label: 'Đã xác nhận',
+    tone: 'bg-blue-100 text-blue-700',
+  },
+  {
+    value: 'SHIPPING',
+    label: 'Đang giao',
+    tone: 'bg-orange-100 text-orange-700',
+  },
+  {
+    value: 'DELIVERED',
+    label: 'Hoàn thành',
+    tone: 'bg-green-100 text-green-700',
+  },
+  {
+    value: 'CANCELLED',
+    label: 'Đã hủy',
+    tone: 'bg-red-100 text-red-700',
+  },
 ]
+
+const getStatus = (status) => {
+  return STATUS_OPTIONS.find((item) => item.value === status)
+}
 
 const PAYMENT_STATUS = {
   PENDING: { label: 'Chưa thanh toán', tone: 'bg-yellow-100 text-yellow-700' },
@@ -91,23 +115,11 @@ onMounted(async () => {
     orderStore.fetchAllOrder({ page: 1, size: 5 }),
     // paymentMethodStore.fetchPaymentMethods(),
   ])
-  console.log(orders.value)
 })
 
 const changePage = async (page) => {
   if (page < 1 || page > totalPages.value) return
   await orderStore.fetchAllOrder(buildParams(page))
-}
-
-const updateOrderStatus = async (id, status) => {
-  try {
-    await orderStore.updateStatusOrder(id, status)
-    notificationStore.notify(`Cập nhật trạng thái mã đơn hàng #${id} thành công`, 'success')
-  } catch (err) {
-    notificationStore.notify(err.response?.data?.message, 'error')
-  } finally {
-    await orderStore.fetchAllOrder(buildParams(currentPage.value))
-  }
 }
 
 // Detail modal
@@ -250,15 +262,12 @@ const handleOpenDetail = (o) => {
                 </td>
 
                 <td class="pr-4">
-                  <select
-                    :value="order.status"
-                    @change="updateOrderStatus(order.id, $event.target.value)"
-                    class="border border-border bg-background px-2 py-1.5 text-xs"
+                  <span
+                    class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+                    :class="getStatus(order.status)?.tone"
                   >
-                    <option v-for="item in STATUS_OPTIONS" :key="item.value" :value="item.value">
-                      {{ item.label }}
-                    </option>
-                  </select>
+                    {{ getStatus(order.status)?.label || order.status }}
+                  </span>
                 </td>
               </tr>
 

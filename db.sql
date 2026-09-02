@@ -203,9 +203,12 @@ CREATE TABLE orders(
 	`status` 				ENUM(
 							'PENDING',
 							'CONFIRMED',
+                            "PICKED",
 							'SHIPPING',
 							'DELIVERED',
-							'CANCELLED'
+							'CANCELLED',
+                            'RETURN_REQUESTED',
+                            'RETURNED'
 							)
 							DEFAULT 'PENDING',
     
@@ -237,7 +240,7 @@ CREATE TABLE orders(
     CONSTRAINT FK_O_P FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id)
 );
 
-ALTER TABLE orders ADD COLUMN ghn_order_code VARCHAR(50);
+ALTER TABLE orders ADD COLUMN delivered_at TIMESTAMP;
 
 CREATE TABLE order_details(
 	id					INT AUTO_INCREMENT PRIMARY KEY,
@@ -345,13 +348,15 @@ CREATE TABLE return_requests (
     CONSTRAINT FK_RR_ORDER FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
+ALTER TABLE return_requests ADD COLUMN ghn_return_code VARCHAR(50);
+
 -- Insert default
 INSERT INTO site_settings (id, data) VALUES (1, '{}')
 ON DUPLICATE KEY UPDATE id = id;
 
 ALTER TABLE vouchers ADD COLUMN is_stackable BOOLEAN DEFAULT FALSE;
 
-INSERT INTO roles(`name`) values("USER"),("ADMIN");
+INSERT INTO roles(`name`) values("USER"),("ADMIN"),("SHIPPER");
 
 INSERT INTO target_audiences(`name`) VALUES
 ('Men'),

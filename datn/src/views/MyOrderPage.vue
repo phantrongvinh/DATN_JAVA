@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -7,6 +7,7 @@ import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
 import { storeToRefs } from 'pinia'
 import { useCheckout } from '@/composables/useCheckout'
+import ReturnRequestModal from '@/components/ReturnRequestModal.vue'
 
 const authStore = useAuthStore()
 const orderStore = useOrderStore()
@@ -101,6 +102,7 @@ const canRequestReturn = (order) => {
   deadline.setDate(deadline.getDate() + 7)
   return new Date() < deadline
 }
+const showReturnModal = ref(false)
 </script>
 
 <template>
@@ -182,12 +184,26 @@ const canRequestReturn = (order) => {
           <!-- Action -->
           <div class="mt-4 flex justify-end gap-2">
             <button
-              v-if="canRequestReturn"
+              v-if="canRequestReturn(order)"
               @click="showReturnModal = true"
               class="rounded border border-yellow-600 px-3 py-2 text-xs font-medium text-yellow-600 transition hover:bg-yellow-600 hover:text-white cursor-pointer"
             >
               Yêu cầu trả hàng
             </button>
+
+            <span
+              v-else-if="order.status === 'RETURN_REQUESTED'"
+              class="rounded border border-gray-400 px-3 py-2 text-xs font-medium text-gray-500"
+            >
+              Đang chờ duyệt
+            </span>
+
+            <span
+              v-else-if="order.status === 'RETURNED'"
+              class="rounded border border-green-600 px-3 py-2 text-xs font-medium text-green-600"
+            >
+              Đã hoàn tất
+            </span>
             <button
               v-if="canPay(order)"
               @click="handleRepay(order)"
@@ -205,6 +221,7 @@ const canRequestReturn = (order) => {
             </button>
           </div>
         </div>
+        <ReturnRequestModal v-model:show="showReturnModal" :order="order"></ReturnRequestModal>
       </li>
     </ul>
 

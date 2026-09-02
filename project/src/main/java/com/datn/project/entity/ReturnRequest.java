@@ -6,7 +6,10 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "return_requests")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReturnRequest {
 
     @Id
@@ -21,7 +24,7 @@ public class ReturnRequest {
     private String reason;
 
     @Column(columnDefinition = "TEXT")
-    private String images; 
+    private String images;
 
     @Enumerated(EnumType.STRING)
     private ReturnStatus status;
@@ -34,4 +37,7 @@ public class ReturnRequest {
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
+
+    @Column(name = "ghn_return_code")
+    private String ghnReturnCode;
 }

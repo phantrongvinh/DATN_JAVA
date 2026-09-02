@@ -36,4 +36,18 @@ public class CloudinaryService {
             throw new RuntimeException("Upload ảnh thất bại", e);
         }
     }
+
+     public String uploadImage(MultipartFile file) {
+        try {
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.emptyMap()
+            );
+
+            return uploadResult.get("secure_url").toString();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Upload ảnh thất bại", e);
+        }
+    }
 }

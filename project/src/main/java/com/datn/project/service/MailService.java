@@ -3,20 +3,56 @@ package com.datn.project.service;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 @Service
 public class MailService {
 
   @Autowired
-  private BrevoMailService brevoMailService;
+  private JavaMailSender mailSender;
+
+  @Value("${spring.mail.username}")
+  private String fromEmail;
+
+  private void sendHtmlEmail(String to, String subject, String html) {
+    try {
+      MimeMessage message = mailSender.createMimeMessage();
+
+      MimeMessageHelper helper = new MimeMessageHelper(
+          message,
+          true,
+          "UTF-8");
+
+      helper.setFrom(fromEmail);
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(html, true);
+
+      mailSender.send(message);
+
+    } catch (MessagingException e) {
+      throw new RuntimeException("Gửi email thất bại", e);
+    }
+  }
 
   public void sendMessageEmail(String to, String subject, String body) {
-    String html = "<pre style=\"font-family: Georgia, serif; white-space: pre-wrap;\">" + body + "</pre>";
-    brevoMailService.send(to, subject, html);
+
+    String html = """
+        <pre style="font-family: Georgia, serif; white-space: pre-wrap;">
+        %s
+        </pre>
+        """.formatted(body);
+
+    sendHtmlEmail(to, subject, html);
   }
 
   public void sendActivationEmail(User user, String activationLink) {
@@ -69,7 +105,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), activationLink);
 
-    brevoMailService.send(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
+    sendHtmlEmail(user.getEmail(), "Kích hoạt tài khoản — Maison Calcio", html);
   }
 
   public void sendResetPasswordEmail(User user, String resetLink) {
@@ -122,7 +158,7 @@ public class MailService {
            """
         .formatted(user.getFullName(), resetLink);
 
-    brevoMailService.send(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
+    sendHtmlEmail(user.getEmail(), "Khôi phục mật khẩu — Maison Calcio", html);
   }
 
   public void sendBirthdayVoucherEmail(User user, Voucher voucher, String monthLabel) {
@@ -180,6 +216,6 @@ public class MailService {
             """
         .formatted(monthLabel, user.getFullName(), voucher.getCode(), discountText, expiresAt);
 
-    brevoMailService.send(user.getEmail(), "🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio", html);
+    sendHtmlEmail(user.getEmail(), "🎂 Quà sinh nhật dành riêng cho bạn — Maison Calcio", html);
   }
 }

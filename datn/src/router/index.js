@@ -169,6 +169,16 @@ const router = createRouter({
           name: 'voucher',
           component: () => import('../views/Voucher.vue'),
         },
+        {
+          path: 'order-processing',
+          name: 'order-processing',
+          component: () => import('../views/OrderOperation.vue'),
+        },
+        {
+          path: 'return-request',
+          name: 'return-request',
+          component: () => import('../views/ReturnRequest.vue'),
+        },
         // Thêm các route admin khác ở đây
         // { path: 'orders', name: 'admin-orders', component: () => import('../views/admin/Orders.vue') },
         // { path: 'products', name: 'admin-products', component: () => import('../views/admin/Products.vue') },
@@ -180,6 +190,11 @@ const router = createRouter({
       path: '/test',
       name: 'test',
       component: () => import('../views/Test.vue'),
+    },
+    {
+      path: '/shipping',
+      name: 'shipping',
+      component: () => import('../views/ShipperSimulation.vue'),
     },
 
     // ─── 404 ──────────────────────────────────────────────────

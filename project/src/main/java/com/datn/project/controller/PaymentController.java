@@ -84,10 +84,8 @@ public class PaymentController {
 
             orderService.confirmPayment(orderId, params.get("vnp_TransactionNo"));
 
-            System.out.println("=== calling GHN createShipment...");
             ghnService.createShipment(orderId);
-            System.out.println("=== GHN done");
-
+            
             Order confirmedOrder = orderService.findById(orderId);
             cartService.clearCart(confirmedOrder.getUser().getId());
 

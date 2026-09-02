@@ -1,5 +1,5 @@
 <script setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { Minus, Plus, X, ShoppingBag } from 'lucide-vue-next'
 
 import ulti from '@/ulti/ulti'
@@ -9,6 +9,7 @@ import { useCheckout } from '@/composables/useCheckout'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const { items, removeItem, updateQuantity } = useCart()
 const authStore = useAuthStore()
@@ -20,8 +21,18 @@ onMounted(async () => {
   }
 })
 
+const router = useRouter()
+
+const { selectedIds } = storeToRefs(cartStore)
+const { toggleSelect } = cartStore
+
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()
+
+const handleCheckout = () => {
+  sessionStorage.setItem('checkoutSelectedIds', JSON.stringify(selectedIds.value))
+  router.push('/checkout')
+}
 </script>
 
 <template>
@@ -69,11 +80,17 @@ const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheck
         <ul class="divide-y divide-border">
           <li
             v-for="item in items"
-            :key="item.variantId"
+            :key="item.productVariantId"
             class="grid grid-cols-[80px_1fr_40px] items-center gap-4 p-6 md:grid-cols-[2fr_120px_120px_120px_40px]"
           >
             <!-- Product -->
             <div class="flex items-center gap-4 md:col-span-1">
+              <input
+                type="checkbox"
+                :checked="selectedIds.includes(item.productVariantId)"
+                @change="toggleSelect(item.productVariantId)"
+                class="h-4 w-4"
+              />
               <img :src="item.image" :alt="item.name" class="h-20 w-20 object-contain" />
 
               <div class="hidden md:block">
@@ -228,12 +245,13 @@ const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheck
             {{ error }}
           </p> -->
 
-          <RouterLink
-            to="/checkout"
+          <div
             class="mt-4 block bg-ink py-3 text-center text-xs uppercase tracking-widest text-ivory hover:bg-ink/85"
           >
-            Tiến hành thanh toán
-          </RouterLink>
+            <button :disabled="selectedIds.length === 0" @click="handleCheckout">
+              Thanh toán ({{ selectedIds.length }} sản phẩm)
+            </button>
+          </div>
 
           <RouterLink
             to="/products"

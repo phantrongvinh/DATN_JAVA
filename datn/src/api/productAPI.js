@@ -11,8 +11,6 @@ const fetchFilterProducts = async (data) => {
   const res = await axiosClient.get(`${url}`, {
     params: data,
   })
-  console.log(res.data)
-
   return res.data
 }
 

@@ -21,6 +21,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -29,6 +30,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -112,9 +114,6 @@ public class Order implements Serializable {
 
     @Column(name = "to_ward_code")
     private String toWardCode;
-
-    @Column(name = "ghn_order_code")
-    private String ghnOrderCode;
 
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;

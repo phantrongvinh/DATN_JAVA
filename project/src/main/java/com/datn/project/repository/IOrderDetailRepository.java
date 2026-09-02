@@ -38,4 +38,6 @@ public interface IOrderDetailRepository extends JpaRepository<OrderDetail, Integ
                 AND od.pointsAwarded = false
             """)
     List<OrderDetail> findUnrewardedDeliveredDetails(Integer userId, Integer productId);
+
+    List<OrderDetail> findByOrderId(Integer orderId);
 }

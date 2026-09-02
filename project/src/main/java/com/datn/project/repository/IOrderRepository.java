@@ -139,5 +139,5 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
     @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId AND o.status <> 'CANCELLED'")
     Integer countByUserIdExcludingCancelled(Integer userId);
 
-    Optional<Order> findByGhnOrderCode(String ghnOrderCode);
+    Optional<Order> findByTrackingCode(String trackingCode);
 }

@@ -96,6 +96,11 @@ const updateStatusOrder = async (id, status) => {
   return res.data
 }
 
+const confirmOrder = async (id) => {
+  const res = await axiosClient.patch(`${url}/orders/${id}/confirm`)
+  return res.data
+}
+
 // user
 const fetchAlluser = async (params) => {
   const res = await axiosClient.get(`${url}/users`, { params: params })
@@ -144,6 +149,19 @@ const generatVoucherBirthday = async () => {
   return res.data
 }
 
+// return
+const fetchReturns = async (page, size, status) => {
+  const res = await axiosClient.get(`${url}/returns`, { params: { page, size, status } })
+  return res.data
+}
+
+const resolveReturn = async (returnId, approved, reason) => {
+  const res = await axiosClient.patch(`${url}/returns/${returnId}`, null, {
+    params: { approved, reason },
+  })
+  return res.data
+}
+
 const adminAPI = {
   fetchProductOverview,
   fetchAllProducts,
@@ -169,6 +187,8 @@ const adminAPI = {
   editVoucher,
   birthdayReviewResponse,
   generatVoucherBirthday,
+  fetchReturns,
+  confirmOrder,
+  resolveReturn,
 }
-
 export default adminAPI

@@ -9,6 +9,9 @@ import java.util.Map;
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,7 @@ import com.datn.project.dto.PromotionRequest;
 import com.datn.project.dto.TimePromotionRequest;
 import com.datn.project.dto.dashboard.DashboardResponse;
 import com.datn.project.dto.order.OrderFilterDTO;
+import com.datn.project.dto.order.ReturnResponse;
 import com.datn.project.dto.product.AddPromotionToProductsRequest;
 import com.datn.project.dto.product.AdminProductFilterDTO;
 import com.datn.project.dto.product.ProductRequest;
@@ -39,7 +43,10 @@ import com.datn.project.dto.voucher.VoucherResponse;
 import com.datn.project.entity.DiscountType;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
+import com.datn.project.entity.ReturnRequest;
+import com.datn.project.entity.ReturnStatus;
 import com.datn.project.entity.SiteSetting;
+import com.datn.project.repository.IReturnRequestRepository;
 import com.datn.project.repository.ISiteSettingRepository;
 import com.datn.project.repository.ITimePromotionRepository;
 import com.datn.project.service.IDashboardService;
@@ -92,6 +99,8 @@ public class AdminController {
 
     @Autowired
     private IReturnRequestService returnService;
+    @Autowired
+    private IReturnRequestRepository returnRequestRepository;
 
     // phần products
     @GetMapping("/products/top5")
@@ -256,25 +265,30 @@ public class AdminController {
     }
 
     // phần order
-    @PatchMapping("/orders/{orderId}/status")
-    public ResponseEntity<?> updateStatus(
-            @PathVariable Integer orderId,
-            @RequestParam String status) {
-        OrderStatus orderStatus = status != null ? OrderStatus.valueOf(status.toUpperCase()) : null;
-        if (orderStatus == OrderStatus.DELIVERED) {
-            throw new RuntimeException("Trạng thái 'Đã giao' chỉ được cập nhật tự động từ đơn vị vận chuyển");
-        }
-        orderService.updateOrderStatus(orderId, orderStatus);
-        return ResponseEntity.ok("Cập nhật trạng thái thành công");
+    // @PatchMapping("/orders/{orderId}/status")
+    // public ResponseEntity<?> updateStatus(
+    // @PathVariable Integer orderId,
+    // @RequestParam String status) {
+    // OrderStatus orderStatus = status != null ?
+    // OrderStatus.valueOf(status.toUpperCase()) : null;
+    // if (orderStatus == OrderStatus.DELIVERED) {
+    // throw new RuntimeException("Trạng thái 'Đã giao' chỉ được cập nhật tự động từ
+    // đơn vị vận chuyển");
+    // }
+    // orderService.updateOrderStatus(orderId, orderStatus);
+    // return ResponseEntity.ok("Cập nhật trạng thái thành công");
+    // }
+
+    @PatchMapping("/orders/{id}/advance")
+    public ResponseEntity<?> advanceOrder(@PathVariable Integer id) {
+        orderService.advanceStatus(id);
+        return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));
     }
 
-    @PatchMapping("/returns/{id}")
-    public ResponseEntity<?> resolveReturn(
-            @PathVariable Integer id,
-            @RequestParam boolean approved,
-            @RequestParam(required = false) String adminNote) {
-        returnService.resolveReturn(id, approved, adminNote);
-        return ResponseEntity.ok(Map.of("message", "Đã xử lý yêu cầu trả hàng"));
+    @PatchMapping("/orders/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Integer id) {
+        orderService.cancelOrder(id);
+        return ResponseEntity.ok(Map.of("message", "Đã hủy đơn hàng"));
     }
 
     @GetMapping("/orders")
@@ -296,6 +310,63 @@ public class AdminController {
                 paymentStatusEnum, paymentMethodId, dateFrom, dateTo, sortBy);
 
         return ResponseEntity.ok(orderService.getAllOrders(page, size, filterDTO)).getBody();
+    }
+
+    @PatchMapping("/orders/{orderId}/confirm")
+    public ResponseEntity<?> confirmOrder(
+            @PathVariable Integer orderId) {
+
+        orderService.confirmOrder(orderId);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Xác nhận đơn hàng thành công"));
+    }
+
+    // return request
+    @GetMapping("/returns")
+    public ResponseEntity<?> getAllReturns(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) ReturnStatus status) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        Page<ReturnRequest> result = status != null
+                ? returnRequestRepository.findByStatus(status, pageable)
+                : returnRequestRepository.findAll(pageable);
+        return ResponseEntity.ok(result.map(this::toResponse));
+    }
+
+    @PatchMapping("/returns/{id}")
+    public ResponseEntity<?> resolveReturn(
+            @PathVariable Integer id,
+            @RequestParam boolean approved,
+            @RequestParam(required = false) String adminNote) {
+        returnService.resolveReturn(id, approved, adminNote);
+        return ResponseEntity.ok(Map.of("message", "Đã xử lý yêu cầu trả hàng"));
+    }
+
+    @PatchMapping("/returns/{id}/complete")
+    public ResponseEntity<?> manualComplete(@PathVariable Integer id) {
+        returnService.manualCompleteReturn(id);
+        return ResponseEntity.ok(Map.of("message", "Đã xác nhận hoàn tất trả hàng"));
+    }
+
+    private ReturnResponse toResponse(ReturnRequest rr) {
+        return ReturnResponse.builder()
+                .id(rr.getId())
+                .orderId(rr.getOrder().getId())
+                .receiverName("Maison Calcio")
+                .fromPhone(rr.getOrder().getReceiverPhone())
+                .toPhone("0909090909")
+                .address(rr.getOrder().getShippingAddress())
+                .reason(rr.getReason())
+                .images(rr.getImages() != null && !rr.getImages().isBlank()
+                        ? List.of(rr.getImages().split(","))
+                        : List.of())
+                .status(rr.getStatus().name())
+                .adminNote(rr.getAdminNote())
+                .createdAt(rr.getCreatedAt())
+                .build();
     }
 
     // @GetMapping("/{id}")
@@ -376,4 +447,5 @@ public class AdminController {
         reviewService.hideReview(userId, productId);
         return ResponseEntity.ok(Map.of("message", "Đã ẩn đánh giá"));
     }
+
 }

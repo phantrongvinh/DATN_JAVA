@@ -64,6 +64,8 @@ const STATUS_LABEL = {
 const currentStepIndex = computed(() =>
   STATUS_STEPS.findIndex((s) => s.key === order.value?.status),
 )
+
+const handlePrint = () => window.print()
 </script>
 
 <template>
@@ -99,6 +101,15 @@ const currentStepIndex = computed(() =>
     </div>
 
     <!-- INVOICE -->
+    <button
+      @click="handlePrint"
+      class="flex items-center gap-2 border border-border px-4 py-2 text-sm hover:bg-secondary"
+    >
+      <Printer class="h-4 w-4" /> In đơn hàng
+    </button>
+    <div class="hidden print:block">
+      <OrderInvoice :order="order" />
+    </div>
     <div class="mx-auto mt-16 max-w-6xl">
       <div class="grid gap-8 lg:grid-cols-[1fr_380px] items-stretch">
         <!-- LEFT -->

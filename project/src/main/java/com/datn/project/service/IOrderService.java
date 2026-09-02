@@ -31,4 +31,10 @@ public interface IOrderService {
     void validateStatusTransition(OrderStatus current, OrderStatus next);
 
     ResponseEntity<?> getAllOrders(int page, int size, OrderFilterDTO filter);
+
+    void advanceStatus(int orderId);
+
+    String getNextStatusLabel(OrderStatus current);
+
+    void confirmOrder(Integer orderId);
 }

@@ -14,8 +14,7 @@ const addressStore = useAddressStore()
 const { addresses } = storeToRefs(addressStore)
 const cartStore = useCartStore()
 
-const items = computed(() => cartStore.items)
-const totalItems = computed(() => items.value.reduce((s, i) => s + i.quantity, 0))
+const totalItems = computed(() => checkoutItems.value.reduce((s, i) => s + i.quantity, 0))
 
 const selectedAddressId = ref(null)
 const selectedAddress = ref(null)
@@ -219,6 +218,7 @@ const handleCheckout = async () => {
 
 // handle voucher
 const {
+  checkoutItems,
   loading,
   subtotal,
   voucherDiscount,
@@ -451,7 +451,7 @@ const {
             <div class="mt-6 border-t pt-4 space-y-3 text-sm">
               <div class="mt-4 space-y-2">
                 <div
-                  v-for="i in items"
+                  v-for="i in checkoutItems"
                   :key="i.productVariantId"
                   class="flex justify-between text-sm"
                 >

@@ -54,6 +54,11 @@ const navs = [
     icon: ShoppingCart,
   },
   {
+    to: '/admin/order-processing',
+    label: 'Xử lý đơn hàng',
+    icon: ShoppingCart,
+  },
+  {
     to: '/admin/users',
     label: 'Người dùng',
     icon: Users,
@@ -62,6 +67,11 @@ const navs = [
     to: '/admin/voucher',
     label: 'Voucher',
     icon: Tickets,
+  },
+  {
+    to: '/admin/return-request',
+    label: 'Yêu cầu hoàn hàng',
+    icon: FileText,
   },
   {
     to: '/admin/landing',
