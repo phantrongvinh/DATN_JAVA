@@ -16,27 +16,42 @@ public class ShippingSimulatorController {
     @Autowired
     private ShippingSimulatorService service;
 
-     @PostMapping("/orders/{orderId}/picked")
+    @PostMapping("/orders/{orderId}/picked")
     public ResponseEntity<?> picked(
-            @PathVariable Integer orderId
-    ) {
+            @PathVariable Integer orderId) {
         service.sendStatus(orderId, "picked");
         return ResponseEntity.ok("Đã giả lập lấy hàng");
     }
 
     @PostMapping("/orders/{orderId}/delivering")
     public ResponseEntity<?> delivering(
-            @PathVariable Integer orderId
-    ) {
+            @PathVariable Integer orderId) {
         service.sendStatus(orderId, "delivering");
         return ResponseEntity.ok("Đã giả lập đang giao");
     }
 
     @PostMapping("/orders/{orderId}/delivered")
     public ResponseEntity<?> delivered(
-            @PathVariable Integer orderId
-    ) {
+            @PathVariable Integer orderId) {
         service.sendStatus(orderId, "delivered");
         return ResponseEntity.ok("Đã giả lập giao thành công");
+    }
+
+    @PostMapping("/returns/{returnId}/picked")
+    public ResponseEntity<?> returnPicked(@PathVariable Integer returnId) {
+        service.sendReturnStatus(returnId, "picked");
+        return ResponseEntity.ok("Đã lấy hàng trả");
+    }
+
+    @PostMapping("/returns/{returnId}/delivering")
+    public ResponseEntity<?> returnDelivering(@PathVariable Integer returnId) {
+        service.sendReturnStatus(returnId, "delivering");
+        return ResponseEntity.ok("Đã đang giao hàng trả về shop");
+    }
+
+    @PostMapping("/returns/{returnId}/delivered")
+    public ResponseEntity<?> returnDelivered(@PathVariable Integer returnId) {
+        service.sendReturnStatus(returnId, "delivered");
+        return ResponseEntity.ok("Đã trả hàng thành công");
     }
 }

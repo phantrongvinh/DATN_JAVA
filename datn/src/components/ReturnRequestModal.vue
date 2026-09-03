@@ -1,16 +1,20 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { X, Upload } from 'lucide-vue-next'
 import { useNotificationStore } from '@/stores/useNotificationStore'
 import returnAPI from '@/api/returnAPI'
 
 const props = defineProps({ show: Boolean, order: Object })
-const emit = defineEmits(['update:show'])
+const emit = defineEmits(['update:show', 'success'])
 
 const notification = useNotificationStore()
 const reason = ref('')
 const files = ref([])
 const submitting = ref(false)
+
+onMounted(() => {
+  console.log(props.order)
+})
 
 const close = () => emit('update:show', false)
 
@@ -31,6 +35,7 @@ const handleSubmit = async () => {
 
     await returnAPI.requestReturn(props.order.id, formData)
     notification.notify('Đã gửi yêu cầu trả hàng', 'success')
+    emit('success')
     close()
   } catch (err) {
     notification.notify(err.response?.data?.message ?? 'Có lỗi xảy ra', 'error')

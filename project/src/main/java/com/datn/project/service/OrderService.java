@@ -29,9 +29,12 @@ import com.datn.project.dto.order.OrderFilterDTO;
 import com.datn.project.dto.order.OrderItemRequest;
 import com.datn.project.dto.order.OrderRequest;
 import com.datn.project.dto.order.OrderResponse;
+import com.datn.project.dto.order.OrderStatusHistoryResponse;
+import com.datn.project.dto.order.ReturnHistoryResponse;
 import com.datn.project.entity.Order;
 import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.OrderStatus;
+import com.datn.project.entity.OrderStatusHistory;
 import com.datn.project.entity.PaymentMethod;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.entity.ProductVariant;
@@ -41,8 +44,10 @@ import com.datn.project.entity.User;
 import com.datn.project.entity.Voucher;
 import com.datn.project.repository.IOrderDetailRepository;
 import com.datn.project.repository.IOrderRepository;
+import com.datn.project.repository.IOrderStatusHistoryRepository;
 import com.datn.project.repository.IPaymentMethodRepository;
 import com.datn.project.repository.IProductVariantRepository;
+import com.datn.project.repository.IReturnRequestRepository;
 import com.datn.project.repository.IUserRepository;
 import com.datn.project.specification.OrderSpecification;
 
@@ -86,6 +91,12 @@ public class OrderService implements IOrderService {
 
         @Autowired
         private IOrderDetailRepository orderDetailRepository;
+
+        @Autowired
+        private IOrderStatusHistoryRepository orderStatusHistoryRepository;
+
+        @Autowired
+        private IReturnRequestRepository returnRequestRepository;
 
         private static final Map<OrderStatus, OrderStatus> NEXT_STATUS = Map.of(
                         OrderStatus.PENDING, OrderStatus.CONFIRMED,
@@ -221,9 +232,7 @@ public class OrderService implements IOrderService {
                 Order savedOrder = orderRepository.save(order);
 
                 // ─── 6. Xử lý theo payment method ────────────────────
-                if (request.getPaymentMethodId() == 2) {
-                        savedOrder.setPaymentStatus(PaymentStatus.PAID);
-                        savedOrder.setStatus(OrderStatus.CONFIRMED);
+                if (request.getPaymentMethodId() == 1) {
                         orderRepository.save(savedOrder);
                         ghnService.createShipment(savedOrder.getId());
                         cartService.clearCart(userId);
@@ -391,6 +400,34 @@ public class OrderService implements IOrderService {
                                                                 ? i.getPromotion().getName()
                                                                 : null)
                                 .build()).toList());
+                List<OrderStatusHistoryResponse> statusHistory = orderStatusHistoryRepository
+                                .findByOrderIdOrderByCreatedAtDesc(order.getId())
+                                .stream()
+                                .map(h -> OrderStatusHistoryResponse.builder()
+                                                .id(h.getId())
+                                                .status(h.getStatus().name())
+                                                .note(h.getNote())
+                                                .createdAt(h.getCreatedAt())
+                                                .build())
+                                .toList();
+                List<ReturnHistoryResponse> returnRequests = returnRequestRepository
+                                .findByOrderIdOrderByCreatedAtDesc(order.getId())
+                                .stream()
+                                .map(r -> ReturnHistoryResponse.builder()
+                                                .id(r.getId())
+                                                .status(r.getStatus().name())
+                                                .reason(r.getReason())
+                                                .adminNote(r.getAdminNote())
+                                                .createdAt(r.getCreatedAt())
+                                                .resolvedAt(r.getResolvedAt())
+                                                .ghnReturnCode(r.getGhnReturnCode())
+                                                .images(r.getImages())
+                                                .build())
+                                .toList();
+
+                response.setReturnRequests(returnRequests);
+
+                response.setStatusHistory(statusHistory);
 
                 response.setCreatedAt(order.getCreatedAt());
                 response.setDiscountAmount(order.getDiscountAmount());
@@ -480,6 +517,45 @@ public class OrderService implements IOrderService {
                 }
 
                 orderRepository.save(order);
+
+                OrderStatusHistory history = OrderStatusHistory.builder()
+                                .order(order)
+                                .status(newStatus)
+                                .note(getStatusNote(newStatus))
+                                .createdAt(LocalDateTime.now())
+                                .build();
+
+                orderStatusHistoryRepository.save(history);
+        }
+
+        private String getStatusNote(OrderStatus status) {
+
+                return switch (status) {
+
+                        case PENDING ->
+                                "Khách đã đặt hàng";
+
+                        case CONFIRMED ->
+                                "Cửa hàng đã xác nhận đơn hàng";
+
+                        case PICKED ->
+                                "Shipper đã lấy hàng từ cửa hàng";
+
+                        case SHIPPING ->
+                                "Đơn hàng đang được giao đến khách hàng";
+
+                        case DELIVERED ->
+                                "Đơn hàng đã được giao thành công";
+
+                        case CANCELLED ->
+                                "Đơn hàng đã bị hủy";
+
+                        case RETURN_REQUESTED ->
+                                "Khách đã yêu cầu trả hàng";
+
+                        case RETURNED ->
+                                "Đơn hàng đã được trả về cửa hàng";
+                };
         }
 
         @Transactional
@@ -507,7 +583,8 @@ public class OrderService implements IOrderService {
                                 OrderStatus.PICKED, List.of(OrderStatus.SHIPPING, OrderStatus.CANCELLED),
                                 OrderStatus.SHIPPING, List.of(OrderStatus.DELIVERED),
                                 OrderStatus.DELIVERED, List.of(),
-                                OrderStatus.CANCELLED, List.of());
+                                OrderStatus.CANCELLED, List.of(), OrderStatus.RETURN_REQUESTED, List.of(),
+                                OrderStatus.RETURNED, List.of());
 
                 if (!allowed.get(current).contains(next)) {
                         throw new RuntimeException(

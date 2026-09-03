@@ -337,18 +337,36 @@ CREATE TABLE site_settings (
 );
 
 CREATE TABLE return_requests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
-    reason TEXT NOT NULL,
-    images TEXT,
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED') DEFAULT 'PENDING',
-    admin_note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP NULL,
+    id 					INT AUTO_INCREMENT PRIMARY KEY,
+    order_id 			INT NOT NULL,
+    reason 				TEXT NOT NULL,
+    images 				TEXT,
+    status 				ENUM('PENDING', 'APPROVED','PICKED','DELIVERING', 'REJECTED', 'COMPLETED') DEFAULT 'PENDING',
+    admin_note 			TEXT,
+    created_at 			TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at 		TIMESTAMP NULL,
     CONSTRAINT FK_RR_ORDER FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
 ALTER TABLE return_requests ADD COLUMN ghn_return_code VARCHAR(50);
+
+CREATE TABLE order_status_history (
+    id 					INT AUTO_INCREMENT PRIMARY KEY,
+
+    order_id 			INT NOT NULL,
+
+    status 				VARCHAR(30) NOT NULL,
+
+    note 				TEXT,
+
+    created_at 			DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_order_status_history_order
+        FOREIGN KEY (order_id)
+        REFERENCES orders(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
 
 -- Insert default
 INSERT INTO site_settings (id, data) VALUES (1, '{}')

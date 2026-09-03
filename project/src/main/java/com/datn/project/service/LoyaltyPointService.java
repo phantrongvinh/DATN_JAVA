@@ -63,4 +63,21 @@ public class LoyaltyPointService {
                 .toList();
         return awardPoints(autoRewardable, user);
     }
+
+    @Transactional
+    public int deductForReturnedOrder(User user, List<OrderDetail> details) {
+        int totalDeduct = 0;
+        for (OrderDetail d : details) {
+            if (!d.isPointsAwarded())
+                continue;
+            totalDeduct += calcPoints(d);
+            d.setPointsAwarded(false); 
+            orderDetailRepository.save(d);
+        }
+        if (totalDeduct > 0) {
+            user.setLoyaltyPoints(Math.max(0, user.getLoyaltyPoints() - totalDeduct));
+            userRepository.save(user);
+        }
+        return totalDeduct;
+    }
 }

@@ -40,6 +40,20 @@ export const useReturnStore = defineStore('return', () => {
     }
   }
 
+  const manualComplete = async (id) => {
+    loading.value = true
+    error.value = null
+    try {
+      await adminAPI.manualComplete(id)
+      return { success: true }
+    } catch (err) {
+      error.value = err.response?.data?.message
+      return { success: false, errorMessages: error.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     returns,
     loading,
@@ -51,5 +65,6 @@ export const useReturnStore = defineStore('return', () => {
     currentPage,
     fetchReturns,
     resolveReturn,
+    manualComplete,
   }
 })

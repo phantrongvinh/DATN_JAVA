@@ -14,7 +14,7 @@ const addressStore = useAddressStore()
 const { addresses } = storeToRefs(addressStore)
 const cartStore = useCartStore()
 
-const totalItems = computed(() => checkoutItems.value.reduce((s, i) => s + i.quantity, 0))
+const totalItems = computed(() => cartStore.items.reduce((s, i) => s + i.quantity, 0))
 
 const selectedAddressId = ref(null)
 const selectedAddress = ref(null)

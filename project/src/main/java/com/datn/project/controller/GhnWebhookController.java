@@ -3,6 +3,7 @@ package com.datn.project.controller;
 import com.datn.project.entity.Order;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.ReturnRequest;
+import com.datn.project.entity.ReturnStatus;
 import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IReturnRequestRepository;
 import com.datn.project.service.IOrderService;
@@ -35,8 +36,9 @@ public class GhnWebhookController {
 
         Optional<ReturnRequest> returnReq = returnRequestRepository.findByGhnReturnCode(trackingCode);
         if (returnReq.isPresent()) {
-            if ("delivered".equals(ghnStatus)) {
-                returnService.completeReturn(returnReq.get().getId());
+            ReturnStatus newReturnStatus = mapGhnReturnStatus(ghnStatus);
+            if (newReturnStatus != null) {
+                returnService.updateReturnTrackingStatus(returnReq.get().getId(), newReturnStatus);
             }
             return;
         }
@@ -47,7 +49,7 @@ public class GhnWebhookController {
         OrderStatus newStatus = mapGhnStatus(ghnStatus);
         if (newStatus != null) {
             orderService.updateOrderStatus(order.getId(), newStatus);
-        }   
+        }
     }
 
     private OrderStatus mapGhnStatus(String ghnStatus) {
@@ -56,6 +58,15 @@ public class GhnWebhookController {
             case "delivering" -> OrderStatus.SHIPPING;
             case "delivered" -> OrderStatus.DELIVERED;
             case "cancel" -> OrderStatus.CANCELLED;
+            default -> null;
+        };
+    }
+
+    private ReturnStatus mapGhnReturnStatus(String ghnStatus) {
+        return switch (ghnStatus) {
+            case "picked" -> ReturnStatus.PICKED;
+            case "delivering" -> ReturnStatus.DELIVERING;
+            case "delivered" -> ReturnStatus.COMPLETED;
             default -> null;
         };
     }

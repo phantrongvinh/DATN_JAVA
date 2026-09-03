@@ -39,6 +39,16 @@ const STATUS_OPTIONS = [
     tone: 'bg-green-100 text-green-700',
   },
   {
+    value: 'RETURN_REQUESTED',
+    label: 'Yêu cầu trả hàng',
+    tone: 'bg-purple-100 text-purple-700',
+  },
+  {
+    value: 'RETURNED',
+    label: 'Đã hoàn hàng',
+    tone: 'bg-indigo-100 text-indigo-700',
+  },
+  {
     value: 'CANCELLED',
     label: 'Đã hủy',
     tone: 'bg-red-100 text-red-700',

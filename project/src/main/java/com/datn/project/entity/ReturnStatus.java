@@ -1,5 +1,5 @@
 package com.datn.project.entity;
 
 public enum ReturnStatus {
-    PENDING, APPROVED, REJECTED, COMPLETED
+    PENDING, APPROVED, PICKED, DELIVERING, REJECTED, COMPLETED
 }

@@ -15,7 +15,7 @@ public interface IOrderDetailRepository extends JpaRepository<OrderDetail, Integ
                 FROM OrderDetail od
                 JOIN od.productVariant pv
                 WHERE od.order.createdAt >= :start AND od.order.createdAt < :end
-                AND od.order.status <> 'CANCELLED'
+               AND od.order.status NOT IN ('CANCELLED', 'RETURNED')
                 GROUP BY pv.product.id, pv.product.name
                 ORDER BY SUM(od.quantity) DESC
             """)

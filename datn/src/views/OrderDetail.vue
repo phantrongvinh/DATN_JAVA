@@ -1,10 +1,11 @@
 <script setup>
 import { RouterLink, useRoute } from 'vue-router'
-import { CheckCircle2 } from 'lucide-vue-next'
+import { CheckCircle2, Printer } from 'lucide-vue-next'
 import ulti from '@/ulti/ulti'
 import { useOrderStore } from '@/stores/useOrderStore'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import OrderInvoice from '@/components/OrderInvoice.vue'
 
 const route = useRoute()
 
@@ -26,16 +27,36 @@ onMounted(async () => {
 watch(orderId, async (newVal) => {
   if (!newVal) return
   await loadOrder(newVal)
-  console.log(order.value)
 })
 
 // Handle status
 
 const STATUS_STEPS = [
-  { key: 'PENDING', label: 'Chờ xác nhận' },
-  { key: 'CONFIRMED', label: 'Đã xác nhận' },
-  { key: 'SHIPPING', label: 'Đang giao hàng' },
-  { key: 'DELIVERED', label: 'Đã giao hàng' },
+  {
+    key: 'PENDING',
+    label: 'Chờ xác nhận',
+    description: 'Đơn hàng đang chờ cửa hàng xác nhận',
+  },
+  {
+    key: 'CONFIRMED',
+    label: 'Đã xác nhận',
+    description: 'Cửa hàng đã xác nhận đơn hàng',
+  },
+  {
+    key: 'PICKED',
+    label: 'Đã lấy hàng',
+    description: 'Shipper đã nhận hàng từ cửa hàng',
+  },
+  {
+    key: 'SHIPPING',
+    label: 'Đang giao hàng',
+    description: 'Đơn hàng đang được giao đến bạn',
+  },
+  {
+    key: 'DELIVERED',
+    label: 'Đã giao hàng',
+    description: 'Đơn hàng đã được giao thành công',
+  },
 ]
 
 const STATUS_LABEL = {
@@ -43,32 +64,103 @@ const STATUS_LABEL = {
     label: 'Chờ xác nhận',
     tone: 'bg-muted text-muted-foreground',
   },
+
   CONFIRMED: {
-    label: 'Đang xử lý',
+    label: 'Đã xác nhận',
     tone: 'bg-gold-soft text-ink',
   },
+
+  PICKED: {
+    label: 'Đã lấy hàng',
+    tone: 'bg-blue-100 text-blue-700',
+  },
+
   SHIPPING: {
     label: 'Đang giao',
     tone: 'bg-ink/10 text-ink',
   },
+
   DELIVERED: {
     label: 'Đã giao',
     tone: 'bg-emerald-100 text-emerald-800',
   },
+
   CANCELLED: {
     label: 'Đã hủy',
     tone: 'bg-red-100 text-red-700',
   },
 }
 
-const currentStepIndex = computed(() =>
-  STATUS_STEPS.findIndex((s) => s.key === order.value?.status),
-)
+const STATUS_HISTORY_LABEL = {
+  PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Đã xác nhận',
+  PICKED: 'Đã lấy hàng',
+  SHIPPING: 'Đang giao hàng',
+  DELIVERED: 'Đã giao hàng',
+  CANCELLED: 'Đã hủy',
+  RETURN_REQUESTED: 'Yêu cầu trả hàng',
+  RETURNED: 'Đã trả hàng',
+}
 
-const handlePrint = () => window.print()
+const RETURN_STATUS_LABEL = {
+  PENDING: {
+    label: 'Chờ duyệt',
+    tone: 'bg-yellow-100 text-yellow-700',
+  },
+
+  APPROVED: {
+    label: 'Đã duyệt',
+    tone: 'bg-blue-100 text-blue-700',
+  },
+
+  REJECTED: {
+    label: 'Từ chối',
+    tone: 'bg-red-100 text-red-700',
+  },
+
+  PICKED: {
+    label: 'Đã lấy hàng',
+    tone: 'bg-indigo-100 text-indigo-700',
+  },
+
+  DELIVERING: {
+    label: 'Đang hoàn hàng',
+    tone: 'bg-orange-100 text-orange-700',
+  },
+
+  COMPLETED: {
+    label: 'Đã hoàn tất',
+    tone: 'bg-green-100 text-green-700',
+  },
+}
+
+const currentStepIndex = computed(() => {
+  if (!order.value?.status) return -1
+
+  return STATUS_STEPS.findIndex((step) => step.key === order.value.status)
+})
+
+const statusHistory = computed(() => order.value?.statusHistory ?? [])
+
+const returnRequests = computed(() => order.value?.returnRequests ?? [])
+
+const returnCount = computed(() => returnRequests.value.length)
+
+const printingOrder = ref(null)
+
+const handlePrint = (order) => {
+  printingOrder.value = order
+
+  nextTick(() => {
+    window.print()
+  })
+}
 </script>
 
 <template>
+  <div class="hidden print:block">
+    <OrderInvoice v-if="printingOrder" :order="printingOrder" />
+  </div>
   <div class="container-x py-16">
     <!-- SUCCESS -->
     <div class="mx-auto max-w-3xl text-center">
@@ -101,16 +193,13 @@ const handlePrint = () => window.print()
     </div>
 
     <!-- INVOICE -->
-    <button
-      @click="handlePrint"
-      class="flex items-center gap-2 border border-border px-4 py-2 text-sm hover:bg-secondary"
-    >
-      <Printer class="h-4 w-4" /> In đơn hàng
-    </button>
-    <div class="hidden print:block">
-      <OrderInvoice :order="order" />
-    </div>
     <div class="mx-auto mt-16 max-w-6xl">
+      <button
+        @click="handlePrint(order)"
+        class="flex items-end gap-2 border border-border px-4 py-2 text-sm hover:bg-secondary my-2"
+      >
+        <Printer class="h-4 w-4" /> In đơn hàng
+      </button>
       <div class="grid gap-8 lg:grid-cols-[1fr_380px] items-stretch">
         <!-- LEFT -->
         <div>
@@ -140,9 +229,21 @@ const handlePrint = () => window.print()
 
                 <span
                   class="mt-2 inline-block rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
-                  :class="STATUS_LABEL[order?.status]?.tone"
+                  :class="
+                    order?.paymentStatus === 'PAID'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : order?.paymentStatus === 'REFUNDED'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                  "
                 >
-                  {{ STATUS_LABEL[order?.status]?.label }}
+                  {{
+                    order?.paymentStatus === 'PAID'
+                      ? 'Đã thanh toán'
+                      : order?.paymentStatus === 'REFUNDED'
+                        ? 'Đã hoàn tiền'
+                        : 'Chưa thanh toán'
+                  }}
                 </span>
               </div>
 
@@ -277,28 +378,39 @@ const handlePrint = () => window.print()
           </div>
 
           <div v-else>
-            <!-- TIMELINE -->
+            <!-- ORDER STATUS -->
             <div class="mt-8 border-t border-border pt-6">
-              <h3 class="mb-4 text-sm font-semibold uppercase tracking-widest">
-                Trạng thái đơn hàng
-              </h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold uppercase tracking-widest">Tiến trình đơn hàng</h3>
 
-              <div class="space-y-5">
-                <div class="flex gap-3" v-for="(status, index) in STATUS_STEPS" :key="status.key">
-                  <!-- dot -->
+                <span
+                  v-if="order?.status"
+                  class="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                  :class="STATUS_LABEL[order.status]?.tone"
+                >
+                  {{ STATUS_LABEL[order.status]?.label }}
+                </span>
+              </div>
+
+              <div class="mt-6 space-y-5">
+                <div v-for="(status, index) in STATUS_STEPS" :key="status.key" class="flex gap-3">
+                  <!-- DOT + LINE -->
                   <div class="flex flex-col items-center">
                     <div
-                      class="mt-1 h-3 w-3 rounded-full"
-                      :class="index <= currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
-                    ></div>
-                    <!-- line nối giữa các bước -->
+                      class="mt-1 flex h-5 w-5 items-center justify-center rounded-full"
+                      :class="index <= currentStepIndex ? 'bg-green-500' : 'bg-gray-200'"
+                    >
+                      <CheckCircle2 v-if="index <= currentStepIndex" class="h-3 w-3 text-white" />
+                    </div>
+
                     <div
                       v-if="index < STATUS_STEPS.length - 1"
-                      class="w-0.5 flex-1 mt-1"
-                      :class="index < currentStepIndex ? 'bg-green-500' : 'bg-gray-300'"
-                    ></div>
+                      class="mt-1 w-0.5 flex-1"
+                      :class="index < currentStepIndex ? 'bg-green-500' : 'bg-gray-200'"
+                    />
                   </div>
 
+                  <!-- CONTENT -->
                   <div class="pb-5">
                     <p
                       class="font-medium"
@@ -312,8 +424,100 @@ const handlePrint = () => window.print()
                     >
                       {{ status.label }}
                     </p>
-                    <p v-if="index === currentStepIndex" class="text-xs text-muted-foreground">
-                      {{ ulti.formatDate(order?.createdAt) }}
+
+                    <p
+                      class="mt-1 text-xs text-muted-foreground"
+                      :class="{
+                        'text-green-600': index === currentStepIndex,
+                      }"
+                    >
+                      {{ status.description }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATUS HISTORY -->
+          <div class="mt-8 border-t border-border pt-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold uppercase tracking-widest">Lịch sử đơn hàng</h3>
+
+              <span class="text-xs text-muted-foreground">
+                {{ statusHistory.length }} lần cập nhật
+              </span>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <div
+                v-for="history in statusHistory"
+                :key="history.id"
+                class="relative border-l-2 border-green-200 pl-4"
+              >
+                <div class="absolute -left-[6px] top-1 h-2.5 w-2.5 rounded-full bg-green-500" />
+
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="font-medium">
+                      {{ STATUS_HISTORY_LABEL[history.status] || history.status }}
+                    </p>
+
+                    <p v-if="history.note" class="mt-1 text-xs text-muted-foreground">
+                      {{ history.note }}
+                    </p>
+                  </div>
+
+                  <span class="shrink-0 text-[11px] text-muted-foreground">
+                    {{ ulti.formatDate(history.createdAt) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="returnCount > 0" class="mt-8 border-t border-border pt-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold uppercase tracking-widest">Yêu cầu trả hàng</h3>
+
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-xs">
+                {{ returnCount }} lần
+              </span>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <div
+                v-for="request in returnRequests"
+                :key="request.id"
+                class="rounded-lg border border-border p-4"
+              >
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">Yêu cầu #{{ request.id }}</p>
+
+                  <span
+                    class="rounded-full px-3 py-1 text-[10px] font-semibold"
+                    :class="RETURN_STATUS_LABEL[request.status]?.tone"
+                  >
+                    {{ RETURN_STATUS_LABEL[request.status]?.label }}
+                  </span>
+                </div>
+
+                <div class="mt-3 space-y-2 text-sm">
+                  <p>
+                    <span class="text-muted-foreground">Lý do:</span>
+                    {{ request.reason }}
+                  </p>
+
+                  <p>
+                    <span class="text-muted-foreground">Ngày yêu cầu:</span>
+                    {{ ulti.formatDate(request.createdAt) }}
+                  </p>
+
+                  <div v-if="request.adminNote" class="mt-3 rounded-md bg-yellow-50 p-3">
+                    <p class="text-xs font-semibold text-yellow-700">Ghi chú từ cửa hàng</p>
+
+                    <p class="mt-1 text-sm text-yellow-800">
+                      {{ request.adminNote }}
                     </p>
                   </div>
                 </div>

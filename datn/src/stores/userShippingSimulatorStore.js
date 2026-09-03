@@ -6,6 +6,7 @@ import shippingAPI from '@/api/shippingAPI'
 export const useShippingSimulatorStore = defineStore('shippingSimulator', () => {
   const orders = ref([])
   const orderLoading = ref(false)
+  const orderError = ref(null)
 
   const orderFilter = ref({
     status: '',
@@ -43,7 +44,7 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
         ['CONFIRMED', 'PICKED', 'SHIPPING'].includes(order.status),
       )
     } catch (error) {
-      console.log(error)
+      orderError.value = error
       throw error
     } finally {
       orderLoading.value = false
@@ -56,7 +57,7 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
 
       await fetchOrders()
     } catch (err) {
-      console.log(err)
+      throw err
     }
   }
 
@@ -69,40 +70,42 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
     await fetchOrders()
   }
 
+  // returns
   const returns = ref([])
   const returnLoading = ref(false)
-
-  const returnFilter = ref({
-    status: '',
-  })
+  const returnError = ref(null)
 
   const returnPage = ref(1)
   const returnSize = ref(10)
   const returnTotalPages = ref(0)
-  const fetchReturns = async (page = 1) => {
+  const fetchReturns = async (status = null) => {
     try {
       returnLoading.value = true
+      returnError.value = null
 
-      const params = {
-        page: returnPage.value,
-        size: returnSize.value,
-      }
-
-      if (returnFilter.value.status) {
-        params.status = returnFilter.value.status
-      }
-
-      const response = await adminAPI.fetchReturns(params.page, params.size, params.status)
-      console.log(response)
+      const response = await adminAPI.fetchReturns(returnPage.value, returnSize.value, status)
 
       returns.value = (response.content || []).filter((item) =>
         ['APPROVED', 'PICKED', 'DELIVERING'].includes(item.status),
       )
 
-      returnPage.value = response.number + 1
-      returnTotalPages.value = response.totalPages
+      returnPage.value = response.page.number + 1
+      returnTotalPages.value = response.page.totalPages
+    } catch (err) {
+      returnError.value = err
+      throw err
     } finally {
       returnLoading.value = false
+    }
+  }
+
+  const updateReturnStatus = async (returnId, action) => {
+    try {
+      await shippingAPI.updateReturnStatus(returnId, action)
+      await fetchReturns()
+    } catch (err) {
+      returnError.value = err
+      throw err
     }
   }
 
@@ -110,6 +113,7 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
     // Orders
     orders,
     orderLoading,
+    orderError,
     orderFilter,
     orderPage,
     orderSize,
@@ -121,12 +125,14 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
     // Returns
     returns,
     returnLoading,
-    returnFilter,
+    returnError,
     returnPage,
     returnSize,
     returnTotalPages,
 
     fetchReturns,
+    updateReturnStatus,
+
     resetFilter,
   }
 })

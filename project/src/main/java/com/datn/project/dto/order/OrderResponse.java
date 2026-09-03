@@ -32,4 +32,8 @@ public class OrderResponse {
     private String paymentMethod;
     private String transactionId;
     private BigDecimal shippingFee;
+
+    private List<OrderStatusHistoryResponse> statusHistory;
+
+    private List<ReturnHistoryResponse> returnRequests;
 }

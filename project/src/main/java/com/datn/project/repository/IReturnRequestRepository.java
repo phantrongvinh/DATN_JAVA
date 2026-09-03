@@ -18,4 +18,6 @@ public interface IReturnRequestRepository extends JpaRepository<ReturnRequest, I
     Optional<ReturnRequest> findByGhnReturnCode(String ghnReturnCode);
 
     Page<ReturnRequest> findByStatus(ReturnStatus status, Pageable pageable);
+
+    List<ReturnRequest> findByOrderIdOrderByCreatedAtDesc(Integer orderId);
 }

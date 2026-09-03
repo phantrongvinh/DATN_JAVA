@@ -9,7 +9,6 @@ import { useCheckout } from '@/composables/useCheckout'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
 
 const { items, removeItem, updateQuantity } = useCart()
 const authStore = useAuthStore()
@@ -23,14 +22,10 @@ onMounted(async () => {
 
 const router = useRouter()
 
-const { selectedIds } = storeToRefs(cartStore)
-const { toggleSelect } = cartStore
-
 // handle thanh toan
 const { subtotal, timeDiscount, finalPrice, timePromotion, timeLeft } = useCheckout()
 
 const handleCheckout = () => {
-  sessionStorage.setItem('checkoutSelectedIds', JSON.stringify(selectedIds.value))
   router.push('/checkout')
 }
 </script>
@@ -85,12 +80,6 @@ const handleCheckout = () => {
           >
             <!-- Product -->
             <div class="flex items-center gap-4 md:col-span-1">
-              <input
-                type="checkbox"
-                :checked="selectedIds.includes(item.productVariantId)"
-                @change="toggleSelect(item.productVariantId)"
-                class="h-4 w-4"
-              />
               <img :src="item.image" :alt="item.name" class="h-20 w-20 object-contain" />
 
               <div class="hidden md:block">
@@ -245,13 +234,13 @@ const handleCheckout = () => {
             {{ error }}
           </p> -->
 
-          <div
-            class="mt-4 block bg-ink py-3 text-center text-xs uppercase tracking-widest text-ivory hover:bg-ink/85"
+          <button
+            :disabled="items.length === 0"
+            @click="handleCheckout"
+            class="mt-4 w-full bg-ink py-3 text-center text-xs uppercase tracking-widest text-ivory transition hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <button :disabled="selectedIds.length === 0" @click="handleCheckout">
-              Thanh toán ({{ selectedIds.length }} sản phẩm)
-            </button>
-          </div>
+            Thanh toán tất cả ({{ items.length }} sản phẩm)
+          </button>
 
           <RouterLink
             to="/products"

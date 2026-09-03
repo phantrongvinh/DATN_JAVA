@@ -8,10 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datn.project.entity.Order;
+import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.entity.ReturnRequest;
 import com.datn.project.entity.ReturnStatus;
+import com.datn.project.repository.IOrderDetailRepository;
 import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IReturnRequestRepository;
 
@@ -28,12 +30,17 @@ public class ReturnRequestService implements IReturnRequestService {
     private GHNService ghnService;
     @Autowired
     private CloudinaryService cloudinaryService;
+    @Autowired
+    private IOrderDetailRepository orderDetailRepository;
+    @Autowired
+    private LoyaltyPointService loyaltyPointService;
 
     private static final int RETURN_WINDOW_DAYS = 7;
 
     @Transactional
     @Override
     public void requestReturn(Integer userId, Integer orderId, String reason, List<MultipartFile> images) {
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
 
@@ -80,7 +87,7 @@ public class ReturnRequestService implements IReturnRequestService {
         if (approved) {
             rr.setStatus(ReturnStatus.APPROVED);
             String ghnCode = ghnService.createReturnOrder(order);
-            rr.setGhnReturnCode(ghnCode); 
+            rr.setGhnReturnCode(ghnCode);
         } else {
             rr.setStatus(ReturnStatus.REJECTED);
             order.setStatus(OrderStatus.DELIVERED);
@@ -103,12 +110,28 @@ public class ReturnRequestService implements IReturnRequestService {
         order.setStatus(OrderStatus.RETURNED);
         order.setPaymentStatus(PaymentStatus.REFUNDED);
         orderRepository.save(order);
+        List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
+        loyaltyPointService.deductForReturnedOrder(order.getUser(), details);
     }
 
     @Transactional
     @Override
     public void manualCompleteReturn(Integer returnRequestId) {
         completeReturn(returnRequestId);
+    }
+
+    @Override
+    public void updateReturnTrackingStatus(Integer returnRequestId, ReturnStatus status) {
+        ReturnRequest rr = returnRequestRepository.findById(returnRequestId)
+                .orElseThrow(() -> new RuntimeException("Yêu cầu trả hàng không tồn tại"));
+
+        if (status == ReturnStatus.COMPLETED) {
+            completeReturn(returnRequestId);
+        }
+
+        rr.setStatus(status);
+        returnRequestRepository.save(rr);
+
     }
 
 }

@@ -1,6 +1,6 @@
 import cartAPI from '@/api/cartAPI'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 export const useCartStore = defineStore(
   'cart',
@@ -10,7 +10,6 @@ export const useCartStore = defineStore(
     const error = ref(null)
     const items = ref([])
     const message = ref(null)
-    const selectedIds = ref([])
 
     function ensureArray() {
       if (!Array.isArray(items.value)) {
@@ -135,27 +134,6 @@ export const useCartStore = defineStore(
       items.value = []
     }
 
-    const toggleSelect = (productVariantId) => {
-      if (selectedIds.value.includes(productVariantId)) {
-        selectedIds.value = selectedIds.value.filter((id) => id !== productVariantId)
-      } else {
-        selectedIds.value.push(productVariantId)
-      }
-      console.log(selectedIds.value)
-    }
-
-    const toggleSelectAll = () => {
-      if (selectedIds.value.length === items.value.length) {
-        selectedIds.value = []
-      } else {
-        selectedIds.value = items.value.map((i) => i.productVariantId)
-      }
-    }
-
-    const selectedItems = computed(() =>
-      items.value.filter((i) => selectedIds.value.includes(i.productVariantId)),
-    )
-
     return {
       loadding,
       error,
@@ -169,10 +147,6 @@ export const useCartStore = defineStore(
       updateQuantityServer,
       mergeCartToServer,
       clearLocal,
-      selectedIds,
-      toggleSelect,
-      toggleSelectAll,
-      selectedItems,
     }
   },
   { persist: true },

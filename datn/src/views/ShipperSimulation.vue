@@ -140,28 +140,36 @@ const updateReturnStatus = async (returnId, action) => {
   try {
     processingReturnId.value = returnId
 
-    message.value = ''
-    error.value = ''
-
-    // await store.updateReturnStatus(returnId, action)
+    await store.updateReturnStatus(returnId, action)
 
     const statusText = {
       picked: 'Đã lấy hàng trả',
       delivering: 'Đang vận chuyển về shop',
     }
-
     message.value = `Yêu cầu trả hàng #${returnId}: ${statusText[action]}`
-
-    await fetchReturns()
   } catch (err) {
-    console.error(err)
-
+    console.log(err)
     returnError.value = err.response?.data?.message || 'Không thể cập nhật trạng thái trả hàng'
   } finally {
     processingReturnId.value = null
   }
 }
-onMounted(fetchReturns)
+
+const canReturnPicked = (returnOrder) => {
+  return returnOrder.status === 'APPROVED'
+}
+
+const canReturnDelivering = (returnOrder) => {
+  return returnOrder.status === 'PICKED'
+}
+
+const canReturnDelivered = (returnOrder) => {
+  return returnOrder.status === 'SHIPPING'
+}
+
+onMounted(async () => {
+  await fetchReturns()
+})
 </script>
 
 <template>
@@ -176,7 +184,12 @@ onMounted(fetchReturns)
         </div>
 
         <button
-          @click="fetchOrders"
+          @click="
+            () => {
+              fetchOrders()
+              fetchReturns()
+            }
+          "
           :disabled="orderLoading || returnLoading"
           class="border border-border px-4 py-2 text-sm hover:bg-secondary"
         >
@@ -712,7 +725,7 @@ onMounted(fetchReturns)
             <div class="mt-6 flex gap-2 border-t border-border pt-4">
               <!-- APPROVED -->
 
-              <!-- <button
+              <button
                 v-if="canReturnPicked(returnOrder)"
                 @click="updateReturnStatus(returnOrder.id, 'picked')"
                 :disabled="processingReturnId === returnOrder.id"
@@ -721,11 +734,11 @@ onMounted(fetchReturns)
                 {{
                   processingReturnId === returnOrder.id ? 'Đang xử lý...' : 'Shipper đã lấy hàng'
                 }}
-              </button> -->
+              </button>
 
               <!-- PICKED -->
 
-              <!-- <button
+              <button
                 v-if="canReturnDelivering(returnOrder)"
                 @click="updateReturnStatus(returnOrder.id, 'delivering')"
                 :disabled="processingReturnId === returnOrder.id"
@@ -734,15 +747,14 @@ onMounted(fetchReturns)
                 {{
                   processingReturnId === returnOrder.id ? 'Đang xử lý...' : 'Bắt đầu giao về shop'
                 }}
-              </button> -->
+              </button>
 
               <!-- DELIVERING -->
-
               <div
                 v-if="returnOrder.status === 'DELIVERING'"
                 class="flex items-center text-sm text-orange-600"
               >
-                🚚 Đang vận chuyển hàng về cửa hàng
+                Đang vận chuyển hàng về cửa hàng
               </div>
             </div>
           </div>

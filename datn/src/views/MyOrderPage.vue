@@ -102,7 +102,16 @@ const canRequestReturn = (order) => {
   deadline.setDate(deadline.getDate() + 7)
   return new Date() < deadline
 }
+const handleReturnSuccess = async () => {
+  await loadOrder()
+}
 const showReturnModal = ref(false)
+const returnOrder = ref(null)
+
+const openModalReturn = (order) => {
+  showReturnModal.value = true
+  returnOrder.value = order
+}
 </script>
 
 <template>
@@ -185,7 +194,7 @@ const showReturnModal = ref(false)
           <div class="mt-4 flex justify-end gap-2">
             <button
               v-if="canRequestReturn(order)"
-              @click="showReturnModal = true"
+              @click="openModalReturn(order)"
               class="rounded border border-yellow-600 px-3 py-2 text-xs font-medium text-yellow-600 transition hover:bg-yellow-600 hover:text-white cursor-pointer"
             >
               Yêu cầu trả hàng
@@ -221,7 +230,11 @@ const showReturnModal = ref(false)
             </button>
           </div>
         </div>
-        <ReturnRequestModal v-model:show="showReturnModal" :order="order"></ReturnRequestModal>
+        <ReturnRequestModal
+          v-model:show="showReturnModal"
+          :order="returnOrder"
+          @success="handleReturnSuccess"
+        ></ReturnRequestModal>
       </li>
     </ul>
 

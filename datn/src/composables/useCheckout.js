@@ -24,15 +24,9 @@ export function useCheckout() {
   const timeLeft = ref(null)
   const shippingFee = ref(0)
 
-  const { selectedIds } = storeToRefs(cartStore)
-
-  const checkoutItems = computed(() =>
-    cartStore.items.filter((i) => selectedIds.value.includes(i.productVariantId)),
-  )
-
   // subtotal — price trong cart đã là discountedPrice sau product promotion
   const subtotal = computed(() => {
-    return checkoutItems.value.reduce((sum, i) => {
+    return cartStore.items.reduce((sum, i) => {
       let price = i.price
 
       if (
@@ -148,7 +142,7 @@ export function useCheckout() {
 
     try {
       const payload = {
-        items: checkoutItems.value.map((i) => ({
+        items: cartStore.items.map((i) => ({
           variantId: i.productVariantId,
           quantity: i.quantity,
         })),
@@ -211,7 +205,6 @@ export function useCheckout() {
   onUnmounted(() => clearInterval(timer))
 
   return {
-    checkoutItems,
     subtotal,
     voucherDiscount,
     timeDiscount,

@@ -341,6 +341,7 @@ public class AdminController {
             @PathVariable Integer id,
             @RequestParam boolean approved,
             @RequestParam(required = false) String adminNote) {
+                System.out.println(adminNote);
         returnService.resolveReturn(id, approved, adminNote);
         return ResponseEntity.ok(Map.of("message", "Đã xử lý yêu cầu trả hàng"));
     }

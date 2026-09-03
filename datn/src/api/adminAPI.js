@@ -151,14 +151,20 @@ const generatVoucherBirthday = async () => {
 
 // return
 const fetchReturns = async (page, size, status) => {
-  const res = await axiosClient.get(`${url}/returns`, { params: { page, size, status } })
+  const params = { page, size, status }
+  const res = await axiosClient.get(`${url}/returns`, { params: params })
   return res.data
 }
 
 const resolveReturn = async (returnId, approved, reason) => {
   const res = await axiosClient.patch(`${url}/returns/${returnId}`, null, {
-    params: { approved, reason },
+    params: { approved, adminNote: reason },
   })
+  return res.data
+}
+
+const manualComplete = async (id) => {
+  const res = await axiosClient.patch(`${url}/returns/${id}/complete`)
   return res.data
 }
 
@@ -190,5 +196,6 @@ const adminAPI = {
   fetchReturns,
   confirmOrder,
   resolveReturn,
+  manualComplete,
 }
 export default adminAPI

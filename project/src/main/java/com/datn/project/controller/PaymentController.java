@@ -75,8 +75,8 @@ public class PaymentController {
 
         if ("00".equals(responseCode)) {
             Order order = orderService.findById(orderId);
-            System.out.println("=== order status: " + order.getStatus());
-            System.out.println("=== orderDetails size: " + order.getOrderDetails().size());
+            // System.out.println("=== order status: " + order.getStatus());
+            // System.out.println("=== orderDetails size: " + order.getOrderDetails().size());
 
             if (order.getPaymentStatus() == PaymentStatus.PAID) {
                 return ResponseEntity.ok(Map.of("message", "Thanh toán thành công"));
@@ -92,16 +92,13 @@ public class PaymentController {
             return ResponseEntity.ok(Map.of("message", "Thanh toán thành công"));
 
         } else {
-            // ─── Thanh toán thất bại / User thoát ────────────
             Order order = orderService.findById(orderId);
 
-            // Chỉ cancel nếu chưa được xử lý
             if (order.getStatus() == OrderStatus.PENDING) {
                 orderService.cancelOrder(orderId);
             }
 
             return ResponseEntity.ok(Map.of("message", "Thanh toán thất bại"));
-            // Trả 200 thay vì 400 để FE nhận được response
 
             // return ResponseEntity.ok(
             // Map.of("message", "Thanh toán chưa hoàn tất"));

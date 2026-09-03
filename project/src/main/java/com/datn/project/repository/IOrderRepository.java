@@ -36,8 +36,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                        COALESCE(SUM(o.finalPrice), 0),
                        COUNT(o.id)
                 FROM Order o
-                WHERE o.status IN ('CONFIRMED', 'DELIVERED')
-                AND o.paymentStatus = 'PAID'
+                WHERE o.status NOT IN ('CANCELLED', 'RETURNED', 'PENDING')
                 AND YEAR(o.createdAt) = :year
                 GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)
                 ORDER BY MONTH(o.createdAt)
@@ -51,7 +50,8 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                        SUM(CASE WHEN o.status = 'CONFIRMED'  THEN 1 ELSE 0 END),
                        SUM(CASE WHEN o.status = 'SHIPPING'   THEN 1 ELSE 0 END),
                        SUM(CASE WHEN o.status = 'DELIVERED'  THEN 1 ELSE 0 END),
-                       SUM(CASE WHEN o.status = 'CANCELLED'  THEN 1 ELSE 0 END)
+                       SUM(CASE WHEN o.status = 'CANCELLED'  THEN 1 ELSE 0 END),
+                       SUM(CASE WHEN o.status = 'RETURNED'   THEN 1 ELSE 0 END)
                 FROM Order o
                 WHERE YEAR(o.createdAt) = :year
                 GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)
@@ -84,7 +84,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 SELECT COALESCE(SUM(o.finalPrice), 0)
                 FROM Order o
                 WHERE FUNCTION('DATE', o.createdAt) = CURRENT_DATE
-                AND o.status <> 'CANCELLED'
+                AND o.status NOT IN ('CANCELLED', 'RETURNED')
             """)
     BigDecimal findRevenueToday();
 
@@ -122,7 +122,7 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 SELECT COALESCE(SUM(o.finalPrice), 0)
                 FROM Order o
                 WHERE o.createdAt >= :start AND o.createdAt < :end
-                AND o.status <> 'CANCELLED'
+                AND o.status NOT IN ('CANCELLED', 'RETURNED')
             """)
     BigDecimal findRevenueByRange(LocalDateTime start, LocalDateTime end);
 
@@ -131,13 +131,13 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                 SELECT COUNT(o)
                 FROM Order o
                 WHERE o.createdAt >= :start AND o.createdAt < :end
-                AND o.status <> 'CANCELLED'
+                AND o.status NOT IN ('CANCELLED', 'RETURNED')
             """)
     Integer findOrderCountByRange(LocalDateTime start, LocalDateTime end);
 
     // query đếm số đơn hàng không tính đơn đã hủy
     @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId AND o.status <> 'CANCELLED'")
-    Integer countByUserIdExcludingCancelled(Integer userId);
+Integer countByUserIdExcludingCancelled(Integer userId);
 
     Optional<Order> findByTrackingCode(String trackingCode);
 }

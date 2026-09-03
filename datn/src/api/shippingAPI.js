@@ -7,8 +7,14 @@ const updateOrderStatus = async (orderId, status) => {
   return res.data
 }
 
+const updateReturnStatus = async (returnId, status) => {
+  const res = await axiosClient.post(`${url}/returns/${returnId}/${status}`)
+  return res.data
+}
+
 const shippingAPI = {
   updateOrderStatus,
+  updateReturnStatus,
 }
 
 export default shippingAPI
