@@ -13,8 +13,9 @@ const notification = useNotificationStore()
 
 const { orders, loading, loadingMore, currentPage, totalPages, totalElements } = storeToRefs(store)
 
-onMounted(() => {
-  store.fetchPendingOrders()
+onMounted(async () => {
+  await store.fetchPendingOrders()
+  console.log(orders.value)
 })
 
 const NEXT_ACTION = {
@@ -167,7 +168,7 @@ const handlePrint = (order) => {
                     <p class="text-xs text-muted-foreground">Địa chỉ giao hàng</p>
 
                     <p class="mt-0.5">
-                      {{ order.shippingDetail || '---' }}
+                      {{ order.shippingAddress || '---' }}
                     </p>
                   </div>
                 </div>
@@ -194,6 +195,14 @@ const handlePrint = (order) => {
 
                   <span>
                     {{ ulti.formatVND(order.shippingFee || 0) }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-muted-foreground"> Giảm giá </span>
+
+                  <span>
+                    - {{ ulti.formatVND((order.timeDiscount || 0) + (order.discountAmount || 0)) }}
                   </span>
                 </div>
 

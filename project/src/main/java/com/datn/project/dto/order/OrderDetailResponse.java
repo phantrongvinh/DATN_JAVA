@@ -20,4 +20,6 @@ public class OrderDetailResponse {
     private BigDecimal originalPrice;
     private BigDecimal price;
     private String promotionName;
+    private int productId;
+    private boolean reviewed;
 }

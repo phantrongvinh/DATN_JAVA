@@ -167,7 +167,7 @@ onMounted(() => {
       <div class="border border-border bg-background">
         <div class="flex flex-wrap gap-2 border-b border-border p-4">
           <button
-            v-for="s in ['PENDING', 'DELIVERING', 'APPROVED', 'REJECTED', 'COMPLETED']"
+            v-for="s in ['PENDING', 'DELIVERING', 'PICKED', 'APPROVED', 'REJECTED', 'COMPLETED']"
             :key="s"
             @click="handleFilter(s)"
             class="border px-4 py-2 text-sm transition"

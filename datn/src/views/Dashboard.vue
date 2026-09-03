@@ -95,7 +95,7 @@
         </div>
 
         <div class="rounded-xl border border-border bg-background p-5">
-          <p class="text-sm text-muted-foreground">Doanh thu trong {{ rangeLabel }}</p>
+          <p class="text-sm text-muted-foreground">Tổng đơn trong {{ rangeLabel }}</p>
           <h2 class="mt-3 text-3xl font-bold">{{ report.ordersInRange }}</h2>
           <p
             class="mt-3 text-sm"

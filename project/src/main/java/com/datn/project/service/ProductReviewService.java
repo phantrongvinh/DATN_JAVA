@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.datn.project.dto.preview.CreateReviewRequest;
 import com.datn.project.dto.preview.ReviewResponse;
 import com.datn.project.dto.preview.ReviewSummaryResponse;
-import com.datn.project.entity.OrderDetail;
 import com.datn.project.entity.Product;
 import com.datn.project.entity.ProductReview;
 import com.datn.project.entity.ProductReviewId;

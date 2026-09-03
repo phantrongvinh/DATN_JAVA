@@ -44,6 +44,7 @@ const statusOptions = [
 const fetchOrders = async () => {
   try {
     await store.fetchOrders()
+    console.log(orders.value)
   } catch (error) {
     notification.notify(
       error.response?.data?.message || 'Không thể tải danh sách đơn hàng',
@@ -375,13 +376,13 @@ onMounted(async () => {
                   </p>
 
                   <p>
-                    SDT
+                    SDT:
                     {{ order.receiverPhone || '---' }}
                   </p>
 
                   <p>
-                    Địa chỉ giao hàng
-                    {{ order.shippingDetail || '---' }}
+                    Địa chỉ giao hàng:
+                    {{ order.shippingAddress || '---' }}
                   </p>
 
                   <p v-if="order.trackingCode">

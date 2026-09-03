@@ -234,7 +234,6 @@ public class OrderService implements IOrderService {
                 // ─── 6. Xử lý theo payment method ────────────────────
                 if (request.getPaymentMethodId() == 1) {
                         orderRepository.save(savedOrder);
-                        ghnService.createShipment(savedOrder.getId());
                         cartService.clearCart(userId);
                 }
 
@@ -270,6 +269,7 @@ public class OrderService implements IOrderService {
                                 .status(order.getStatus().name())
                                 .shippingAddress(order.getShippingAddress())
                                 .receiverName(order.getReceiverName())
+                                .shippingFee(order.getShippingFee())
                                 .receiverPhone(order.getReceiverPhone())
                                 .createdAt(order.getCreatedAt())
                                 .paymentStatus(order.getPaymentStatus().name())
@@ -295,7 +295,7 @@ public class OrderService implements IOrderService {
                         throw new RuntimeException("Đơn hàng đã bị hủy");
 
                 order.setPaymentStatus(PaymentStatus.PAID);
-                order.setStatus(OrderStatus.CONFIRMED);
+                order.setStatus(OrderStatus.PENDING);
                 order.setPaymentTransactionId(transactionId);
                 orderRepository.save(order);
         }
@@ -395,6 +395,8 @@ public class OrderService implements IOrderService {
                                 .quantity(i.getQuantity())
                                 .originalPrice(i.getProductVariant().getPrice())
                                 .price(i.getPrice())
+                                .productId(i.getProductVariant().getProduct().getId())
+                                .reviewed(i.isPointsAwarded())
                                 .promotionName(
                                                 i.getPromotion() != null
                                                                 ? i.getPromotion().getName()

@@ -22,6 +22,7 @@ const loadOrder = async (id) => {
 
 onMounted(async () => {
   await loadOrder(orderId.value)
+  console.log(order.value)
 })
 
 watch(orderId, async (newVal) => {
@@ -319,9 +320,9 @@ const handlePrint = (order) => {
                   class="flex items-center justify-between border border-gold/30 bg-gold/5 p-3 text-sm"
                 >
                   <span>Đánh giá sản phẩm để nhận {{ estimatedPoints }} điểm tích lũy</span>
-                  <button @click="openReviewModal(item)" class="text-gold underline">
+                  <RouterLink :to="'/productDetail/' + item.productId" class="text-gold underline">
                     Đánh giá ngay
-                  </button>
+                  </RouterLink>
                 </div>
               </li>
             </ul>

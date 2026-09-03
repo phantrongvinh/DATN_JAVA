@@ -37,6 +37,8 @@ public class PaymentController {
     @Autowired
     private ICartService cartService;
 
+    
+
     // Tạo payment URL sau khi order đã được tạo
     @GetMapping("/vnpay/{orderId}")
     public ResponseEntity<?> vnpayPayment(
@@ -84,7 +86,6 @@ public class PaymentController {
 
             orderService.confirmPayment(orderId, params.get("vnp_TransactionNo"));
 
-            ghnService.createShipment(orderId);
             
             Order confirmedOrder = orderService.findById(orderId);
             cartService.clearCart(confirmedOrder.getUser().getId());

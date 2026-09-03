@@ -49,6 +49,7 @@ import com.datn.project.entity.SiteSetting;
 import com.datn.project.repository.IReturnRequestRepository;
 import com.datn.project.repository.ISiteSettingRepository;
 import com.datn.project.repository.ITimePromotionRepository;
+import com.datn.project.service.GHNService;
 import com.datn.project.service.IDashboardService;
 import com.datn.project.service.IOrderService;
 import com.datn.project.service.IProductReviewService;
@@ -101,6 +102,9 @@ public class AdminController {
     private IReturnRequestService returnService;
     @Autowired
     private IReturnRequestRepository returnRequestRepository;
+
+    @Autowired
+    private GHNService ghnService;
 
     // phần products
     @GetMapping("/products/top5")
@@ -318,6 +322,7 @@ public class AdminController {
 
         orderService.confirmOrder(orderId);
 
+        ghnService.createShipment(orderId);
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Xác nhận đơn hàng thành công"));
@@ -341,7 +346,7 @@ public class AdminController {
             @PathVariable Integer id,
             @RequestParam boolean approved,
             @RequestParam(required = false) String adminNote) {
-                System.out.println(adminNote);
+        System.out.println(adminNote);
         returnService.resolveReturn(id, approved, adminNote);
         return ResponseEntity.ok(Map.of("message", "Đã xử lý yêu cầu trả hàng"));
     }
