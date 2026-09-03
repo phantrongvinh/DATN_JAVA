@@ -239,7 +239,12 @@ const handleCheckout = () => {
             @click="handleCheckout"
             class="mt-4 w-full bg-ink py-3 text-center text-xs uppercase tracking-widest text-ivory transition hover:bg-ink/85 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Thanh toán tất cả ({{ items.length }} sản phẩm)
+            Thanh toán tất cả ({{
+              items.reduce((total, item) => {
+                return total + item.quantity
+              }, 0)
+            }}
+            sản phẩm)
           </button>
 
           <RouterLink

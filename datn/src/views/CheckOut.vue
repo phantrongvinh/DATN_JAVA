@@ -451,7 +451,7 @@ const {
             <div class="mt-6 border-t pt-4 space-y-3 text-sm">
               <div class="mt-4 space-y-2">
                 <div
-                  v-for="i in checkoutItems"
+                  v-for="i in cartStore.items"
                   :key="i.productVariantId"
                   class="flex justify-between text-sm"
                 >

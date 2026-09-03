@@ -11,7 +11,7 @@ public class ProfanityFilterService {
     // TODO: bổ sung đầy đủ theo thực tế — đây chỉ là danh sách mẫu tối thiểu
     private static final Set<String> BANNED_WORDS = Set.of(
             "lon", "cac", "du ma", "dit", "vcl", "vl", "cak", "loz",
-            "ngu", "cho chet", "oc cho", "sung", "chich choac"
+            "ngu", "cho chet", "oc cho", "sung", "chich choac","xau","gom","loi","qq","quan que","ghe"
             // TODO: thêm các biến thể viết tắt/không dấu khác
     );
 

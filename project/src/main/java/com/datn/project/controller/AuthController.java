@@ -51,7 +51,7 @@ public class AuthController {
             authService.activate(token);
 
             response.sendRedirect(
-                    "https://sports-ecommerce-nine.vercel.app/activate-success");
+                    "http://localhost:5173/activate-success");
 
         } catch (Exception e) {
 
@@ -60,12 +60,12 @@ public class AuthController {
             if (message.equals("EXPIRED")) {
 
                 response.sendRedirect(
-                        "https://sports-ecommerce-nine.vercel.app/activation-error?type=expired");
+                        "http://localhost:5173/activation-error?type=expired");
 
             } else {
 
                 response.sendRedirect(
-                        "https://sports-ecommerce-nine.vercel.app/activation-error?type=invalid");
+                        "http://localhost:5173/activation-error?type=invalid");
             }
         }
     }
