@@ -44,7 +44,6 @@ const statusOptions = [
 const fetchOrders = async () => {
   try {
     await store.fetchOrders()
-    console.log(orders.value)
   } catch (error) {
     notification.notify(
       error.response?.data?.message || 'Không thể tải danh sách đơn hàng',
@@ -162,10 +161,6 @@ const canReturnPicked = (returnOrder) => {
 
 const canReturnDelivering = (returnOrder) => {
   return returnOrder.status === 'PICKED'
-}
-
-const canReturnDelivered = (returnOrder) => {
-  return returnOrder.status === 'SHIPPING'
 }
 
 onMounted(async () => {
@@ -369,7 +364,7 @@ onMounted(async () => {
                   </span>
                 </div>
 
-                <div class="mt-3 space-y-1 text-sm text-muted-foreground">
+                <div class="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     Người nhận:
                     {{ order.receiverName || order.user?.fullName || '---' }}

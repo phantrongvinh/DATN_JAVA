@@ -293,7 +293,7 @@ const handlePrint = (order) => {
               <li
                 v-for="item in order?.items"
                 :key="item.id"
-                class="flex gap-4 border-b border-border p-6 last:border-0"
+                class="flex flex-wrap gap-4 border-b border-border p-6 last:border-0"
               >
                 <div class="flex-1">
                   <h3 class="font-medium">
@@ -317,11 +317,10 @@ const handlePrint = (order) => {
                 </div>
                 <div
                   v-if="order.status === 'DELIVERED' && !item.reviewed"
-                  class="flex items-center justify-between border border-gold/30 bg-gold/5 p-3 text-sm"
+                  class="flex w-full items-center justify-end text-sm"
                 >
-                  <span>Đánh giá sản phẩm để nhận {{ estimatedPoints }} điểm tích lũy</span>
                   <RouterLink :to="'/productDetail/' + item.productId" class="text-gold underline">
-                    Đánh giá ngay
+                    <span>Đánh giá sản phẩm để nhận {{ estimatedPoints }} điểm tích lũy</span>
                   </RouterLink>
                 </div>
               </li>

@@ -46,6 +46,10 @@ const STATUS_LABEL = {
     label: 'Đã xác nhận',
     tone: 'bg-blue-100 text-blue-800',
   },
+  PICKED: {
+    label: 'Đã lấy hàng',
+    tone: 'bg-cyan-100 text-cyan-800',
+  },
   SHIPPING: {
     label: 'Đang giao',
     tone: 'bg-purple-100 text-purple-800',
@@ -57,6 +61,14 @@ const STATUS_LABEL = {
   CANCELLED: {
     label: 'Đã hủy',
     tone: 'bg-red-100 text-red-800',
+  },
+  RETURN_REQUESTED: {
+    label: 'Đang hoàn đơn',
+    tone: 'bg-orange-100 text-orange-800',
+  },
+  RETURNED: {
+    label: 'Đã hoàn đơn',
+    tone: 'bg-yellow-100 text-yellow-800',
   },
 }
 
@@ -211,7 +223,7 @@ const openModalReturn = (order) => {
               v-else-if="order.status === 'RETURNED'"
               class="rounded border border-green-600 px-3 py-2 text-xs font-medium text-green-600"
             >
-              Đã hoàn tất
+              Đã hoàn tất hoàn đơn
             </span>
             <button
               v-if="canPay(order)"

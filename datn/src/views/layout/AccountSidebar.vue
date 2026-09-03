@@ -1,6 +1,6 @@
 <script setup>
 import { useAuthStore } from '@/stores/useAuthStore'
-import { LogOut, Package, Heart, MapPin, Settings } from 'lucide-vue-next'
+import { LogOut, Package, Heart, MapPin, Settings, Ticket } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 
 const menuItems = [
@@ -20,7 +20,7 @@ const menuItems = [
     path: '/profile/wishlist',
   },
   {
-    icon: Heart,
+    icon: Ticket,
     label: 'Vouchers',
     path: '/profile/vouchers',
   },

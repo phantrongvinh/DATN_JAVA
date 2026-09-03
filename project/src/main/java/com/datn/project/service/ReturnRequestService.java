@@ -13,9 +13,11 @@ import com.datn.project.entity.OrderStatus;
 import com.datn.project.entity.PaymentStatus;
 import com.datn.project.entity.ReturnRequest;
 import com.datn.project.entity.ReturnStatus;
+import com.datn.project.entity.Voucher;
 import com.datn.project.repository.IOrderDetailRepository;
 import com.datn.project.repository.IOrderRepository;
 import com.datn.project.repository.IReturnRequestRepository;
+import com.datn.project.repository.IVoucherRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -34,6 +36,10 @@ public class ReturnRequestService implements IReturnRequestService {
     private IOrderDetailRepository orderDetailRepository;
     @Autowired
     private LoyaltyPointService loyaltyPointService;
+    @Autowired
+    private IVoucherRepository voucherRepository;
+    @Autowired
+    private IVoucherService voucherService;
 
     private static final int RETURN_WINDOW_DAYS = 7;
 
@@ -109,6 +115,11 @@ public class ReturnRequestService implements IReturnRequestService {
         Order order = rr.getOrder();
         order.setStatus(OrderStatus.RETURNED);
         order.setPaymentStatus(PaymentStatus.REFUNDED);
+        if(order.getVoucher() != null){
+            Voucher voucher = voucherRepository.findById(order.getVoucher().getId()).orElseThrow(() -> new RuntimeException("Không tìm thấy voucher tương ứng"));
+            voucherService.decrementUsedCount(voucher);
+        }
+
         orderRepository.save(order);
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
         loyaltyPointService.deductForReturnedOrder(order.getUser(), details);

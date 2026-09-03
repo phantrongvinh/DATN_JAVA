@@ -10,7 +10,7 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
 
   const orderFilter = ref({
     status: '',
-    orderId: '',
+    search: '',
   })
 
   const orderPage = ref(1)
@@ -32,10 +32,10 @@ export const useShippingSimulatorStore = defineStore('shippingSimulator', () => 
         params.status = orderFilter.value.status
       }
 
-      if (orderFilter.value.orderId) {
-        params.search = orderFilter.value.orderId
+      if (orderFilter.value.search) {
+        params.search = orderFilter.value.search
       }
-
+      console.log(params)
       const response = await adminAPI.fetchAllOrders(params)
 
       const content = response.content || []

@@ -29,13 +29,17 @@
 import { useRouter } from 'vue-router'
 import AccountSidebar from './AccountSidebar.vue'
 import { useAuthStore } from '@/stores/useAuthStore.js'
-import { watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const { user } = storeToRefs(authStore)
+
+onMounted(async () => {
+  await authStore.me()
+})
 
 watch(
   user,

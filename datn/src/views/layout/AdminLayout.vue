@@ -59,6 +59,11 @@ const navs = [
     icon: ShoppingCart,
   },
   {
+    to: '/admin/return-request',
+    label: 'Yêu cầu hoàn hàng',
+    icon: FileText,
+  },
+  {
     to: '/admin/users',
     label: 'Người dùng',
     icon: Users,
@@ -68,11 +73,7 @@ const navs = [
     label: 'Voucher',
     icon: Tickets,
   },
-  {
-    to: '/admin/return-request',
-    label: 'Yêu cầu hoàn hàng',
-    icon: FileText,
-  },
+
   {
     to: '/admin/landing',
     label: 'Trang chủ',

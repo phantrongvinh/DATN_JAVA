@@ -8,7 +8,7 @@ import ulti from '@/ulti/ulti'
 const store = useReturnStore()
 const notification = useNotificationStore()
 
-const { returns } = storeToRefs(store)
+const { returns, loading } = storeToRefs(store)
 
 const statusFilter = ref('PENDING')
 
@@ -152,6 +152,10 @@ const handleFilter = async (status) => {
   await store.fetchReturns(status)
 }
 
+const fetchReturns = async () => {
+  await store.fetchReturns('PENDING')
+}
+
 onMounted(() => {
   store.fetchReturns(statusFilter.value)
 })
@@ -165,19 +169,32 @@ onMounted(() => {
 
     <main class="p-6">
       <div class="border border-border bg-background">
-        <div class="flex flex-wrap gap-2 border-b border-border p-4">
+        <div class="flex items-center justify-between border-b border-border p-4">
+          <div class="flex flex-wrap justify-between gap-2">
+            <button
+              v-for="s in ['PENDING', 'DELIVERING', 'PICKED', 'APPROVED', 'REJECTED', 'COMPLETED']"
+              :key="s"
+              @click="handleFilter(s)"
+              class="border px-4 py-2 text-sm transition"
+              :class="
+                statusFilter === s
+                  ? 'border-black bg-black text-white'
+                  : 'border-border hover:bg-secondary'
+              "
+            >
+              {{ getStatusLabel(s) }}
+            </button>
+          </div>
           <button
-            v-for="s in ['PENDING', 'DELIVERING', 'PICKED', 'APPROVED', 'REJECTED', 'COMPLETED']"
-            :key="s"
-            @click="handleFilter(s)"
-            class="border px-4 py-2 text-sm transition"
-            :class="
-              statusFilter === s
-                ? 'border-black bg-black text-white'
-                : 'border-border hover:bg-secondary'
+            @click="
+              () => {
+                fetchReturns()
+              }
             "
+            :disabled="loading"
+            class="border border-border px-4 py-2 text-sm hover:bg-secondary"
           >
-            {{ getStatusLabel(s) }}
+            {{ loading ? 'Đang tải...' : '↻ Làm mới' }}
           </button>
         </div>
 

@@ -20,4 +20,5 @@ public class TimePromotionController {
         return ResponseEntity.ok(timePromotionService.getActiveTimePromotion().orElse(null));
     }
 
+
 }

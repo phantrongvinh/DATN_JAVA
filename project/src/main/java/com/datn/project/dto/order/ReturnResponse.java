@@ -25,4 +25,5 @@ public class ReturnResponse {
     private String fromPhone;
     private String toPhone;
     private String address;
+    private String ghnReturnCode;
 }

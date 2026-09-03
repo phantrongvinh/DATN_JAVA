@@ -3,6 +3,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import Toast from './components/Toast.vue'
 import { useSiteSettingsStore } from './stores/useSiteSettingsStore.js'
 import { onMounted } from 'vue'
+import ChatWidget from './views/ChatWidget.vue'
 
 const siteSettingsStore = useSiteSettingsStore()
 const router = useRouter()
@@ -31,6 +32,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <ChatWidget />
   <RouterView />
   <Toast />
 </template>

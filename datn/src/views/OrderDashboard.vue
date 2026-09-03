@@ -29,6 +29,11 @@ const STATUS_OPTIONS = [
     tone: 'bg-blue-100 text-blue-700',
   },
   {
+    value: 'PICKED',
+    label: 'Đã lấy hàng',
+    tone: 'bg-cyan-100 text-cyan-700',
+  },
+  {
     value: 'SHIPPING',
     label: 'Đang giao',
     tone: 'bg-orange-100 text-orange-700',
@@ -187,7 +192,7 @@ const handleOpenDetail = (o) => {
               <option value="REFUNDED">Đã hoàn tiền</option>
             </select>
 
-            <select
+            <!-- <select
               v-model="filter.paymentMethodId"
               class="border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground"
             >
@@ -195,7 +200,7 @@ const handleOpenDetail = (o) => {
               <option v-for="item in paymentMethods" :key="item.id" :value="item.id">
                 {{ item.name }}
               </option>
-            </select>
+            </select> -->
 
             <input
               v-model="filter.dateFrom"

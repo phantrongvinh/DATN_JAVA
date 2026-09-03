@@ -13,4 +13,8 @@ public class MonthlyOrderDTO {
     private Integer shipping;
     private Integer delivered;
     private Integer cancelled;
+    private Integer returnRequested;
+    private Integer returned;
+    private Integer picked;
+
 }

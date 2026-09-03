@@ -331,8 +331,11 @@ const statusClass = (status) =>
   ({
     PENDING: 'bg-yellow-100 text-yellow-700',
     CONFIRMED: 'bg-blue-100 text-blue-700',
+    PICKED: 'bg-indigo-100 text-indigo-700',
     SHIPPING: 'bg-purple-100 text-purple-700',
     DELIVERED: 'bg-green-100 text-green-700',
+    RETURN_REQUESTED: 'bg-cyan-100 text-cyan-700',
+    RETURNED: 'bg-orange-100 text-orange-700',
     CANCELLED: 'bg-red-100 text-red-700',
   })[status] ?? 'bg-gray-100 text-gray-700'
 
@@ -340,8 +343,11 @@ const statusText = (status) =>
   ({
     PENDING: 'Chờ xác nhận',
     CONFIRMED: 'Đã xác nhận',
+    PICKED: 'Đã lấy hàng',
     SHIPPING: 'Đang giao',
     DELIVERED: 'Đã giao',
+    RETURN_REQUESTED: 'Đang hoàn đơn',
+    RETURNED: 'Đã hoàn',
     CANCELLED: 'Đã hủy',
   })[status] ?? 'Không xác định'
 </script>

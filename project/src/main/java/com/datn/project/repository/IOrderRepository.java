@@ -51,7 +51,9 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
                        SUM(CASE WHEN o.status = 'SHIPPING'   THEN 1 ELSE 0 END),
                        SUM(CASE WHEN o.status = 'DELIVERED'  THEN 1 ELSE 0 END),
                        SUM(CASE WHEN o.status = 'CANCELLED'  THEN 1 ELSE 0 END),
-                       SUM(CASE WHEN o.status = 'RETURNED'   THEN 1 ELSE 0 END)
+                       SUM(CASE WHEN o.status = 'RETURN_REQUESTED'   THEN 1 ELSE 0 END),
+                       SUM(CASE WHEN o.status = 'RETURNED'   THEN 1 ELSE 0 END),
+                       SUM(CASE WHEN o.status = 'PICKED'   THEN 1 ELSE 0 END)
                 FROM Order o
                 WHERE YEAR(o.createdAt) = :year
                 GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)
@@ -137,7 +139,19 @@ public interface IOrderRepository extends JpaRepository<Order, Integer>, JpaSpec
 
     // query đếm số đơn hàng không tính đơn đã hủy
     @Query("SELECT COUNT(o) FROM Order o WHERE o.user.id = :userId AND o.status <> 'CANCELLED'")
-Integer countByUserIdExcludingCancelled(Integer userId);
+    Integer countByUserIdExcludingCancelled(Integer userId);
 
     Optional<Order> findByTrackingCode(String trackingCode);
+
+    @Query("""
+                SELECT o FROM Order o
+                WHERE o.user.id = :userId
+                AND o.status = 'DELIVERED'
+                AND o.deliveredAt >= :cutoff
+                AND NOT EXISTS (
+                    SELECT 1 FROM ReturnRequest rr WHERE rr.order.id = o.id AND rr.status = 'PENDING'
+                )
+                ORDER BY o.deliveredAt DESC
+            """)
+    List<Order> findReturnableOrders(@Param("userId") Integer userId, @Param("cutoff") LocalDateTime cutoff);
 }

@@ -118,6 +118,9 @@ public class DashboardService implements IDashboardService {
                                                         .shipping(row != null ? ((Long) row[4]).intValue() : 0)
                                                         .delivered(row != null ? ((Long) row[5]).intValue() : 0)
                                                         .cancelled(row != null ? ((Long) row[6]).intValue() : 0)
+                                                        .returnRequested(row != null ? ((Long) row[7]).intValue() : 0)
+                                                        .returned(row != null ? ((Long) row[8]).intValue() : 0)
+                                                        .picked(row != null ? ((Long) row[9]).intValue() : 0)
                                                         .build();
                                 }).toList();
 

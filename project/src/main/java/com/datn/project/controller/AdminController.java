@@ -370,6 +370,7 @@ public class AdminController {
                         ? List.of(rr.getImages().split(","))
                         : List.of())
                 .status(rr.getStatus().name())
+                .ghnReturnCode(rr.getGhnReturnCode())
                 .adminNote(rr.getAdminNote())
                 .createdAt(rr.getCreatedAt())
                 .build();
